@@ -21,4 +21,19 @@ public static class CoreUtilities
         Debug.LogError("There's no target specified.");
         return null;
     }
+
+    public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
+        if (target != null) {
+            var data = target.GetType()
+                .GetFields(BindingFlags.Instance 
+                           | BindingFlags.Static
+                           | BindingFlags.NonPublic 
+                           | BindingFlags.Public).Where(predicate);
+            
+            return data;
+        }
+        
+        Debug.LogError("There's no target specified.");
+        return null;
+    }
 }
