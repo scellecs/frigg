@@ -7,10 +7,12 @@
 
         [Button("Simple button to click")]
         public void SimpleLog() {
+            Debug.Log("Simple log");
         }
         
         [Button]
         public void SimpleLogWithoutName() {
+            Debug.Log("Simple log2");
         }
     }
 }

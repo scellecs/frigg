@@ -8,7 +8,7 @@
             var attr = (ButtonAttribute)info.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
 
             if (GUILayout.Button(attr.Text)) {
-                
+                info.Invoke(obj, new object[]{ });
             }
         }
     }
