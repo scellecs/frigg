@@ -2,8 +2,8 @@
     using System;
     using UnityEngine;
 
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class DropdownAttribute : PropertyAttribute, IAttribute {
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class DropdownAttribute : PropertyAttribute, IAttribute {
 
         public string Name { get; private set; }
 
