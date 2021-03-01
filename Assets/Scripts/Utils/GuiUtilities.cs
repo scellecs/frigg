@@ -13,9 +13,19 @@
             }
         }
 
-        public static void Dropdown(Object obj, FieldInfo info) {
-            var attr = (DropdownAttribute) info.GetCustomAttributes(typeof(DropdownAttribute), true)[0];
-            //Todo: check & refactor
+        public static void Dropdown(
+            Rect rect, SerializedObject serializedObject, object target, FieldInfo field,
+            string label, int selectedIndex, string[] options, object[] values)
+        {
+            EditorGUI.BeginChangeCheck();
+
+            var newIndex = EditorGUI.Popup(rect, label, selectedIndex, options);
+
+            if (!EditorGUI.EndChangeCheck())
+                return;
+
+            Undo.RecordObject(serializedObject.targetObject, "Dropdown");
+            field.SetValue(target, values[newIndex]);
         }
     }
 }

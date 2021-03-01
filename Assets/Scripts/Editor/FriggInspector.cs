@@ -4,7 +4,6 @@
     using Attributes;
     using UnityEditor;
     using UnityEngine;
-    using UnityEngine.UIElements;
     using Utils;
     
     [CanEditMultipleObjects]
@@ -40,7 +39,7 @@
 
         private void DrawDropdowns() {
             foreach (var element in this.fields) {
-                GuiUtilities.Dropdown(this.serializedObject.targetObject, element);
+                
             }
         }
     }

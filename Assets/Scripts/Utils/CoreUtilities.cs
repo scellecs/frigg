@@ -36,4 +36,22 @@ public static class CoreUtilities
         Debug.LogError("There's no target specified.");
         return null;
     }
+    
+    public static MethodInfo TryGetMethod(this object target, string name) {
+        if (target != null) {
+            return target.TryGetMethods(x => x.Name == name).FirstOrDefault();
+        }
+        
+        Debug.LogError("There's no target specified.");
+        return null;
+    }
+    
+    public static FieldInfo TryGetField(this object target, string name) {
+        if (target != null) {
+            return target.TryGetFields(x => x.Name == name).FirstOrDefault();
+        }
+        
+        Debug.LogError("There's no target specified.");
+        return null;
+    }
 }
