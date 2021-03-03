@@ -4,7 +4,7 @@ namespace Assets.Scripts.Attributes {
     using System;
 
     [AttributeUsage(AttributeTargets.Method)]
-    public sealed class ButtonAttribute : PropertyAttribute, IAttribute 
+    public sealed class ButtonAttribute : BaseAttribute 
     {
         public string Text { get; private set; }
 
