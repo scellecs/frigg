@@ -1,10 +1,33 @@
 ﻿namespace Assets.Scripts.Utils {
+    using System.Linq;
     using System.Reflection;
     using Attributes;
     using UnityEditor;
     using UnityEngine;
 
-    public class GuiUtilities {
+    public static class GuiUtilities {
+
+        #region property implementations
+        public static void PropertyField(SerializedProperty property, bool includeChildren) {
+            DrawPropertyField(new Rect(), property, new GUIContent(property.name), includeChildren);
+        }
+        
+        private static void DrawPropertyField(Rect rect, SerializedProperty property, 
+            GUIContent label, bool includeChildren) {
+            
+            EditorGUI.BeginChangeCheck();
+            var attr = CoreUtilities.TryGetAttributes<BaseAttribute>(property).Any();
+
+            if (!attr) {
+                return;
+            }
+
+            EditorGUILayout.PropertyField(property, label, includeChildren);
+            EditorGUI.EndChangeCheck();
+        }
+        #endregion
+        
+        #region elements
         public static void Button(Object obj, MethodInfo info) {
             var attr = (ButtonAttribute)info.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
             
@@ -27,5 +50,6 @@
             Undo.RecordObject(serializedObject.targetObject, "Dropdown");
             field.SetValue(target, values[newIndex]);
         }
+        #endregion
     }
 }
