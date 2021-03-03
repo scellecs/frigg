@@ -234,6 +234,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   intValue: 0
+  flags: 0
 --- !u!4 &846225803
 Transform:
   m_ObjectHideFlags: 0

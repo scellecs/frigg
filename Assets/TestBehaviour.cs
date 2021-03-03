@@ -6,21 +6,31 @@
 
     public class TestBehaviour : MonoBehaviour {
 
+        #region dropdown
         [Dropdown("intValues")]
         public int intValue;
 
         private int[] intValues = {1, 2, 3, 4, 5};
 
-        [Dropdown("vectorValues")]
-        private Vector3 vectorValue;
+        [Dropdown("VectorValues")]
+        public Vector3 vectorValue;
+        
+        [Dropdown("StringValues")]
+        public string stringValue;
+        
+        private List<string> StringValues { get { return new List<string>() { "A", "B", "C", "D", "E" }; } }
 
-        private DropdownList<string> vectorValues = new DropdownList<string>() {
-            {"test", "Testcaseone"},
-            {"testtwo", "Testcasetwo"},
-            {"testthree", "Testcasethree"},
-            {"testfour", "Testcasefour"}
-        };
-            
+        private DropdownList<Vector3> VectorValues() {
+            return new DropdownList<Vector3>() {
+                {"test", Vector3.back},
+                {"testtwo", Vector3.up},
+                {"testthree", Vector3.forward},
+                {"testfour", Vector3.left}
+            };
+        }
+        #endregion
+
+        #region button
         [Button("Simple button to click one")]
         public void SimpleLog() {
             Debug.Log("Simple log");
@@ -30,5 +40,19 @@
         public void SimpleLogWithoutName() {
             Debug.Log("Simple log two");
         }
+        #endregion
+
+        #region enum flags
+        public enum TestFlags {
+            One = 0,
+            Two = 1,
+            Three = 3,
+            Four = 4 
+        }
+
+        [EnumFlags]
+        public TestFlags flags;
+        #endregion
+
     }
 }
