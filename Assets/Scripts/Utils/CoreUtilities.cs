@@ -114,8 +114,6 @@ public static class CoreUtilities
         {
             return null;
         }
-        
-        Debug.Log(property.propertyPath);
 
         string   path     = property.propertyPath.Replace(".Array.data[", "[");
         object   obj      = property.serializedObject.targetObject;
