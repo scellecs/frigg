@@ -1,4 +1,5 @@
 ﻿namespace Assets {
+    using System;
     using System.Collections.Generic;
     using Scripts.Attributes;
     using Scripts.Utils;
@@ -43,15 +44,22 @@
         #endregion
 
         #region enum flags
+        
+        [Flags]
         public enum TestFlags {
-            One = 0,
-            Two = 1,
-            Three = 3,
-            Four = 4 
+            None  = 0,
+            One   = 1 << 0,
+            Two   = 1 << 1,
+            Three = 1 << 2,
+            Four  = 1 << 3
         }
 
         [EnumFlags]
         public TestFlags flags;
+        
+        [EnumFlags("Enum flags with name")]
+        public TestFlags flagsTwo;
+
         #endregion
 
     }
