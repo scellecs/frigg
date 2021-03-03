@@ -3,7 +3,7 @@
     using UnityEngine;
 
     [AttributeUsage(AttributeTargets.Field)]
-    public sealed class DropdownAttribute : PropertyAttribute, IAttribute {
+    public sealed class DropdownAttribute : BaseAttribute {
 
         public string Name { get; private set; }
 
