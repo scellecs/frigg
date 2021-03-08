@@ -1,8 +1,8 @@
-﻿namespace Assets.Scripts.Attributes.CustomAttribute {
+﻿namespace Assets.Scripts.Attributes.Custom {
     using System;
 
     [AttributeUsage(AttributeTargets.Field)]
-    public class ReorderableListAttribute : Attribute, IAttribute {
+    public class ReorderableListAttribute : CustomAttribute {
         public string Name { get; private set; }
 
         public ReorderableListAttribute(string name) {
