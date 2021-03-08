@@ -72,5 +72,18 @@
         public List<int> intlist;
 
         #endregion
+
+        #region readonly
+
+        [Readonly]
+        public Vector3 data = Vector3.back;
+
+        [Readonly]
+        public int testInt = 123;
+        
+        [Readonly]
+        public string testString = "test string data";
+
+        #endregion
     }
 }
