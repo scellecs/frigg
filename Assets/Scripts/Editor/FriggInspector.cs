@@ -3,6 +3,8 @@
     using System.Linq;
     using System.Reflection;
     using Attributes;
+    using CustomPropertyDrawers;
+    using PropertyDrawers;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -13,7 +15,7 @@
 
         private List<SerializedProperty>  serializedProperties = new List<SerializedProperty>();
         private IEnumerable<PropertyInfo> properties; //store all properties with attributes
-        private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes
+        private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes (Non-serialized)
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
 
         private void OnEnable() {
@@ -21,10 +23,12 @@
                 => info.GetCustomAttributes(typeof(ButtonAttribute), true).Length > 0);
             
             this.fields = this.target.TryGetFields(info
-                => info.GetCustomAttributes(typeof(DropdownAttribute), true).Length > 0);
+                => info.GetCustomAttributes(typeof(BaseAttribute), true).Length > 0);
             //Todo: not only 'dropdown', but all other attributes.
 
             this.serializedProperties = this.GetSerializedProperties();
+            
+            ReorderableListDrawer.ClearData();
         }
         
         public override void OnInspectorGUI() {
@@ -68,6 +72,8 @@
                 if (prop.name == "m_Script") {
                     continue;
                 }
+                
+                prop.serializedObject.Update();
                 GuiUtilities.PropertyField(prop, true);
             }
         }

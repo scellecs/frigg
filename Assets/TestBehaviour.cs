@@ -2,6 +2,7 @@
     using System;
     using System.Collections.Generic;
     using Scripts.Attributes;
+    using Scripts.Attributes.Custom;
     using Scripts.Utils;
     using UnityEngine;
 
@@ -61,6 +62,15 @@
         public TestFlags flagsTwo;
 
         #endregion
+        
+        #region reorderableList
 
+        [ReorderableList]
+        public int[] intArray;
+
+        [ReorderableList]
+        public List<int> intlist;
+
+        #endregion
     }
 }

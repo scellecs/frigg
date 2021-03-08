@@ -2,6 +2,8 @@
     using System.Linq;
     using System.Reflection;
     using Attributes;
+    using Attributes.Custom;
+    using Editor.CustomPropertyDrawers;
     using UnityEditor;
     using UnityEngine;
 
@@ -15,15 +17,22 @@
         private static void DrawPropertyField(Rect rect, SerializedProperty property, 
             GUIContent label, bool includeChildren) {
             
-            EditorGUI.BeginChangeCheck();
-            var attr = CoreUtilities.TryGetAttributes<BaseAttribute>(property).Any();
+            var customAttr = CoreUtilities.TryGetAttribute<CustomAttribute>(property);
+            if (customAttr != null)
+                customAttr.GetCustomDrawer().OnGUI(rect, property);
+            
+            else {
 
-            if (!attr) {
-                return;
+                var attr = CoreUtilities.TryGetAttributes<BaseAttribute>(property).Any();
+
+                if (!attr) {
+                    return;
+                }
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(property, label, includeChildren);
+                EditorGUI.EndChangeCheck();
             }
-
-            EditorGUILayout.PropertyField(property, label, includeChildren);
-            EditorGUI.EndChangeCheck();
         }
         #endregion
         
