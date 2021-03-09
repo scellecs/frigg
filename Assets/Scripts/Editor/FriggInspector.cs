@@ -14,7 +14,7 @@
     public class FriggInspector : Editor {
 
         private List<SerializedProperty>  serializedProperties = new List<SerializedProperty>(); //Unity's Serialized properties
-        private IEnumerable<PropertyInfo> properties; //store all properties with attributes
+        private IEnumerable<PropertyInfo> properties; //store all properties with attributes (native)
         private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes (Non-serialized)
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
 
@@ -34,6 +34,7 @@
         }
         
         public override void OnInspectorGUI() {
+            this.serializedObject.Update();
 
             if(this.serializedProperties.Any(p => 
                 CoreUtilities.TryGetAttribute<IAttribute>(p) != null))
@@ -71,18 +72,19 @@
         }
 
         private void DrawSerializedProperties() {
-            foreach (var prop in this.serializedProperties) {
-                if (prop.name == "m_Script") {
-                    continue;
-                }
-
+            foreach (var prop in this.serializedProperties
+                .Where(prop => prop.name != "m_Script")) {
                 prop.serializedObject.Update();
+                
                 GuiUtilities.PropertyField(prop, true);
             }
         }
 
         private void DrawNonSerializedFieldsAndProperties() {
             foreach (var field in this.fields) {
+                if(field.IsUnitySerialized())
+                    continue;
+                
                 GuiUtilities.Field(field.GetValue(this.target), field.Name);
             }
 

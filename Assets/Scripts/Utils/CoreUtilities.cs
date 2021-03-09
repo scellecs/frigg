@@ -234,4 +234,15 @@ public static class CoreUtilities
     }
     
     public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
+    
+    public static bool IsUnitySerialized(this FieldInfo fieldInfo)
+    {
+        var attr = fieldInfo.GetCustomAttributes(true);
+        if (attr.Any(x => x is NonSerializedAttribute))
+        {
+            return false;
+        }
+        
+        return !fieldInfo.IsPrivate || attr.Any(x => x is SerializeField);
+    }
 }
