@@ -80,9 +80,21 @@ public static class CoreUtilities
         Debug.LogError("There's no target specified.");
         return null;
     }
+    
+    public static Type TryGetListElementType(Type listType) 
+        => listType.IsGenericType ? listType.GetGenericArguments()[0] : listType.GetElementType();
+
     #endregion
 
     #region properties //TODO: Check for any kind of errors.
+    
+    public static Type GetPropertyType(SerializedProperty property)
+    {
+        var parentType = GetTargetObjectWithProperty(property).GetType();
+        var fieldInfo  = parentType.GetField(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+        return fieldInfo?.FieldType;
+    }
 
     public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
         var fInfo = GetTargetObjectWithProperty(property).TryGetField(property.name);
@@ -198,8 +210,7 @@ public static class CoreUtilities
 
     private static object GetValue_Imp(object source, string name, int index)
     {
-        var enumerable = GetValue_Imp(source, name) as IEnumerable;
-        if (enumerable == null)
+        if (!(GetValue_Imp(source, name) is IEnumerable enumerable))
         {
             return null;
         }
@@ -215,6 +226,12 @@ public static class CoreUtilities
 
         return enumerator.Current;
     }
-
     #endregion
+
+    public static void OnDataChanged(SerializedProperty property) {
+        Undo.RecordObject(property.serializedObject.targetObject, "reorderable list");
+        property.serializedObject.ApplyModifiedProperties();
+    }
+    
+    public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
 }
