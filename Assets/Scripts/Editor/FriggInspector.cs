@@ -13,7 +13,7 @@
     [CustomEditor(typeof(Object), true)]
     public class FriggInspector : Editor {
 
-        private List<SerializedProperty>  serializedProperties = new List<SerializedProperty>();
+        private List<SerializedProperty>  serializedProperties = new List<SerializedProperty>(); //Unity's Serialized properties
         private IEnumerable<PropertyInfo> properties; //store all properties with attributes
         private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes (Non-serialized)
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
@@ -23,9 +23,11 @@
                 => info.GetCustomAttributes(typeof(ButtonAttribute), true).Length > 0);
             
             this.fields = this.target.TryGetFields(info
-                => info.GetCustomAttributes(typeof(BaseAttribute), true).Length > 0);
-            //Todo: not only 'dropdown', but all other attributes.
+                => info.GetCustomAttributes(typeof(ShowInInspectorAttribute), true).Length > 0);
 
+            this.properties = this.target.TryGetProperties(info
+                => info.GetCustomAttributes(typeof(ShowInInspectorAttribute), true).Length > 0);
+            
             this.serializedProperties = this.GetSerializedProperties();
             
             ReorderableListDrawer.ClearData();
@@ -33,14 +35,15 @@
         
         public override void OnInspectorGUI() {
 
-            this.DrawButtons();
-
             if(this.serializedProperties.Any(p => 
                 CoreUtilities.TryGetAttribute<IAttribute>(p) != null))
                 this.DrawSerializedProperties();
             else {
                 this.DrawDefaultInspector();
             }
+            
+            this.DrawButtons();
+            this.DrawNonSerializedFieldsAndProperties();
         }
 
         private List<SerializedProperty> GetSerializedProperties() {
@@ -72,9 +75,19 @@
                 if (prop.name == "m_Script") {
                     continue;
                 }
-                
+
                 prop.serializedObject.Update();
                 GuiUtilities.PropertyField(prop, true);
+            }
+        }
+
+        private void DrawNonSerializedFieldsAndProperties() {
+            foreach (var field in this.fields) {
+                GuiUtilities.Field(field.GetValue(this.target), field.Name);
+            }
+
+            foreach (var prop in this.properties) {
+                GuiUtilities.Field(prop.GetValue(this.target), prop.Name, prop.CanWrite);
             }
         }
     }
