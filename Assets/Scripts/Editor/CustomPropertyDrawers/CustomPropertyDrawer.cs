@@ -11,13 +11,11 @@
             
             this.CreateAndDraw(rect, property, new GUIContent(property.name));
 
-            EditorGUI.EndChangeCheck();
-
-            property.serializedObject.Update();
-            property.serializedObject.ApplyModifiedProperties();
-            
-            Undo.RecordObject(property.serializedObject.targetObject, "reorderableList");
+            if (EditorGUI.EndChangeCheck()) {
+                CoreUtilities.OnDataChanged(property);
+            }
         }
+        
         protected abstract void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label);
     }
     
