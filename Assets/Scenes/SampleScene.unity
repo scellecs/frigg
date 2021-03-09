@@ -233,8 +233,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcdf515dd33eb264e86e1799f26f10c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  intValue: 0
-  flags: 0
+  intValue: 2
+  vectorValue: {x: 0, y: 0, z: 1}
+  stringValue: D
+  flags: 6
+  flagsTwo: 6
+  intArray: 
+  intlist: 020000000000000003000000
+  floatArray:
+  - 1
+  - 2
+  - 3
+  floatlist:
+  - 1
+  - 2
+  - 3
+  vectorArray:
+  - {x: 1, y: 1, z: 1}
+  - {x: 1, y: 1, z: 1}
+  vectorlist:
+  - {x: 1, y: 1, z: 1}
+  - {x: 1, y: 1, z: 1}
+  data: {x: 0, y: 0, z: -1}
+  testInt: 123
+  testString: test string data
 --- !u!4 &846225803
 Transform:
   m_ObjectHideFlags: 0

@@ -8,7 +8,7 @@
 
     public class TestBehaviour : MonoBehaviour {
 
-        #region dropdown
+        /*#region dropdown
         [Dropdown("intValues")]
         public int intValue;
 
@@ -95,6 +95,19 @@
         
         [Readonly]
         public string testString = "test string data";
+
+        #endregion*/
+
+        #region showInInspector
+
+        [ShowInInspector]
+        private int showIntValue;
+
+        [ShowInInspector]
+        private string showStrValue;
+        
+        [ShowInInspector]
+        public int ReadOnlyProperty => this.showIntValue;
 
         #endregion
     }
