@@ -97,5 +97,38 @@
         public string testString = "test string data";
 
         #endregion
+
+        #region showInInspector
+
+        public int JustATest;
+
+        [ShowInInspector]
+        private int privateInt;
+
+        [ShowInInspector]
+        private string privateString;
+        
+        [ShowInInspector]
+        public int publicInt;
+        
+        [ShowInInspector]
+        public string publicString;
+
+        [ShowInInspector]
+        public bool publicBool;
+        
+        [ShowInInspector]
+        private bool privateBool;
+        
+        [ShowInInspector]
+        public int ReadOnlyProperty => this.privateInt;
+
+        [ShowInInspector]
+        public int AnotherCustomProperty {
+            get => this.publicInt;
+            set => this.publicInt = value; 
+        }
+
+        #endregion
     }
 }
