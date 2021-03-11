@@ -3,6 +3,7 @@
     using System.Linq;
     using System.Reflection;
     using Attributes;
+    using Attributes.Custom;
     using CustomPropertyDrawers;
     using PropertyDrawers;
     using UnityEditor;
@@ -37,14 +38,15 @@
             this.serializedObject.Update();
 
             if(this.serializedProperties.Any(p => 
-                CoreUtilities.TryGetAttribute<IAttribute>(p) != null))
+                CoreUtilities.TryGetAttribute<BaseAttribute>(p) != null))
                 this.DrawSerializedProperties();
             else {
                 this.DrawDefaultInspector();
             }
-            
+
             this.DrawButtons();
-            this.DrawNonSerializedFieldsAndProperties();
+            this.DrawNonSerializedFields();
+            this.DrawNativeProperties();
         }
 
         private List<SerializedProperty> GetSerializedProperties() {
@@ -76,20 +78,36 @@
                 .Where(prop => prop.name != "m_Script")) {
                 prop.serializedObject.Update();
                 
+                Debug.Log(prop.name);
+                
                 GuiUtilities.PropertyField(prop, true);
             }
         }
 
-        private void DrawNonSerializedFieldsAndProperties() {
+        private void DrawNonSerializedFields() {
+            
             foreach (var field in this.fields) {
-                if(field.IsUnitySerialized())
+                if (field.IsUnitySerialized()) {
                     continue;
-                
-                GuiUtilities.Field(field.GetValue(this.target), field.Name);
-            }
+                }
 
+                var value = field.GetValue(this.target);
+                if (value == null)
+                    return;
+
+                field.SetValue(this.target, 
+                    GuiUtilities.Field(field.GetValue(this.target), $"[private] {field.Name}"));
+            }
+        }
+
+        private void DrawNativeProperties() {
             foreach (var prop in this.properties) {
-                GuiUtilities.Field(prop.GetValue(this.target), prop.Name, prop.CanWrite);
+                if(!prop.CanWrite)
+                    GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", prop.CanWrite);
+                
+                else
+                    prop.SetValue(this.target, 
+                        GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", prop.CanWrite));
             }
         }
     }
