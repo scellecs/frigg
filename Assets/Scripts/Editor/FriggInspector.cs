@@ -36,9 +36,9 @@
         
         public override void OnInspectorGUI() {
             this.serializedObject.Update();
-
+            
             if(this.serializedProperties.Any(p => 
-                CoreUtilities.TryGetAttribute<BaseAttribute>(p) != null))
+                CoreUtilities.TryGetAttribute<IAttribute>(p) != null))
                 this.DrawSerializedProperties();
             else {
                 this.DrawDefaultInspector();
@@ -76,10 +76,7 @@
         private void DrawSerializedProperties() {
             foreach (var prop in this.serializedProperties
                 .Where(prop => prop.name != "m_Script")) {
-                prop.serializedObject.Update();
-                
-                Debug.Log(prop.name);
-                
+                this.serializedObject.Update();
                 GuiUtilities.PropertyField(prop, true);
             }
         }
@@ -102,12 +99,23 @@
 
         private void DrawNativeProperties() {
             foreach (var prop in this.properties) {
-                if(!prop.CanWrite)
-                    GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", prop.CanWrite);
-                
-                else
-                    prop.SetValue(this.target, 
-                        GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", prop.CanWrite));
+                if (!prop.CanWrite) {
+                    GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", false);
+                }
+
+                else {
+                    var value = prop.GetValue(this.target);
+                    
+                    prop.SetValue(this.target, GuiUtilities
+                        .Field(prop.GetValue(this.target), $"[property] {prop.Name}"));
+
+                    var secondValue = prop.GetValue(this.target);
+
+                    if (value.Equals(secondValue) || Application.isPlaying) {
+                        continue;
+                    }
+                    EditorUtility.SetDirty(this.target);
+                }
             }
         }
     }
