@@ -3,246 +3,250 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
-public static class CoreUtilities
-{
-    #region reflection
-    public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
-        if (target != null) {
-            var data = target.GetType()
-                .GetMethods(BindingFlags.Instance 
-                            | BindingFlags.Static
-                            | BindingFlags.NonPublic 
-                            | BindingFlags.Public).Where(predicate);
+namespace Assets.Scripts.Utils {
+    public static class CoreUtilities
+    {
+        #region reflection
 
-            return data;
+        public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
+            if (target != null) {
+                var data = target.GetType()
+                    .GetMethods(BindingFlags.Instance 
+                                | BindingFlags.Static
+                                | BindingFlags.NonPublic 
+                                | BindingFlags.Public).Where(predicate);
+
+                return data;
+            }
+
+            Debug.LogError("There's no target specified.");
+            return null;
         }
 
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
-
-    public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
-        if (target != null) {
-            var data = target.GetType()
-                .GetFields(BindingFlags.Instance 
-                           | BindingFlags.Static
-                           | BindingFlags.NonPublic 
-                           | BindingFlags.Public).Where(predicate);
+        public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
+            if (target != null) {
+                var data = target.GetType()
+                    .GetFields(BindingFlags.Instance 
+                               | BindingFlags.Static
+                               | BindingFlags.NonPublic 
+                               | BindingFlags.Public).Where(predicate);
             
-            return data;
-        }
+                return data;
+            }
         
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
     
-    public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
-        if (target != null) {
-            var data = target.GetType()
-                .GetProperties(BindingFlags.Instance 
-                           | BindingFlags.Static
-                           | BindingFlags.NonPublic 
-                           | BindingFlags.Public).Where(predicate);
+        public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
+            if (target != null) {
+                var data = target.GetType()
+                    .GetProperties(BindingFlags.Instance 
+                                   | BindingFlags.Static
+                                   | BindingFlags.NonPublic 
+                                   | BindingFlags.Public).Where(predicate);
             
+                return data;
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
+    
+        public static MethodInfo TryGetMethod(this object target, string name) {
+            if (target != null) {
+                return target.TryGetMethods(x => x.Name == name).FirstOrDefault();
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
+    
+        public static FieldInfo TryGetField(this object target, string name) {
+            if (target != null) {
+                return target.TryGetFields(x => x.Name == name).FirstOrDefault();
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
+    
+        public static PropertyInfo TryGetProperty(this object target, string name) {
+            if (target != null) {
+                return target.TryGetProperties(x => x.Name == name).FirstOrDefault();
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
+    
+        public static Type TryGetListElementType(Type listType) 
+            => listType.IsGenericType ? listType.GetGenericArguments()[0] : listType.GetElementType();
+
+        #endregion
+
+        #region properties //TODO: Check for any kind of errors.
+    
+        public static Type GetPropertyType(SerializedProperty property)
+        {
+            var parentType = GetTargetObjectWithProperty(property).GetType();
+            var fieldInfo  = parentType.GetField(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            return fieldInfo?.FieldType;
+        }
+
+        public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
+            var fInfo = GetTargetObjectWithProperty(property).TryGetField(property.name);
+
+            if (fInfo == null)
+            {
+                return new T[] { };
+            }
+        
+            var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
+
             return data;
         }
-        
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
-    
-    public static MethodInfo TryGetMethod(this object target, string name) {
-        if (target != null) {
-            return target.TryGetMethods(x => x.Name == name).FirstOrDefault();
+
+        public static T TryGetAttribute<T>(SerializedProperty property) where T : class {
+            var attr = TryGetAttributes<T>(property);
+
+            return (attr.Length > 0) ? attr[0] : null;
         }
-        
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
-    
-    public static FieldInfo TryGetField(this object target, string name) {
-        if (target != null) {
-            return target.TryGetFields(x => x.Name == name).FirstOrDefault();
-        }
-        
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
-    
-    public static PropertyInfo TryGetProperty(this object target, string name) {
-        if (target != null) {
-            return target.TryGetProperties(x => x.Name == name).FirstOrDefault();
-        }
-        
-        Debug.LogError("There's no target specified.");
-        return null;
-    }
-    
-    public static Type TryGetListElementType(Type listType) 
-        => listType.IsGenericType ? listType.GetGenericArguments()[0] : listType.GetElementType();
 
-    #endregion
-
-    #region properties //TODO: Check for any kind of errors.
-    
-    public static Type GetPropertyType(SerializedProperty property)
-    {
-        var parentType = GetTargetObjectWithProperty(property).GetType();
-        var fieldInfo  = parentType.GetField(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-        return fieldInfo?.FieldType;
-    }
-
-    public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
-        var fInfo = GetTargetObjectWithProperty(property).TryGetField(property.name);
-
-        if (fInfo == null)
+        /// <summary>
+        /// Gets the object the property represents.
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static object GetTargetObjectOfProperty(SerializedProperty property)
         {
-            return new T[] { };
-        }
-        
-        var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
-
-        return data;
-    }
-
-    public static T TryGetAttribute<T>(SerializedProperty property) where T : class {
-        var attr = TryGetAttributes<T>(property);
-
-        return (attr.Length > 0) ? attr[0] : null;
-    }
-
-    /// <summary>
-    /// Gets the object the property represents.
-    /// </summary>
-    /// <param name="property"></param>
-    /// <returns></returns>
-    public static object GetTargetObjectOfProperty(SerializedProperty property)
-    {
-        if (property == null)
-        {
-            return null;
-        }
-
-        string   path     = property.propertyPath.Replace(".Array.data[", "[");
-        object   obj      = property.serializedObject.targetObject;
-        string[] elements = path.Split('.');
-
-        foreach (var element in elements)
-        {
-            if (element.Contains("["))
-            {
-                string elementName = element.Substring(0, element.IndexOf("["));
-                int    index       = Convert.ToInt32(element.Substring(element.IndexOf("["))
-                    .Replace("[", "").Replace("]", ""));
-                obj = GetValue_Imp(obj, elementName, index);
-            }
-            else
-            {
-                obj = GetValue_Imp(obj, element);
-            }
-        }
-
-        return obj;
-    }
-
-    /// <summary>
-    /// Gets the object that the property is a member of
-    /// </summary>
-    /// <param name="property"></param>
-    /// <returns></returns>
-    public static object GetTargetObjectWithProperty(SerializedProperty property)
-    {
-        var   path        = property.propertyPath.Replace(".Array.data[", "[");
-
-        object   obj      = property.serializedObject.targetObject;
-        var elements      = path.Split('.');
-        
-        for (int i = 0; i < elements.Length - 1; i++)
-        {
-            string element = elements[i];
-            if (element.Contains("["))
-            {
-                var elementName = element.Substring(0, element.IndexOf("["));
-                var    index       = Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
-                obj = GetValue_Imp(obj, elementName, index);
-            }
-            else
-            {
-                obj = GetValue_Imp(obj, element);
-            }
-        }
-
-        return obj;
-    }
-    
-    private static object GetValue_Imp(object source, string name)
-    {
-        if (source == null)
-        {
-            return null;
-        }
-
-        var type = source.GetType();
-
-        while (type != null)
-        {
-            var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            if (field != null)
-            {
-                return field.GetValue(source);
-            }
-
-            var property = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (property != null)
-            {
-                return property.GetValue(source, null);
-            }
-
-            type = type.BaseType;
-        }
-
-        return null;
-    }
-
-    private static object GetValue_Imp(object source, string name, int index)
-    {
-        if (!(GetValue_Imp(source, name) is IEnumerable enumerable))
-        {
-            return null;
-        }
-
-        var enumerator = enumerable.GetEnumerator();
-        for (var i = 0; i <= index; i++)
-        {
-            if (!enumerator.MoveNext())
+            if (property == null)
             {
                 return null;
             }
+
+            string   path     = property.propertyPath.Replace(".Array.data[", "[");
+            object   obj      = property.serializedObject.targetObject;
+            string[] elements = path.Split('.');
+
+            foreach (var element in elements)
+            {
+                if (element.Contains("["))
+                {
+                    string elementName = element.Substring(0, element.IndexOf("["));
+                    int index = Convert.ToInt32(element.Substring(element.IndexOf("["))
+                        .Replace("[", "").Replace("]", ""));
+                    obj = GetValue_Imp(obj, elementName, index);
+                }
+                else
+                {
+                    obj = GetValue_Imp(obj, element);
+                }
+            }
+
+            return obj;
         }
 
-        return enumerator.Current;
-    }
-    #endregion
-
-    public static void OnDataChanged(SerializedProperty property) {
-        Undo.RecordObject(property.serializedObject.targetObject, "reorderable list");
-        property.serializedObject.ApplyModifiedProperties();
-    }
-    
-    public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
-    
-    public static bool IsUnitySerialized(this FieldInfo fieldInfo)
-    {
-        var attr = fieldInfo.GetCustomAttributes(true);
-        if (attr.Any(x => x is NonSerializedAttribute))
+        /// <summary>
+        /// Gets the object that the property is a member of
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static object GetTargetObjectWithProperty(SerializedProperty property)
         {
-            return false;
-        }
+            var path = property.propertyPath.Replace(".Array.data[", "[");
+
+            object obj      = property.serializedObject.targetObject;
+            var    elements = path.Split('.');
         
-        return !fieldInfo.IsPrivate || attr.Any(x => x is SerializeField);
+            for (int i = 0; i < elements.Length - 1; i++)
+            {
+                string element = elements[i];
+                if (element.Contains("["))
+                {
+                    var elementName = element.Substring(0, element.IndexOf("["));
+                    var index       = Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
+                    obj = GetValue_Imp(obj, elementName, index);
+                }
+                else
+                {
+                    obj = GetValue_Imp(obj, element);
+                }
+            }
+
+            return obj;
+        }
+    
+        private static object GetValue_Imp(object source, string name)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            var type = source.GetType();
+
+            while (type != null)
+            {
+                var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                if (field != null)
+                {
+                    return field.GetValue(source);
+                }
+
+                var property = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (property != null)
+                {
+                    return property.GetValue(source, null);
+                }
+
+                type = type.BaseType;
+            }
+
+            return null;
+        }
+
+        private static object GetValue_Imp(object source, string name, int index)
+        {
+            if (!(GetValue_Imp(source, name) is IEnumerable enumerable))
+            {
+                return null;
+            }
+
+            var enumerator = enumerable.GetEnumerator();
+            for (var i = 0; i <= index; i++)
+            {
+                if (!enumerator.MoveNext())
+                {
+                    return null;
+                }
+            }
+
+            return enumerator.Current;
+        }
+        #endregion
+
+        public static void OnDataChanged(SerializedProperty property) {
+            Undo.RecordObject(property.serializedObject.targetObject, "reorderable list");
+            property.serializedObject.ApplyModifiedProperties();
+        }
+    
+        public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
+    
+        public static bool IsUnitySerialized(this FieldInfo fieldInfo)
+        {
+            var attr = fieldInfo.GetCustomAttributes(true);
+            if (attr.Any(x => x is NonSerializedAttribute))
+            {
+                return false;
+            }
+        
+            return !fieldInfo.IsPrivate || attr.Any(x => x is SerializeField);
+        }
     }
 }
