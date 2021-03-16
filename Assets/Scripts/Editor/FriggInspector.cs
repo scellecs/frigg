@@ -6,7 +6,6 @@
     using Attributes.Custom;
     using Attributes.Meta;
     using CustomPropertyDrawers;
-    using PropertyDrawers;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -47,7 +46,7 @@
 
             var max    = this.mixedData.Max(x => x.Key);
 
-            for (var i = 0; i < max; i++) {
+            for (var i = 0; i <= max; i++) {
                 var elements = this.mixedData[i];
 
                 foreach (var element in elements) {
@@ -56,10 +55,11 @@
 
                     var type = element.GetType();
 
-                    if (type?.FullName == null) {
+                    if (type.FullName == null) {
                         continue;
                     }
 
+                    //Todo: Handle this better. (e.g type == typeof(PropertyField)...)
                     if (type.FullName.Contains("MonoProperty")) {
                         this.DrawNativeProperty((PropertyInfo) element);
                     }
@@ -146,30 +146,37 @@
             }
         }
 
-        private static ILookup<int, object> SortAll(List<SerializedProperty> serProps, 
+        private static ILookup<int, object> SortAll(IEnumerable<SerializedProperty> serProps, 
             IEnumerable<PropertyInfo> props, IEnumerable<FieldInfo> fields, 
             IEnumerable<MethodInfo> methods) {
 
             var pairs = new List<KeyValuePair<int, object>>();
             
             foreach (var field in fields) {
-                var data = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (data != null) {
-                    pairs.Add(new KeyValuePair<int, object>(data.Order, field));
+                var attr = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).First();
+                if (attr != null) {
+                    pairs.Add(new KeyValuePair<int, object>(attr.Order, field));
                 }
             }
             
             foreach (var prop in props) {
-                var data = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (data != null) {
-                    pairs.Add(new KeyValuePair<int, object>(data.Order, prop));
+                var attr = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).First();
+                if (attr != null) {
+                    pairs.Add(new KeyValuePair<int, object>(attr.Order, prop));
                 }
             }
             
             foreach (var method in methods) {
-                var data = (OrderAttribute) method.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (data != null) {
-                    pairs.Add(new KeyValuePair<int, object>(data.Order, method));
+                var attr = (OrderAttribute) method.GetCustomAttributes(typeof(OrderAttribute)).First();
+                if (attr != null) {
+                    pairs.Add(new KeyValuePair<int, object>(attr.Order, method));
+                }
+            }
+
+            foreach (var prop in serProps) {
+                var attr = CoreUtilities.TryGetAttribute<OrderAttribute>(prop);
+                if (attr != null) {
+                    pairs.Add(new KeyValuePair<int, object>(attr.Order, prop));
                 }
             }
 

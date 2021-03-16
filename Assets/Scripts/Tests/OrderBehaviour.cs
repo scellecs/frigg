@@ -12,26 +12,32 @@
         [Order(2)]
         public int value;
         
+        [Button("Ordered 2"), Order(2)]
+        public void SimpleTwo() {
+            Debug.Log("Simple ordered 2");
+        }
+        
+        [Button("Ordered 3"), Order(3)]
+        public void SimpleThree() {
+            Debug.Log("Simple ordered 3");
+        }
+        
         [Button("Ordered 1"), Order(1)]
         public void SimpleOne() {
-            Debug.Log("Simple log");
+            Debug.Log("Simple ordered 1");
         }
         
-        [Button("Ordered 0"), Order]
-        public void TestTwo() {
-            Debug.Log("Simple log two");
-        }
-        
-        [Button("Ordered 0 too"), Order]
-        public void TestThree() {
-            Debug.Log("Simple log two");
-        }
-
-        [Order(5)]
+        [Order(4)]
         [ShowInInspector]
         private int TestToEdit;
         
-        [Order(4)]
+        [Button("Ordered 5"), Order(5)]
+        public void SimpleFive() {
+            Debug.Log("Simple ordered 1");
+        }
+        
+        
+        [Order]
         [ShowInInspector]
         public int TestProperty { get; set;}
     }
