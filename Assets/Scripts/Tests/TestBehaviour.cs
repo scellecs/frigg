@@ -1,10 +1,11 @@
-﻿namespace Assets {
+﻿namespace Assets.Scripts.Tests {
     using System;
     using System.Collections.Generic;
-    using Scripts.Attributes;
-    using Scripts.Attributes.Custom;
-    using Scripts.Utils;
+    using Attributes;
+    using Attributes.Custom;
+    using Attributes.Meta;
     using UnityEngine;
+    using Utils;
 
     public class TestBehaviour : MonoBehaviour {
 
@@ -31,19 +32,7 @@
             };
         }
         #endregion
-
-        #region button
-        [Button("Simple button to click one")]
-        public void SimpleLog() {
-            Debug.Log("Simple log");
-        }
         
-        [Button]
-        public void SimpleLogWithoutName() {
-            Debug.Log("Simple log two");
-        }
-        #endregion
-
         #region enum flags
         
         [Flags]
