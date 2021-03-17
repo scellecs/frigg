@@ -20,7 +20,7 @@
                 return;
             }
 
-            var enumValues = EditorGUILayout.EnumFlagsField(lab, target);
+            var enumValues = EditorGUI.EnumFlagsField(position, lab, target);
 
             property.intValue = (int)Convert.ChangeType(enumValues, target.GetType());
 
