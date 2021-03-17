@@ -45,11 +45,14 @@
         
         public override void OnInspectorGUI() {
             this.serializedObject.Update();
-
-            var max    = this.mixedData.Max(x => x.Key);
-
+            
             if (!this.anySerializedWithAttr)
                 this.DrawDefaultInspector();
+            
+            if(this.mixedData.Count <= 0)
+                return;
+            
+            var max    = this.mixedData.Max(x => x.Key);
 
             for (var i = 0; i <= max; i++) {
                 var elements = this.mixedData[i];
