@@ -121,16 +121,23 @@
         }
 
         private void DrawNonSerializedField(FieldInfo field) {
-
+            
             if (field.IsUnitySerialized()) {
                 return;
             }
 
             var value = field.GetValue(this.target);
-            if (value == null)
-                return;
+            if (value == null) {
+                //we need to check this because string is a reference type so it's always null on init.
+                if(!field.FieldType.IsValueType) {
+                    value = string.Empty;
+                }
+                else
+                   return;
+            }
+
             field.SetValue(this.target,
-                GuiUtilities.Field(field.GetValue(this.target), $"[private] {field.Name}"));
+                GuiUtilities.Field(value, $"[private] {field.Name}"));
         }
 
         private void DrawNativeProperty(PropertyInfo prop) {
