@@ -19,6 +19,8 @@
         private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes (Non-serialized)
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
 
+        private bool anySerializedWithAttr;
+
         private ILookup<int, object> mixedData;
         private void OnEnable() {
             this.methods = this.target.TryGetMethods(info
@@ -32,6 +34,9 @@
             
             this.serializedProperties = this.GetSerializedProperties();
             
+            this.anySerializedWithAttr = this.serializedProperties.Any(p 
+                => CoreUtilities.TryGetAttribute<IAttribute>(p) != null);
+            
             this.mixedData = SortAll(this.serializedProperties, 
                 this.properties, this.fields, this.methods);
 
@@ -41,10 +46,10 @@
         public override void OnInspectorGUI() {
             this.serializedObject.Update();
 
-            if (this.serializedProperties.All(p => CoreUtilities.TryGetAttribute<IAttribute>(p) == null))
-                this.DrawDefaultInspector();
-
             var max    = this.mixedData.Max(x => x.Key);
+
+            if (!this.anySerializedWithAttr)
+                this.DrawDefaultInspector();
 
             for (var i = 0; i <= max; i++) {
                 var elements = this.mixedData[i];
@@ -75,6 +80,9 @@
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
+                    
+                    if(!this.anySerializedWithAttr)
+                        continue;
 
                     var prop = (SerializedProperty) element;
                     if (prop.name == "m_Script")
@@ -151,33 +159,29 @@
             IEnumerable<MethodInfo> methods) {
 
             var pairs = new List<KeyValuePair<int, object>>();
-            
-            foreach (var field in fields) {
-                var attr = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (attr != null) {
-                    pairs.Add(new KeyValuePair<int, object>(attr.Order, field));
-                }
-            }
-            
-            foreach (var prop in props) {
-                var attr = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (attr != null) {
-                    pairs.Add(new KeyValuePair<int, object>(attr.Order, prop));
-                }
-            }
-            
+
             foreach (var method in methods) {
-                var attr = (OrderAttribute) method.GetCustomAttributes(typeof(OrderAttribute)).First();
-                if (attr != null) {
-                    pairs.Add(new KeyValuePair<int, object>(attr.Order, method));
-                }
+                var attr = (OrderAttribute) method.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, method) 
+                    : new KeyValuePair<int, object>(0, method));
             }
 
             foreach (var prop in serProps) {
                 var attr = CoreUtilities.TryGetAttribute<OrderAttribute>(prop);
-                if (attr != null) {
-                    pairs.Add(new KeyValuePair<int, object>(attr.Order, prop));
-                }
+                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, prop)
+                    : new KeyValuePair<int, object>(0, prop));
+            }
+            
+            foreach (var field in fields) {
+                var attr = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, field) 
+                    : new KeyValuePair<int, object>(0, field));
+            }
+            
+            foreach (var prop in props) {
+                var attr = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, prop) 
+                    : new KeyValuePair<int, object>(0, prop));
             }
 
             return pairs.OrderBy(s => s.Key).ToLookup(pair =>
