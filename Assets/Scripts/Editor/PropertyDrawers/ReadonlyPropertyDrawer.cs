@@ -7,7 +7,7 @@
     public class ReadonlyPropertyDrawer : BaseDrawer {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             using (new EditorGUI.DisabledScope(true)) {
-                EditorGUILayout.PropertyField(property, label);
+                EditorGUI.PropertyField(position, property, label);
             }
         }
     }

@@ -29,13 +29,12 @@
         
         [Order(4)]
         [ShowInInspector]
-        private int TestToEdit;
+        private int testToEdit;
         
         [Button("Ordered 5"), Order(5)]
         public void SimpleFive() {
-            Debug.Log("Simple ordered 1");
+            Debug.Log("Simple ordered 5");
         }
-        
         
         [Order]
         [ShowInInspector]

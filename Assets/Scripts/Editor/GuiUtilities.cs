@@ -62,7 +62,7 @@
             using (new EditorGUI.DisabledScope(!canWrite)) {
                 
                 var objType = value.GetType();
-                
+
                 if (objType == typeof(bool))
                 {
                     return EditorGUILayout.Toggle(label, (bool)value);
