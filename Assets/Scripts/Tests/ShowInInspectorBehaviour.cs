@@ -1,5 +1,6 @@
 ﻿namespace Assets.Scripts.Tests {
     using Attributes.Custom;
+    using Attributes.Meta;
     using UnityEngine;
 
     public class ShowInInspectorBehaviour : MonoBehaviour {

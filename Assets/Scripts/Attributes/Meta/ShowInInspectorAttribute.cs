@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts.Attributes.Custom {
+﻿namespace Assets.Scripts.Attributes.Meta {
     using System;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
