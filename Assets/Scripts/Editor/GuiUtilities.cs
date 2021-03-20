@@ -1,15 +1,26 @@
-﻿namespace Assets.Scripts.Utils {
+﻿namespace Assets.Scripts.Editor {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using Attributes;
     using Attributes.Custom;
-    using Editor.CustomPropertyDrawers;
+    using CustomPropertyDrawers;
     using UnityEditor;
     using UnityEngine;
+    using Utils;
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
+
+        public static List<Type> reorderableAllowed = new List<Type> {
+            typeof(int),
+            typeof(string),
+            typeof(float),
+            typeof(long),
+            typeof(double),
+            typeof(bool)
+        };
 
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
@@ -18,14 +29,11 @@
         
         private static void DrawPropertyField(Rect rect, SerializedProperty property, 
             GUIContent label, bool includeChildren) {
-            
-            var customAttr = CoreUtilities.TryGetAttribute<CustomAttribute>(property); //reorderable list & ShowInInspector
-            customAttr?.GetCustomDrawer()?.OnGUI(rect, property);
 
-            if (CoreUtilities.TryGetAttributes<CustomAttribute>(property).Any()) {
+            if (HandleCustomProperty(rect, property))
                 return;
-            }
-
+            
+            //If there weren't any custom attributes - we need to draw default fields
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(property, label, includeChildren);
             EditorGUI.EndChangeCheck();
@@ -33,6 +41,23 @@
             property.serializedObject.ApplyModifiedProperties();
         }
         #endregion
+
+        private static bool HandleCustomProperty(Rect rect, SerializedProperty property) {
+            if (!CoreUtilities.TryGetAttributes<CustomAttribute>(property).Any()) {
+
+                if (property.isArray) {
+                    Debug.Log(property.type);
+                    new ReorderableListAttribute().GetCustomDrawer().OnGUI(rect, property);
+                    return true;
+                }
+
+                return false;
+            }
+
+            var customAttr = CoreUtilities.TryGetAttribute<CustomAttribute>(property); //reorderable list if there is an attribute
+            customAttr?.GetCustomDrawer()?.OnGUI(rect, property);
+            return true;
+        }
         
         #region elements
         public static void Button(Object obj, MethodInfo info) {
