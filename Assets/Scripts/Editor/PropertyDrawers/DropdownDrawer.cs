@@ -12,7 +12,7 @@
     public class DropdownDrawer : BaseDrawer {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 
-            EditorGUI.BeginProperty(position, label, property);
+            EditorGUI.BeginProperty(position, new GUIContent(property.displayName), property);
             
             var attr          = (DropdownAttribute) this.attribute;
             var target        = property.serializedObject.targetObject;
@@ -36,7 +36,7 @@
                     var currIndex = Array.IndexOf(valuesArr, currValue);
             
                     GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                        this.fieldInfo, label.text, currIndex, options, valuesArr);
+                        this.fieldInfo, property.displayName, currIndex, options, valuesArr);
                     break;
                 }
                 
@@ -63,7 +63,7 @@
                         }
 
                         GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                            this.fieldInfo, label.text, selected, options.ToArray(), val.ToArray());
+                            this.fieldInfo, property.displayName, selected, options.ToArray(), val.ToArray());
                     }
 
                     break;
