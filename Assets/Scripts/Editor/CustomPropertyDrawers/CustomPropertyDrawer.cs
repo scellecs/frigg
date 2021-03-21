@@ -1,6 +1,7 @@
 ﻿namespace Assets.Scripts.Editor.CustomPropertyDrawers {
     using System;
     using System.Collections.Generic;
+    using Attributes;
     using Attributes.Custom;
     using UnityEditor;
     using UnityEngine;
@@ -8,12 +9,20 @@
 
     public abstract class CustomPropertyDrawer {
         public void OnGUI(Rect rect, SerializedProperty property) {
-            EditorGUI.BeginChangeCheck();
-            
-            this.CreateAndDraw(rect, property, new GUIContent(property.name));
 
-            if (EditorGUI.EndChangeCheck()) {
-                CoreUtilities.OnDataChanged(property);
+            var isVisible = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property);
+
+            var isDisabled = isVisible == null;
+
+            //We need this to handle CustomProperty for Readonly behaviour
+            using(new EditorGUI.DisabledScope(!isDisabled)){
+                EditorGUI.BeginChangeCheck();
+
+                this.CreateAndDraw(rect, property, new GUIContent(property.name));
+
+                if (EditorGUI.EndChangeCheck()) {
+                    CoreUtilities.OnDataChanged(property);
+                }
             }
         }
         

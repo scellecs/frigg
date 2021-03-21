@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using UnityEditor;
 
-    public class CustomAttribute : Attribute {
+    public class CustomAttribute : Attribute, IAttribute {
 
     }
 }
