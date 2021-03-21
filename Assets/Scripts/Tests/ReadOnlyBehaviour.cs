@@ -1,4 +1,5 @@
 ﻿namespace Assets.Scripts.Tests {
+    using System.Collections.Generic;
     using Attributes;
     using UnityEngine;
 
@@ -12,5 +13,8 @@
         
         [Readonly]
         public string testString = "test string data";
+
+        [Readonly]
+        public List<string> readOnlyArray;
     }
 }

@@ -88,13 +88,9 @@
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
-
-                    //because we need to draw DefaultInspector on this behaviour
-                    if (this.anySerializedWithAttr) {
-                        continue;
-                    }
                     
                     var prop = (SerializedProperty) element;
+
                     if (prop.name == "m_Script")
                         continue;
 
@@ -146,12 +142,14 @@
                    return;
             }
 
+            var canWrite = field.GetCustomAttribute<ReadonlyAttribute>() == null;
+
             field.SetValue(this.target,
-                GuiUtilities.Field(value, $"[private] {field.Name}"));
+                GuiUtilities.Field(value, $"[private] {field.Name}", canWrite));
         }
 
         private void DrawNativeProperty(PropertyInfo prop) {
-            if (!prop.CanWrite) {
+            if (!prop.CanWrite || prop.GetCustomAttribute<ReadonlyAttribute>() != null) {
                 GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", false);
             }
 
