@@ -1,4 +1,5 @@
 ﻿namespace Assets.Scripts.Tests {
+    using System.Collections.Generic;
     using Attributes.Custom;
     using Attributes.Meta;
     using UnityEngine;
@@ -11,7 +12,7 @@
         public int publicFieldAttr;
 
         [ShowInInspector]
-        public string publicString;
+        public string publicString = "test string";
 
         [ShowInInspector]
         public bool publicBool;
