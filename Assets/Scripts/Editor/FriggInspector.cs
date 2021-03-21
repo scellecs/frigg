@@ -145,19 +145,21 @@
             var canWrite = field.GetCustomAttribute<ReadonlyAttribute>() == null;
 
             field.SetValue(this.target,
-                GuiUtilities.Field(value, $"[private] {field.Name}", canWrite));
+                GuiUtilities.Field(value, $"[private] {ObjectNames.NicifyVariableName(field.Name)}", canWrite));
         }
 
         private void DrawNativeProperty(PropertyInfo prop) {
+            var niceName = ObjectNames.NicifyVariableName(prop.Name);
+            
             if (!prop.CanWrite || prop.GetCustomAttribute<ReadonlyAttribute>() != null) {
-                GuiUtilities.Field(prop.GetValue(this.target), $"[property] {prop.Name}", false);
+                GuiUtilities.Field(prop.GetValue(this.target), $"[property] {niceName}", false);
             }
 
             else {
                 var value = prop.GetValue(this.target);
                     
                 prop.SetValue(this.target, GuiUtilities
-                    .Field(prop.GetValue(this.target), $"[property] {prop.Name}"));
+                    .Field(prop.GetValue(this.target), $"[property] {niceName}"));
 
                 var secondValue = prop.GetValue(this.target);
 

@@ -14,7 +14,7 @@
     public static class GuiUtilities {
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
-            DrawPropertyField(new Rect(), property, new GUIContent(property.name), includeChildren);
+            DrawPropertyField(new Rect(), property, new GUIContent(property.displayName), includeChildren);
         }
         
         //Draw single property field

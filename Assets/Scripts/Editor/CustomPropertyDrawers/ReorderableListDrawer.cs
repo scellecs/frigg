@@ -40,7 +40,8 @@
         }
 
         private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
-            reorderableList.drawHeaderCallback = tempRect => { EditorGUI.LabelField(tempRect, new GUIContent($"{reorderableList.serializedProperty.name} - {reorderableList.count} elements")); };
+            reorderableList.drawHeaderCallback = tempRect => { EditorGUI.LabelField(tempRect, 
+                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); };
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
