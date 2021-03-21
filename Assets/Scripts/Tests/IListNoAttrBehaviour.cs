@@ -1,19 +1,20 @@
 ﻿namespace Assets.Scripts.Tests {
     using System.Collections.Generic;
+    using Attributes;
     using UnityEngine;
 
     public class IListNoAttrBehaviour : MonoBehaviour {
         
-        public int[] intArray;
+        public int[] intArrayNoAttr;
         
-        public List<int> intlist;
+        public List<int> intListNoAttr;
         
-        public float[]   floatArray;
+        public float[] floatArrayNoAttr;
         
-        public List<float> floatlist;
+        public List<float> floatListNoAttr;
         
         public Vector3[] vectorArray;
         
-        public List<Vector3> vectorlist;
+        public List<Vector3> vectorList;
     }
 }
