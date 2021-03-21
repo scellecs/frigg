@@ -20,6 +20,7 @@
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
 
         private bool anySerializedWithAttr;
+        private bool hasArrays;
 
         private ILookup<int, object> mixedData;
         private void OnEnable() {
@@ -37,6 +38,8 @@
             this.anySerializedWithAttr = this.serializedProperties.Any(p 
                 => CoreUtilities.TryGetAttribute<IAttribute>(p) != null);
             
+            this.hasArrays = this.serializedProperties.Any(p => p.isArray);
+            
             this.mixedData = SortAll(this.serializedProperties, 
                 this.properties, this.fields, this.methods);
 
@@ -45,10 +48,12 @@
         
         public override void OnInspectorGUI() {
             this.serializedObject.Update();
-            
-            if (!this.anySerializedWithAttr)
+
+            //means there's no arrays and props with attributes at all.
+            if (!this.anySerializedWithAttr && !this.hasArrays) {
                 this.DrawDefaultInspector();
-            
+            }
+
             if(this.mixedData.Count <= 0)
                 return;
             
@@ -60,7 +65,7 @@
                 foreach (var element in elements) {
                     if (element == null)
                         return;
-
+                    
                     var type = element.GetType();
 
                     if (type.FullName == null) {
@@ -83,10 +88,12 @@
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
-                    
-                    if(!this.anySerializedWithAttr)
-                        continue;
 
+                    //because we need to draw DefaultInspector on this behaviour
+                    if (this.anySerializedWithAttr) {
+                        continue;
+                    }
+                    
                     var prop = (SerializedProperty) element;
                     if (prop.name == "m_Script")
                         continue;
@@ -110,7 +117,7 @@
                 list.Add(prop);
             }
             while (it.NextVisible(false));
-
+            
             return list;
         }
 
