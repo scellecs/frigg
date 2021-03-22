@@ -214,12 +214,12 @@ GameObject:
   m_Component:
   - component: {fileID: 846225803}
   - component: {fileID: 846225809}
-  - component: {fileID: 846225808}
   - component: {fileID: 846225807}
   - component: {fileID: 846225806}
   - component: {fileID: 846225805}
   - component: {fileID: 846225804}
   - component: {fileID: 846225802}
+  - component: {fileID: 846225808}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -330,6 +330,7 @@ MonoBehaviour:
   data: {x: 0, y: 0, z: -1}
   testInt: 123
   testString: test string data
+  readOnlyArray: []
 --- !u!114 &846225809
 MonoBehaviour:
   m_ObjectHideFlags: 0
