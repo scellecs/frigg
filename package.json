@@ -1,13 +1,8 @@
 {
   "name": "com.scellecs.frigg",
   "author": "Oleg Morozov",
-  "displayName": "frigg",
-  "description": "",
+  "displayName": "Frigg",
+  "description": "Inspector Tools For Unity",
   "unity": "2019.4",
-  "version": "2021.1.0",
-  "dependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/scellecs/frigg"
-  }
+  "version": "2021.1.0"
 }
