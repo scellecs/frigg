@@ -1,4 +1,6 @@
-﻿namespace Assets.Scripts.Editor {
+﻿using Assets.Scripts.Attributes.Meta;
+
+namespace Assets.Scripts.Editor {
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -20,12 +22,16 @@
         //Draw single property field
         private static void DrawPropertyField(Rect rect, SerializedProperty property, 
             GUIContent label, bool includeChildren) {
-            
+
             //Check if there are any custom attributes on this property. If true - handle it using custom drawer and then return.
             if (HandleCustomProperty(rect, property))
                 return;
             
             //If there weren't any custom attributes - we need to draw default property field
+            
+            if(CoreUtilities.TryGetAttribute<HideLabelAttribute>(property) != null)
+                label = GUIContent.none;
+
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(property, label, includeChildren);
             EditorGUI.EndChangeCheck();
@@ -83,7 +89,7 @@
 
         public static object Field(object value, string label, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
-                
+
                 var objType = value.GetType();
 
                 if (objType == typeof(bool))
