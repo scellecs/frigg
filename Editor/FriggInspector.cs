@@ -20,7 +20,7 @@
         private IEnumerable<FieldInfo>    fields;     //Store all fields with attributes (Non-serialized)
         private IEnumerable<MethodInfo>   methods;    //Store all methods with attributes (for buttons)
 
-        private bool anySerializedWithAttr;
+        private bool anySerialized;
         private bool hasArrays;
 
         private ILookup<int, object> mixedData;
@@ -36,8 +36,7 @@
             
             this.serializedProperties = this.GetSerializedProperties();
             
-            this.anySerializedWithAttr = this.serializedProperties.Any(p 
-                => CoreUtilities.TryGetAttribute<IAttribute>(p) != null);
+            this.anySerialized = this.serializedProperties.Count > 0;
             
             this.hasArrays = this.serializedProperties.Any(p => p.isArray);
             
@@ -51,7 +50,7 @@
             this.serializedObject.Update();
 
             //means there's no arrays and props with attributes at all.
-            if (!this.anySerializedWithAttr && !this.hasArrays) {
+            if (!this.anySerialized && !this.hasArrays) {
                 this.DrawDefaultInspector();
             }
 

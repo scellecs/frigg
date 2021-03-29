@@ -11,6 +11,8 @@ namespace Assets.Scripts.Editor {
     using UnityEditor;
     using UnityEngine;
     using Utils;
+    using CustomAttributeExtensions = CustomPropertyDrawers.CustomAttributeExtensions;
+    using CustomPropertyDrawer = UnityEditor.CustomPropertyDrawer;
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
@@ -22,16 +24,17 @@ namespace Assets.Scripts.Editor {
         //Draw single property field
         private static void DrawPropertyField(Rect rect, SerializedProperty property, 
             GUIContent label, bool includeChildren) {
-
-            //Check if there are any custom attributes on this property. If true - handle it using custom drawer and then return.
-            if (HandleCustomProperty(rect, property))
-                return;
             
+            //Check if there are any custom attributes on this property. If true - handle it using custom drawer and then return.
+            if (HandleCustomDrawer(rect, property))
+                return;
             //If there weren't any custom attributes - we need to draw default property field
             
+            //Check if we need to hide label
             if(CoreUtilities.TryGetAttribute<HideLabelAttribute>(property) != null)
                 label = GUIContent.none;
 
+            //finally - draw PropertyField
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(property, label, includeChildren);
             EditorGUI.EndChangeCheck();
@@ -39,21 +42,33 @@ namespace Assets.Scripts.Editor {
             property.serializedObject.ApplyModifiedProperties();
         }
         #endregion
-
-        private static bool HandleCustomProperty(Rect rect, SerializedProperty property) {
+        
+        private static bool HandleCustomDrawer(Rect rect, SerializedProperty property) {
             //Check for custom attributes
             var attributes = CoreUtilities.TryGetAttributes<CustomAttribute>(property);
             
+            //If there is at least one property with applied attribute - Get it's drawer and draw elements
             if (attributes.Any()) {
-                attributes[0].GetCustomDrawer().OnGUI(rect, property);
+                CustomAttributeExtensions.GetCustomDrawer(attributes[0]).OnGUI(rect, property);
                 return true;
+            }
+            
+            var type = CoreUtilities.GetPropertyType(property);
+
+            //Not used directly on the property
+            if (type.IsSerializable) {
+                var attr = (CustomAttribute) Attribute.GetCustomAttribute(type,
+                    typeof(InlinePropertyAttribute));
+
+                if (attr != null) {
+                    CustomAttributeExtensions.GetCustomDrawer(attr).OnGUI(rect, property);
+                    return true;
+                }
             }
 
             if (!property.isArray) {
                 return false;
             }
-
-            var type = CoreUtilities.GetPropertyType(property);
 
             if (type == typeof(string)) {
                 return false;
