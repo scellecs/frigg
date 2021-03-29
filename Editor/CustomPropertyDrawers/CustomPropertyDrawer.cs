@@ -3,6 +3,8 @@
     using System.Collections.Generic;
     using Attributes;
     using Attributes.Custom;
+    using Attributes.Meta;
+    using PropertyDrawers;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -18,7 +20,30 @@
             using(new EditorGUI.DisabledScope(!isDisabled)){
                 EditorGUI.BeginChangeCheck();
 
-                this.CreateAndDraw(rect, property, new GUIContent(property.name));
+                if (this.GetType() == typeof(InlinePropertyDrawer)) {
+                    var drawer = (InlinePropertyDrawer)
+                        CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
+                    
+                    var attr = CoreUtilities.TryGetAttribute<InlinePropertyAttribute>
+                        (property);
+
+                    if (attr != null) {
+                        drawer.labelWidth = attr.LabelWitdh;
+                    }
+
+                    else {
+                        var type = CoreUtilities.GetPropertyType(property);
+                        attr = (InlinePropertyAttribute) Attribute.GetCustomAttribute(type,
+                            typeof(InlinePropertyAttribute));
+                        drawer.labelWidth = attr.LabelWitdh;
+                    }
+                    
+                    this.CreateAndDraw(rect, property, new GUIContent(property.displayName));
+                }
+
+                if (this.GetType() == typeof(ReorderableListDrawer)) {
+                    this.CreateAndDraw(rect, property, new GUIContent(property.displayName));
+                }
 
                 if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnDataChanged(property);
@@ -34,10 +59,14 @@
 
         static CustomAttributeExtensions() =>
             drawers = new Dictionary<Type, CustomPropertyDrawer> {
-                [typeof(ReorderableListAttribute)] = ReorderableListDrawer.instance
+                [typeof(ReorderableListAttribute)] = ReorderableListDrawer.instance,
+                [typeof(InlinePropertyAttribute)]  = InlinePropertyDrawer.instance
             };
 
-        public static CustomPropertyDrawer GetCustomDrawer(this CustomAttribute attribute)
+        public static CustomPropertyDrawer GetCustomDrawer(CustomAttribute attribute)
             => drawers.TryGetValue(attribute.GetType(), out var drawer) ? drawer : null;
+        
+        public static CustomPropertyDrawer GetCustomDrawer(Type type)
+            => drawers.TryGetValue(type, out var drawer) ? drawer : null;
     }
 }
