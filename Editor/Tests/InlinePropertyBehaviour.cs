@@ -1,10 +1,12 @@
 ﻿namespace Assets.Scripts.Tests {
     using System;
     using Attributes.Custom;
+    using Attributes.Meta;
     using UnityEngine;
 
     public class InlinePropertyBehaviour : MonoBehaviour {
 
+        [HideLabel]
         [InlineProperty(LabelWitdh = 10)]
         public Player    player;
         

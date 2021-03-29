@@ -11,10 +11,11 @@
         public int labelWidth;
         
         protected override void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label) {
-            EditorGUILayout.BeginHorizontal();
 
             EditorGUIUtility.labelWidth = this.labelWidth;
-            EditorGUILayout.LabelField(label);
+            EditorGUILayout.BeginHorizontal();
+            if(label != GUIContent.none)
+               EditorGUILayout.LabelField(label);
 
             var copy       = property.Copy(); //we need to work with a property copy
             var enumerator = copy.GetEnumerator();
@@ -25,6 +26,7 @@
             }
 
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
         }
     }
 }

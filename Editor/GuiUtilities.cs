@@ -24,7 +24,7 @@ namespace Assets.Scripts.Editor {
         //Draw single property field
         private static void DrawPropertyField(Rect rect, SerializedProperty property, 
             GUIContent label, bool includeChildren) {
-            
+
             //Check if there are any custom attributes on this property. If true - handle it using custom drawer and then return.
             if (HandleCustomDrawer(rect, property))
                 return;

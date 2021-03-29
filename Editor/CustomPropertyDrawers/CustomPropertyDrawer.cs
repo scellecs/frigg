@@ -16,6 +16,9 @@
 
             var isDisabled = isVisible == null;
 
+            var label = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property)
+                        == null ? new GUIContent(property.displayName) : GUIContent.none;
+
             //We need this to handle CustomProperty for Readonly behaviour
             using(new EditorGUI.DisabledScope(!isDisabled)){
                 EditorGUI.BeginChangeCheck();
@@ -38,11 +41,11 @@
                         drawer.labelWidth = attr.LabelWitdh;
                     }
                     
-                    this.CreateAndDraw(rect, property, new GUIContent(property.displayName));
+                    this.CreateAndDraw(rect, property, label);
                 }
 
                 if (this.GetType() == typeof(ReorderableListDrawer)) {
-                    this.CreateAndDraw(rect, property, new GUIContent(property.displayName));
+                    this.CreateAndDraw(rect, property, label);
                 }
 
                 if (EditorGUI.EndChangeCheck()) {
