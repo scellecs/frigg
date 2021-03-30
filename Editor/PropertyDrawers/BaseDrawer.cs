@@ -1,15 +1,19 @@
 ﻿namespace Assets.Scripts.Editor.PropertyDrawers {
     using UnityEngine;
     using UnityEditor;
+    using Utils;
 
-    public class BaseDrawer : PropertyDrawer {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
-            EditorGUI.BeginProperty(position, label, property);
+    public abstract class BaseDrawer : PropertyDrawer {
+        public sealed override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+            EditorGUI.BeginChangeCheck();
+
+            this.OnDrawerGUI(position, property, label);
             
-            position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
-            
-            EditorGUI.PropertyField(position, property, label, true);
-            EditorGUI.EndProperty();
+            if (EditorGUI.EndChangeCheck()) {
+                CoreUtilities.OnDataChanged(property);
+            }
         }
+
+        protected abstract void OnDrawerGUI(Rect rect, SerializedProperty prop, GUIContent label);
     }
 }
