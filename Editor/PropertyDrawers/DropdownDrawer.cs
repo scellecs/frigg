@@ -10,9 +10,8 @@
 
     [CustomPropertyDrawer(typeof(DropdownAttribute))]
     public class DropdownDrawer : BaseDrawer {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
-
-            EditorGUI.BeginProperty(position, new GUIContent(property.displayName), property);
+        protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
+                        EditorGUI.BeginProperty(position, new GUIContent(property.displayName), property);
             
             var attr          = (DropdownAttribute) this.attribute;
             var target        = property.serializedObject.targetObject;

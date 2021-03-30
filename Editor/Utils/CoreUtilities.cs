@@ -8,6 +8,8 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Assets.Scripts.Utils {
+    using Attributes.Meta;
+
     public static class CoreUtilities
     {
         #region reflection
@@ -232,14 +234,31 @@ namespace Assets.Scripts.Utils {
         #endregion
 
         public static void OnDataChanged(SerializedProperty property) {
-            Undo.RecordObject(property.serializedObject.targetObject, "reorderable list");
             property.serializedObject.ApplyModifiedProperties();
+
+            var attr = TryGetAttributes<OnValueChangedAttribute>(property);
+
+            if (attr.Length == 0)
+                return;
+
+            var target = GetTargetObjectWithProperty(property);
+
+            foreach (var obj in attr) {
+                var method = target.TryGetMethod(obj.callbackMethod);
+
+                if (method != null && method.GetParameters().Length == 0 && method.ReturnType == typeof(void)) {
+                    method.Invoke(target, new object[] { });
+                }
+
+                else {
+                    Debug.LogError($"Can't find any method with name {obj.callbackMethod} and return type 'void'.");
+                }
+            }
         }
     
         public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
     
-        public static bool IsUnitySerialized(this FieldInfo fieldInfo)
-        {
+        public static bool IsUnitySerialized(this FieldInfo fieldInfo) {
             var attr = fieldInfo.GetCustomAttributes(true);
             if (attr.Any(x => x is NonSerializedAttribute))
             {
