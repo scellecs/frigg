@@ -7,13 +7,13 @@
 
     [CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
     public class EnumFlagsDrawer : BaseDrawer {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+        protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
 
             var attr   = (EnumFlagsAttribute) this.attribute;
             var target = (Enum)CoreUtilities.GetTargetObjectOfProperty(property);
             
-            var lab    = string.IsNullOrEmpty(attr.Name) ? label.text : attr.Name;
+            var lab = string.IsNullOrEmpty(attr.Name) ? label.text : attr.Name;
 
             if (target == null) {
                 Debug.LogError("Invalid target.");
