@@ -37,9 +37,8 @@ namespace Assets.Scripts.Editor {
             //finally - draw PropertyField
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(property, label, includeChildren);
-            EditorGUI.EndChangeCheck();
-            
-            property.serializedObject.ApplyModifiedProperties();
+            if(EditorGUI.EndChangeCheck())
+                CoreUtilities.OnDataChanged(property);
         }
         #endregion
         
