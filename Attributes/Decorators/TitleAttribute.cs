@@ -3,7 +3,7 @@
     using Assets.Scripts.Attributes;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
-    public class TitleAttribute : BaseDecoratorAttribute {
+    public class TitleAttribute : BaseDecoratorAttribute, IDecoratorAttribute {
         public string         title { get; set; }
         
         public TitleAlignment titleAlighment = TitleAlignment.Left;
