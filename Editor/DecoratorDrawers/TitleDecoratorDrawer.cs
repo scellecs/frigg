@@ -4,29 +4,24 @@
     using Packages.Frigg.Attributes;
     using UnityEditor;
     using UnityEngine;
+    
+    public class TitleDecoratorDrawer : BaseDecoratorDrawer {
+        private const float SPACE_AMOUNT = 6.0f;
 
-    [CustomPropertyDrawer(typeof(TitleAttribute))]
-    public class TitleDecoratorDrawer : DecoratorDrawer {
-        private const float SPACE_AMOUNT = 8.0f;
-        
-        public override float GetHeight() {
-            var attr = (TitleAttribute) attribute;
-
-            //Spacing between each element
+        protected override float GetHeight() {
+            var attr = (TitleAttribute) this.attribute;
             return EditorGUIUtility.singleLineHeight + SPACE_AMOUNT + attr.lineHeight;
         }
 
-        public override void OnGUI(Rect position) {
-            var attr = (TitleAttribute) this.attribute;
-
-            var rect = EditorGUI.IndentedRect(position);
+        protected override void DrawDecorator(Rect rect, IDecoratorAttribute attribute) {
+            var attr = (TitleAttribute) attribute;
 
             var style = new GUIStyle {fontSize = attr.fontSize};
             if (attr.bold) {
-                style.fontStyle     = FontStyle.Bold;
+                style.fontStyle = FontStyle.Bold;
             }
             
-            style.normal.textColor  = attr.textColor.ToColor();
+            style.normal.textColor = attr.textColor.ToColor();
 
             switch (attr.titleAlighment) {
                 case TitleAlignment.Left:
@@ -40,14 +35,16 @@
                     break;
             }
 
+            rect.y += SPACE_AMOUNT / 2f;
+
             EditorGUI.LabelField(rect, new GUIContent(attr.title), style);
             
             rect.y += EditorGUIUtility.singleLineHeight + attr.lineHeight * (SPACE_AMOUNT / 2f);
 
-            rect.height =  attr.lineHeight;
-
+            rect.height = attr.lineHeight;
+            
             if(attr.drawLine)
-               EditorGUI.DrawRect(rect, attr.lineColor.ToColor());
+                EditorGUI.DrawRect(rect, attr.lineColor.ToColor());
         }
     }
 }
