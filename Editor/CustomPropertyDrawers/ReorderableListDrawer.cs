@@ -13,6 +13,7 @@
         private Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
 
         public static void ClearData() {
+            Debug.Log("Data cleared");
             instance = new ReorderableListDrawer();
         }
 
@@ -37,7 +38,8 @@
                 instance.reorderableLists[p.name] = reorderableList;
             }
             
-            reorderableList = instance.reorderableLists[p.name]; //if is null
+            //if is null
+            reorderableList = instance.reorderableLists[p.name];
             reorderableList.DoLayoutList();
         }
 
@@ -124,8 +126,6 @@
             {
                 property.rectValue = default;
             }
-            
-            property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }

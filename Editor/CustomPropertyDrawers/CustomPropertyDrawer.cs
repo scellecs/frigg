@@ -26,7 +26,7 @@
                 if (this.GetType() == typeof(InlinePropertyDrawer)) {
                     var drawer = (InlinePropertyDrawer)
                         CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
-                    
+
                     var attr = CoreUtilities.TryGetAttribute<InlinePropertyAttribute>
                         (property);
 
@@ -40,7 +40,7 @@
                             typeof(InlinePropertyAttribute));
                         drawer.labelWidth = attr.LabelWitdh;
                     }
-                    
+
                     this.CreateAndDraw(rect, property, label);
                 }
 
