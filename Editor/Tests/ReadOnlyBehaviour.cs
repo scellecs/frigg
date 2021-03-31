@@ -6,11 +6,11 @@
     public class ReadOnlyBehaviour : MonoBehaviour {
         
         [Readonly]
-        public Vector3 data = Vector3.back;
+        public Vector3 TestVector;
 
         [Readonly]
         public int testInt = 123;
-        
+
         [Readonly]
         public string testString = "test string data";
 
