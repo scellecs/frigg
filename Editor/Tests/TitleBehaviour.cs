@@ -6,6 +6,17 @@
     using UnityEngine;
 
     public class TitleBehaviour : MonoBehaviour {
+
+        [Title("Private fields")]
+        [ShowInInspector]
+        private int private1;
+        
+        [ShowInInspector]
+        private int private2;
+        
+        [ShowInInspector]
+        private int private3;
+        
         [Title("Test without any arguments")]
         public int    test1;
         public string str1;
@@ -40,10 +51,13 @@
         [ShowInInspector]
         public int prop { get; set; }
 
-        [Title("just a button to click")]
+        [Title("Some buttons", fontSize = 16)]
         [Button("Test button")]
-        [Order(1)]
         public void ClickMe() {
+        }
+        
+        [Button("Test button")]
+        public void ClickMeTwo() {
         }
     }
 }
