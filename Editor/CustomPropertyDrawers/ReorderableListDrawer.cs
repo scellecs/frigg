@@ -1,6 +1,8 @@
 ﻿namespace Assets.Scripts.Editor.CustomPropertyDrawers {
+    using System;
     using System.Collections.Generic;
     using UnityEditor;
+    using UnityEditor.Graphs;
     using UnityEditorInternal;
     using UnityEngine;
     using Utils;
@@ -55,8 +57,9 @@
             reorderableList.onAddCallback = delegate {
                 property.arraySize++;
 
-                var element = property.GetArrayElementAtIndex(property.arraySize - 1);
-                var type    = CoreUtilities.GetPropertyType(element);
+                var type = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(property));
+
+                SetDefaultValue(property.GetArrayElementAtIndex(property.arraySize - 1), type);
             };
 
             reorderableList.onRemoveCallback = delegate {
@@ -73,9 +76,56 @@
                 => EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
         }
         
-        //TODO: Handle with objectReferenceValue
-        private static void SetDefaultValue() {
+        private static void SetDefaultValue(SerializedProperty property, Type type) {
+            if (type == typeof(bool)) {
+                property.boolValue = default;
+            }
+            if (type == typeof(int))
+            {
+                property.intValue = default;
+            }
+            if (type == typeof(long))
+            {
+                property.longValue = default;
+            }
+            if (type == typeof(float))
+            {
+                property.floatValue = default;
+            }
+            if (type == typeof(double))
+            {
+                property.doubleValue = default;
+            }
+            if (type == typeof(string))
+            {
+                property.stringValue = default;
+            }
+            if (type == typeof(Vector2))
+            {
+                property.vector2Value = default;
+            }
+            if (type == typeof(Vector3))
+            {
+                property.vector3Value = default;
+            }
+            if (type == typeof(Vector4))
+            {
+                property.vector4Value = default;
+            }
+            if (type == typeof(Color))
+            {
+                property.colorValue = default;
+            }
+            if (type == typeof(Bounds))
+            {
+                property.boundsValue = default;
+            }
+            if (type == typeof(Rect))
+            {
+                property.rectValue = default;
+            }
             
+            property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }
