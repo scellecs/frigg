@@ -1,4 +1,5 @@
 ﻿namespace Assets.Scripts.Editor {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -7,10 +8,12 @@
     using Attributes.Meta;
     using CustomPropertyDrawers;
     using Frigg;
+    using Packages.Frigg.Attributes;
     using UnityEditor;
     using UnityEngine;
     using Utils;
-    
+    using Object = UnityEngine.Object;
+
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Object), true)]
     public class FriggInspector : Editor {
@@ -118,11 +121,29 @@
         }
 
         private void DrawButton(MethodInfo element) {
+
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+
+            if (attr.Any()) {
+                foreach (var obj in attr) {
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                }
+            }
+            
             GuiUtilities.Button(this.serializedObject.targetObject, element);
         }
 
         private void DrawSerializedProperty(SerializedProperty prop) {
             this.serializedObject.Update();
+
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(prop);
+
+            if (attr.Any()) {
+                foreach (var obj in attr) {
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                }
+            }
+            
             GuiUtilities.PropertyField(prop, true);
         }
 
@@ -147,6 +168,14 @@
             var niceName = ObjectNames.NicifyVariableName(field.Name);
             
             var label = field.GetCustomAttribute<HideLabelAttribute>() == null ? $"[private] {niceName}" : string.Empty;
+            
+            var attr = field.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+
+            if (attr.Any()) {
+                foreach (var obj in attr) {
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                }
+            }
 
             field.SetValue(this.target,
                 GuiUtilities.Field(value, label, canWrite));
@@ -158,7 +187,16 @@
             var label = prop.GetCustomAttribute<HideLabelAttribute>() == null ?
                 $"[property] {niceName}" : string.Empty;
             
+            var attr = prop.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+
+            if (attr.Any()) {
+                foreach (var obj in attr) {
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                }
+            }
+            
             if (!prop.CanWrite || prop.GetCustomAttribute<ReadonlyAttribute>() != null) {
+                
                 GuiUtilities.Field(prop.GetValue(this.target), label, false);
             }
 
