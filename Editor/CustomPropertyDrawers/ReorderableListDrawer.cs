@@ -1,6 +1,7 @@
 ﻿namespace Assets.Scripts.Editor.CustomPropertyDrawers {
     using System;
     using System.Collections.Generic;
+    using Attributes.Meta;
     using UnityEditor;
     using UnityEditor.Graphs;
     using UnityEditorInternal;
@@ -27,12 +28,20 @@
                 return;
  
             ReorderableList reorderableList;
-            
+
             if (!instance.reorderableLists.ContainsKey(p.name)) {
-                reorderableList = new ReorderableList(p.serializedObject, p,
-                    true, true, true, true);
+                var attr = CoreUtilities.TryGetAttribute<ListDrawerSettingsAttribute>(property);
                 
-                SetCallbacks(property, reorderableList);
+                if (attr != null) {
+                    reorderableList = new ReorderableList(p.serializedObject, p,
+                        attr.AllowDrag, !attr.HideHeader, !attr.HideAddButton, !attr.HideRemoveButton);
+                    SetCallbacks(property, reorderableList, attr.HideHeader);
+                }
+                else {
+                    reorderableList = new ReorderableList(p.serializedObject, p,
+                        true, true, true, true);
+                    SetCallbacks(property, reorderableList);
+                }
 
                 instance.reorderableLists[p.name] = reorderableList;
             }
@@ -42,11 +51,14 @@
             reorderableList.DoLayoutList();
         }
 
-        private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
-            reorderableList.drawHeaderCallback = tempRect => { 
-                EditorGUI.LabelField(tempRect, 
-                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); 
-            };
+        private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
+
+            if (!hideHeader) {
+                reorderableList.drawHeaderCallback = tempRect => {
+                    EditorGUI.LabelField(tempRect,
+                        new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements"));
+                };
+            }
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
