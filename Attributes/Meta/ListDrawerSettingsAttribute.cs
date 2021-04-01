@@ -1,6 +1,7 @@
 ﻿namespace Assets.Scripts.Attributes.Meta {
     using System;
 
+    [AttributeUsage(AttributeTargets.Field)]
     public class ListDrawerSettingsAttribute : Attribute {
         public bool AllowDrag   { get; set; }
         public bool HideAddButton    { get; set; }
