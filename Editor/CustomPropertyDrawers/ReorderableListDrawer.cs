@@ -13,7 +13,6 @@
         private Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
 
         public static void ClearData() {
-            Debug.Log("Data cleared");
             instance = new ReorderableListDrawer();
         }
 
@@ -26,7 +25,7 @@
 
             if(!p.isArray)
                 return;
-
+ 
             ReorderableList reorderableList;
             
             if (!instance.reorderableLists.ContainsKey(p.name)) {
@@ -43,17 +42,24 @@
             reorderableList.DoLayoutList();
         }
 
-        private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
-            reorderableList.drawHeaderCallback = tempRect => { EditorGUI.LabelField(tempRect, 
-                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); };
+        private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
+            reorderableList.drawHeaderCallback = tempRect => { 
+                EditorGUI.LabelField(tempRect, 
+                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); 
+            };
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
                 tempRect.y     += 2.0f;
                 tempRect.x     += 10.0f;
                 tempRect.width -= 10.0f;
+                
+                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, 
+                    EditorGUIUtility.singleLineHeight), element, true);
+            };
 
-                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, EditorGUIUtility.singleLineHeight), element, true);
+            reorderableList.onChangedCallback = list => {
+                
             };
 
             reorderableList.onAddCallback = delegate {
@@ -61,7 +67,9 @@
 
                 var type = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(property));
 
-                SetDefaultValue(property.GetArrayElementAtIndex(property.arraySize - 1), type);
+                var element = property.GetArrayElementAtIndex(property.arraySize - 1);
+
+                SetDefaultValue(element, type);
             };
 
             reorderableList.onRemoveCallback = delegate {
