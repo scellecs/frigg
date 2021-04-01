@@ -16,6 +16,8 @@ namespace Assets.Scripts.Editor {
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
+        private const int PROPERTY_MIN_WIDTH = 212;
+        
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
             DrawPropertyField(new Rect(), property, new GUIContent(property.displayName), includeChildren);
@@ -36,7 +38,16 @@ namespace Assets.Scripts.Editor {
 
             //finally - draw PropertyField
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(property, label, includeChildren);
+            
+            //Check if Editor is in wide mode so we won't wrap any properties to the next line
+            if (!EditorGUIUtility.wideMode)
+            {
+                EditorGUIUtility.wideMode   = true;
+                EditorGUIUtility.labelWidth = EditorGUIUtility.currentViewWidth - PROPERTY_MIN_WIDTH ;
+            }
+            
+            EditorGUILayout.PropertyField(property, label, false);
+            
             if(EditorGUI.EndChangeCheck())
                 CoreUtilities.OnDataChanged(property);
         }

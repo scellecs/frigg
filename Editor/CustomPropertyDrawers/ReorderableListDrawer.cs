@@ -1,6 +1,8 @@
 ﻿namespace Assets.Scripts.Editor.CustomPropertyDrawers {
+    using System;
     using System.Collections.Generic;
     using UnityEditor;
+    using UnityEditor.Graphs;
     using UnityEditorInternal;
     using UnityEngine;
     using Utils;
@@ -23,7 +25,7 @@
 
             if(!p.isArray)
                 return;
-
+ 
             ReorderableList reorderableList;
             
             if (!instance.reorderableLists.ContainsKey(p.name)) {
@@ -35,28 +37,39 @@
                 instance.reorderableLists[p.name] = reorderableList;
             }
             
-            reorderableList = instance.reorderableLists[p.name]; //if is null
+            //if is null
+            reorderableList = instance.reorderableLists[p.name];
             reorderableList.DoLayoutList();
         }
 
-        private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
-            reorderableList.drawHeaderCallback = tempRect => { EditorGUI.LabelField(tempRect, 
-                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); };
+        private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList) {
+            reorderableList.drawHeaderCallback = tempRect => { 
+                EditorGUI.LabelField(tempRect, 
+                new GUIContent($"{reorderableList.serializedProperty.displayName} - {reorderableList.count} elements")); 
+            };
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
                 tempRect.y     += 2.0f;
                 tempRect.x     += 10.0f;
                 tempRect.width -= 10.0f;
+                
+                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, 
+                    EditorGUIUtility.singleLineHeight), element, true);
+            };
 
-                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, EditorGUIUtility.singleLineHeight), element, true);
+            reorderableList.onChangedCallback = list => {
+                
             };
 
             reorderableList.onAddCallback = delegate {
                 property.arraySize++;
 
+                var type = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(property));
+
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
-                var type    = CoreUtilities.GetPropertyType(element);
+
+                SetDefaultValue(element, type);
             };
 
             reorderableList.onRemoveCallback = delegate {
@@ -73,9 +86,54 @@
                 => EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
         }
         
-        //TODO: Handle with objectReferenceValue
-        private static void SetDefaultValue() {
-            
+        private static void SetDefaultValue(SerializedProperty property, Type type) {
+            if (type == typeof(bool)) {
+                property.boolValue = default;
+            }
+            if (type == typeof(int))
+            {
+                property.intValue = default;
+            }
+            if (type == typeof(long))
+            {
+                property.longValue = default;
+            }
+            if (type == typeof(float))
+            {
+                property.floatValue = default;
+            }
+            if (type == typeof(double))
+            {
+                property.doubleValue = default;
+            }
+            if (type == typeof(string))
+            {
+                property.stringValue = default;
+            }
+            if (type == typeof(Vector2))
+            {
+                property.vector2Value = default;
+            }
+            if (type == typeof(Vector3))
+            {
+                property.vector3Value = default;
+            }
+            if (type == typeof(Vector4))
+            {
+                property.vector4Value = default;
+            }
+            if (type == typeof(Color))
+            {
+                property.colorValue = default;
+            }
+            if (type == typeof(Bounds))
+            {
+                property.boundsValue = default;
+            }
+            if (type == typeof(Rect))
+            {
+                property.rectValue = default;
+            }
         }
     }
 }
