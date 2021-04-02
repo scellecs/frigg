@@ -9,7 +9,7 @@
         [InfoBox("Test box type Info")]
         public int testInteger;
         
-        [InfoBox("Test WarningBox & fixed height (wont resize)", InfoMessageType = InfoMessageType.Warning, Height = 15)]
+        [InfoBox("Test WarningBox & fixed height (wont resize)", InfoMessageType = InfoMessageType.Warning, Height = 60)]
         public int testIntegerTwo;
         
         [InfoBox("Test box type Error & custom font size", InfoMessageType = InfoMessageType.Error, FontSize = 16)]
