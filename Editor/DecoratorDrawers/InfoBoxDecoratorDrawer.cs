@@ -6,13 +6,13 @@
     using UnityEngine;
 
     public class InfoBoxDecoratorDrawer : BaseDecoratorDrawer {
-        protected override float GetHeight() {
+        protected override float GetHeight(Rect rect) {
             var attr = (InfoBoxAttribute) this.attribute;
             
             return attr.Height + SPACE_AMOUNT;
         }
 
-        protected override void DrawDecorator(Rect rect) {
+        protected override void DrawDecorator(Rect rect, object target) {
             var attr = (InfoBoxAttribute) this.attribute;
 
             rect.height += attr.Height;
@@ -46,7 +46,8 @@
             if (!attr.HasCustomHeight) {
                 var height = style.CalcHeight(content, rect.width);
                 if (rect.height < height) {
-                    rect.height += height - rect.height;
+                    var diff = Math.Abs(height - rect.height);
+                    rect.height += diff;
                 }
             }
 

@@ -126,7 +126,7 @@
 
             if (attr.Any()) {
                 foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
                 }
             }
             
@@ -140,7 +140,7 @@
 
             if (attr.Any()) {
                 foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
                 }
             }
             
@@ -173,7 +173,7 @@
 
             if (attr.Any()) {
                 foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), field, obj);
                 }
             }
 
@@ -191,7 +191,7 @@
 
             if (attr.Any()) {
                 foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(), obj);
+                    DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
                 }
             }
             

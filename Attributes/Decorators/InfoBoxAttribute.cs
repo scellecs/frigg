@@ -27,8 +27,6 @@
             set => this.fontSize = value;
         }
 
-        public string Text { get; private set; }
-
         public InfoBoxAttribute(string text) {
             Text = text;
         }

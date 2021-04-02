@@ -4,8 +4,7 @@
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
     public class TitleAttribute : BaseDecoratorAttribute {
-        public string         title { get; set; }
-        
+
         public TitleAlignment titleAlighment = TitleAlignment.Left;
 
         public bool drawLine = true;
@@ -18,7 +17,7 @@
         public ColorUtils.FriggColor lineColor = ColorUtils.FriggColor.Gray;
 
         public TitleAttribute(string title) {
-            this.title = title;
+            this.Text = title;
         }
     }
 
