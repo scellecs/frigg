@@ -6,12 +6,12 @@
     using UnityEngine;
     
     public class TitleDecoratorDrawer : BaseDecoratorDrawer {
-        protected override float GetHeight() {
+        protected override float GetHeight(Rect rect) {
             var attr = (TitleAttribute) this.attribute;
             return attr.lineHeight + SPACE_AMOUNT;
         }
 
-        protected override void DrawDecorator(Rect rect) {
+        protected override void DrawDecorator(Rect rect, object target) {
             var attr = (TitleAttribute) this.attribute;
 
             var style = new GUIStyle {fontSize = attr.fontSize};
@@ -35,7 +35,7 @@
 
             rect.y += SPACE_AMOUNT / 2f;
 
-            EditorGUI.LabelField(rect, new GUIContent(attr.title), style);
+            EditorGUI.LabelField(rect, new GUIContent(attr.Text), style);
             
             rect.y += EditorGUIUtility.singleLineHeight + attr.lineHeight * (SPACE_AMOUNT / 2f);
 
