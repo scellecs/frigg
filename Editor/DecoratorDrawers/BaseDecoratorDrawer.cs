@@ -37,12 +37,8 @@
                 this.propertyInfo = (PropertyInfo) target;
 
             this.attribute = (BaseDecoratorAttribute) attr;
-            var height     = this.GetHeight(rect);
-
-            rect = EditorGUILayout.GetControlRect();
+            
             this.DrawDecorator(rect, target);
-
-            EditorGUILayout.Space(Math.Abs(height - rect.height));
         }
 
         protected abstract float GetHeight(Rect rect);

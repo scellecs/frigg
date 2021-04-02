@@ -37,6 +37,8 @@
             }
             
             GUI.Label(rect, content, style);
+            
+            EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
         }
     }
 }
