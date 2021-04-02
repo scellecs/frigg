@@ -9,7 +9,7 @@
         protected override float GetHeight(Rect rect) {
             var attr = (InfoBoxAttribute) this.attribute;
             
-            return attr.Height + SPACE_AMOUNT;
+            return attr.Height;
         }
 
         protected override void DrawDecorator(Rect rect, object target) {
@@ -52,6 +52,18 @@
             }
 
             GUI.Label(rect, content, style);
+            var newRect = this.GetHeight(EditorGUILayout.GetControlRect());
+
+            if (newRect < InfoBoxAttribute.DEFAULT_HEIGHT) {
+                EditorGUILayout.Space(newRect - (InfoBoxAttribute.DEFAULT_HEIGHT - newRect));
+                return;
+            }
+            
+            if (newRect > InfoBoxAttribute.DEFAULT_HEIGHT) {
+                EditorGUILayout.Space(InfoBoxAttribute.DEFAULT_HEIGHT - (InfoBoxAttribute.DEFAULT_HEIGHT - newRect));
+                return;
+            }
+            EditorGUILayout.Space(attr.Height);
         }
     }
 }

@@ -15,7 +15,8 @@
             drawers = new Dictionary<Type, BaseDecoratorDrawer> {
                 [typeof(TitleAttribute)] = new TitleDecoratorDrawer(),
                 [typeof(InfoBoxAttribute)] = new InfoBoxDecoratorDrawer(),
-                [typeof(RequiredAttribute)] = new RequiredDecoratorDrawer()
+                [typeof(RequiredAttribute)] = new RequiredDecoratorDrawer(),
+                [typeof(PropertySpaceAttribute)] = new PropertySpaceDecoratorDrawer()
             };
 
         public static BaseDecoratorDrawer GetDecorator(IDecoratorAttribute attribute)
