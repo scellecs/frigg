@@ -13,7 +13,8 @@
 
         static DecoratorDrawerUtils() =>
             drawers = new Dictionary<Type, BaseDecoratorDrawer> {
-                [typeof(TitleAttribute)] = new TitleDecoratorDrawer()
+                [typeof(TitleAttribute)] = new TitleDecoratorDrawer(),
+                [typeof(InfoBoxAttribute)] = new InfoBoxDecoratorDrawer()
             };
 
         public static BaseDecoratorDrawer GetDecorator(IDecoratorAttribute attribute)

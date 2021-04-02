@@ -6,15 +6,13 @@
     using UnityEngine;
     
     public class TitleDecoratorDrawer : BaseDecoratorDrawer {
-        private const float SPACE_AMOUNT = 6.0f;
-
         protected override float GetHeight() {
             var attr = (TitleAttribute) this.attribute;
-            return EditorGUIUtility.singleLineHeight + SPACE_AMOUNT + attr.lineHeight;
+            return attr.lineHeight + SPACE_AMOUNT;
         }
 
-        protected override void DrawDecorator(Rect rect, IDecoratorAttribute attribute) {
-            var attr = (TitleAttribute) attribute;
+        protected override void DrawDecorator(Rect rect) {
+            var attr = (TitleAttribute) this.attribute;
 
             var style = new GUIStyle {fontSize = attr.fontSize};
             if (attr.bold) {
