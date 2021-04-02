@@ -1,4 +1,6 @@
 ﻿namespace Assets.Scripts.Editor.DecoratorDrawers {
+    using System;
+    using System.Reflection;
     using Packages.Frigg.Attributes;
     using UnityEditor;
     using UnityEngine;
@@ -6,19 +8,45 @@
     public abstract class BaseDecoratorDrawer {
         public       BaseDecoratorAttribute attribute;
         public const float                  SPACE_AMOUNT = 8.0f;
-        
-        public void OnGUI(Rect rect, IDecoratorAttribute attr) {
 
-            this.attribute = (BaseDecoratorAttribute)attr;
+        public SerializedProperty property     = null;
+        public MethodInfo         methodInfo   = null;
+        public FieldInfo          fieldInfo    = null;
+        public PropertyInfo       propertyInfo = null;
+
+        public void OnGUI(Rect rect, object target, IDecoratorAttribute attr) {
+            var type = target.GetType();
+
+            if (type == typeof(SerializedProperty)) {
+                this.property = (SerializedProperty) target;
+
+                if (attr is RequiredAttribute) {
+                    if (this.property.objectReferenceValue != null) {
+                        return;
+                    }
+                }
+            }
+
+            if (type == typeof(MethodInfo))
+                this.methodInfo = (MethodInfo) target;
             
-            var height = this.GetHeight();
-            EditorGUILayout.Space(height);
+            if (type == typeof(FieldInfo))
+                this.fieldInfo = (FieldInfo) target;
+            
+            if (type == typeof(PropertyInfo))
+                this.propertyInfo = (PropertyInfo) target;
 
-            this.DrawDecorator(rect);
+            this.attribute = (BaseDecoratorAttribute) attr;
+            var height     = this.GetHeight(rect);
+
+            rect = EditorGUILayout.GetControlRect();
+            this.DrawDecorator(rect, target);
+
+            EditorGUILayout.Space(Math.Abs(height - rect.height));
         }
 
-        protected abstract float GetHeight();
+        protected abstract float GetHeight(Rect rect);
 
-        protected abstract void DrawDecorator(Rect rect);
+        protected abstract void DrawDecorator(Rect rect, object target);
     }
 }
