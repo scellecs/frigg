@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Assets.Scripts.Tests
 {
+    using System.Collections.Generic;
+    using Attributes;
+
     public class HideLabelBehaviour : MonoBehaviour {
         
         [HideLabel]
@@ -21,5 +24,11 @@ namespace Assets.Scripts.Tests
         [ShowInInspector]
         [HideLabel]
         private int somePrivateField;
+        
+        [Dropdown("StringValues")]
+        [HideLabel]
+        public string stringValue;
+        
+        private List<string> StringValues { get { return new List<string>() { "A", "B", "C", "D", "E" }; } }
     }
 }

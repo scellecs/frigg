@@ -36,7 +36,7 @@ namespace Assets.Scripts.Editor {
             
             //Check if we need to hide label
             if(CoreUtilities.TryGetAttribute<HideLabelAttribute>(property) != null)
-                label = GUIContent.none;
+                label.text = string.Empty;
 
             //finally - draw PropertyField
             EditorGUI.BeginChangeCheck();
@@ -48,7 +48,7 @@ namespace Assets.Scripts.Editor {
                 EditorGUIUtility.labelWidth = EditorGUIUtility.currentViewWidth - PROPERTY_MIN_WIDTH ;
             }
 
-            EditorGUILayout.PropertyField(property, label, false);
+            EditorGUILayout.PropertyField(property, label, includeChildren);
             
             if(EditorGUI.EndChangeCheck())
                 CoreUtilities.OnDataChanged(property);
@@ -103,7 +103,7 @@ namespace Assets.Scripts.Editor {
 
         public static void Dropdown(
             Rect rect, SerializedObject serializedObject, object target, FieldInfo field,
-            string label, int selectedIndex, string[] options, object[] values)
+            GUIContent label, int selectedIndex, GUIContent[] options, object[] values)
         {
             EditorGUI.BeginChangeCheck();
 
@@ -118,7 +118,6 @@ namespace Assets.Scripts.Editor {
 
         public static object Field(object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
-
                 var objType = value.GetType();
 
                 if (objType == typeof(bool))
