@@ -15,8 +15,13 @@
             var isVisible = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property);
 
             var isDisabled = isVisible == null;
-
-            var content = CoreUtilities.GetGUIContent(property);
+            
+            var content  = CoreUtilities.GetGUIContent(property);
+            
+            var hideAttr = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property);
+            if (hideAttr != null) {
+                content.text = string.Empty;
+            }
             
             //We need this to handle CustomProperty for Readonly behaviour
             using(new EditorGUI.DisabledScope(!isDisabled)){
@@ -30,14 +35,14 @@
                         (property);
 
                     if (attr != null) {
-                        drawer.labelWidth = attr.LabelWitdh;
+                        drawer.labelWidth = attr.LabelWidth;
                     }
 
                     else {
                         var type = CoreUtilities.GetPropertyType(property);
                         attr = (InlinePropertyAttribute) Attribute.GetCustomAttribute(type,
                             typeof(InlinePropertyAttribute));
-                        drawer.labelWidth = attr.LabelWitdh;
+                        drawer.labelWidth = attr.LabelWidth;
                     }
 
                     this.CreateAndDraw(rect, property, content);

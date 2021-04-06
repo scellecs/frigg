@@ -5,6 +5,7 @@
     using Attributes.Meta;
     using UnityEngine;
 
+    [HideMonoScript]
     public class PropertyTooltipBehaviour : MonoBehaviour {
         [PropertyTooltip("It's private non serialized field")]
         [ShowInInspector]

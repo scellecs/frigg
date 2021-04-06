@@ -11,12 +11,12 @@
     [CustomPropertyDrawer(typeof(DropdownAttribute))]
     public class DropdownDrawer : BaseDrawer {
         protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
-                        EditorGUI.BeginProperty(position, new GUIContent(property.displayName), property);
+            EditorGUI.BeginProperty(position, label, property);
             
             var attr          = (DropdownAttribute) this.attribute;
             var target        = property.serializedObject.targetObject;
             var values        = this.GetDropdownValues(property, attr.Name);
-            var selectedValue = fieldInfo.GetValue(target);
+            var selectedValue = this.fieldInfo.GetValue(target);
 
             switch (values) {
                 case IList list: {
@@ -25,23 +25,23 @@
                     var size = list.Count;
                 
                     var valuesArr = new object[size];
-                    var options   = new string[size];
+                    var options   = new GUIContent[size];
 
                     for (var i = 0; i < size; i++) {
-                        valuesArr[i] = list[i];
-                        options[i]   = list[i].ToString();
+                        valuesArr[i]    = list[i];
+                        options[i] = new GUIContent(list[i].ToString());
                     }
 
                     var currIndex = Array.IndexOf(valuesArr, currValue);
             
                     GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                        this.fieldInfo, property.displayName, currIndex, options, valuesArr);
+                        this.fieldInfo, label, currIndex, options, valuesArr);
                     break;
                 }
                 
                 case IDropdownList droplist: {
                     var val     = new List<object>();
-                    var options = new List<string>();
+                    var options = new List<GUIContent>();
 
                     var currIndex = 0;
                     var selected  = 0;
@@ -56,13 +56,13 @@
                             }
 
                             val.Add(current.Value);
-                            options.Add(current.Key);
+                            options.Add(new GUIContent(current.Key));
                         
                             currIndex++;
                         }
 
                         GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                            this.fieldInfo, property.displayName, selected, options.ToArray(), val.ToArray());
+                            this.fieldInfo, label, selected, options.ToArray(), val.ToArray());
                     }
 
                     break;

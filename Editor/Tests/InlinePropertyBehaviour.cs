@@ -4,10 +4,11 @@
     using Attributes.Meta;
     using UnityEngine;
 
+    [HideMonoScript]
     public class InlinePropertyBehaviour : MonoBehaviour {
 
         [HideLabel]
-        [InlineProperty(LabelWitdh = 10)]
+        [InlineProperty(LabelWidth = 10)]
         public Player    player;
         
         public PlayerTwo playerTwo;
@@ -20,7 +21,7 @@
         }
         
         [Serializable]
-        [InlineProperty(LabelWitdh = 10)]
+        [InlineProperty(LabelWidth = 10)]
         public class PlayerTwo {
             public int healthTwo;
             public int armorTwo;

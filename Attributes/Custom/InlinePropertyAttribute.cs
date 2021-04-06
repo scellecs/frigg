@@ -8,10 +8,10 @@ namespace Assets.Scripts.Attributes.Custom {
                     AttributeTargets.Field | AttributeTargets.Property, Inherited = false)]
     public class InlinePropertyAttribute : CustomAttribute {
 
-        public int LabelWitdh { get; set; }
+        public int LabelWidth { get; set; }
 
         public InlinePropertyAttribute() {
-            LabelWitdh = 10;
+            LabelWidth = 10;
         }
     }
 }

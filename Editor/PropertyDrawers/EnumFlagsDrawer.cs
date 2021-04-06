@@ -12,15 +12,13 @@
 
             var attr   = (EnumFlagsAttribute) this.attribute;
             var target = (Enum)CoreUtilities.GetTargetObjectOfProperty(property);
-            
-            var lab = string.IsNullOrEmpty(attr.Name) ? label.text : attr.Name;
 
             if (target == null) {
                 Debug.LogError("Invalid target.");
                 return;
             }
 
-            var enumValues = EditorGUI.EnumFlagsField(position, lab, target);
+            var enumValues = EditorGUI.EnumFlagsField(position, label, target);
 
             property.intValue = (int)Convert.ChangeType(enumValues, target.GetType());
 
