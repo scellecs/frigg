@@ -94,8 +94,15 @@
                     
                     var prop = (SerializedProperty) element;
 
-                    if (prop.name == "m_Script")
-                        continue;
+                    if (prop.name == "m_Script") {
+                        var propType = CoreUtilities.GetTargetObjectWithProperty(prop).GetType();
+                        var hasAttr  = (HideMonoScriptAttribute) Attribute.GetCustomAttribute(propType,
+                            typeof(HideMonoScriptAttribute));
+                        
+                        if (hasAttr != null) {
+                            continue;
+                        }
+                    }
 
                     this.DrawSerializedProperty((SerializedProperty) element);
                 }
