@@ -165,10 +165,6 @@
 
             var canWrite = field.GetCustomAttribute<ReadonlyAttribute>() == null;
 
-            var niceName = ObjectNames.NicifyVariableName(field.Name);
-            
-            var label = field.GetCustomAttribute<HideLabelAttribute>() == null ? $"[private] {niceName}" : string.Empty;
-            
             var attr = field.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
 
             if (attr.Any()) {
@@ -176,17 +172,15 @@
                     DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), field, obj);
                 }
             }
-
+            
+            var content = CoreUtilities.GetGUIContent(field);
+            
             field.SetValue(this.target,
-                GuiUtilities.Field(value, label, canWrite));
+                GuiUtilities.Field(value, content, canWrite));
         }
 
         private void DrawNativeProperty(PropertyInfo prop) {
-            var niceName = ObjectNames.NicifyVariableName(prop.Name);
-            
-            var label = prop.GetCustomAttribute<HideLabelAttribute>() == null ?
-                $"[property] {niceName}" : string.Empty;
-            
+
             var attr = prop.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
 
             if (attr.Any()) {
@@ -194,17 +188,18 @@
                     DecoratorDrawerUtils.GetDecorator(obj).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
                 }
             }
+
+            var content = CoreUtilities.GetGUIContent(prop);
             
             if (!prop.CanWrite || prop.GetCustomAttribute<ReadonlyAttribute>() != null) {
-                
-                GuiUtilities.Field(prop.GetValue(this.target), label, false);
+                GuiUtilities.Field(prop.GetValue(this.target), content, false);
             }
 
             else {
                 var value = prop.GetValue(this.target);
                     
                 prop.SetValue(this.target, GuiUtilities
-                    .Field(prop.GetValue(this.target), label));
+                    .Field(prop.GetValue(this.target), content));
 
                 var secondValue = prop.GetValue(this.target);
 

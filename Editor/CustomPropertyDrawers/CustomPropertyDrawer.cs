@@ -19,6 +19,11 @@
             var label = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property)
                         == null ? new GUIContent(property.displayName) : GUIContent.none;
 
+            var tooltip = CoreUtilities.TryGetAttribute<PropertyTooltipAttribute>(property);
+            if (tooltip != null) {
+                label.tooltip = tooltip.Text;
+            }
+            
             //We need this to handle CustomProperty for Readonly behaviour
             using(new EditorGUI.DisabledScope(!isDisabled)){
                 EditorGUI.BeginChangeCheck();
