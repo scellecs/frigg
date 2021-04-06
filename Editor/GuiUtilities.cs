@@ -20,7 +20,9 @@ namespace Assets.Scripts.Editor {
         
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
-            DrawPropertyField(new Rect(), property, new GUIContent(property.displayName), includeChildren);
+            var content = CoreUtilities.GetGUIContent(property);
+            
+            DrawPropertyField(new Rect(), property, content, includeChildren);
         }
         
         //Draw single property field
@@ -112,70 +114,70 @@ namespace Assets.Scripts.Editor {
             field.SetValue(target, values[newIndex]);
         }
 
-        public static object Field(object value, string label, bool canWrite = true) {
+        public static object Field(object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
 
                 var objType = value.GetType();
 
                 if (objType == typeof(bool))
                 {
-                    return EditorGUILayout.Toggle(label, (bool)value);
+                    return EditorGUILayout.Toggle(content, (bool)value);
                 }
                 if (objType == typeof(int))
                 {
-                    return EditorGUILayout.IntField(label, (int)value);
+                    return EditorGUILayout.IntField(content, (int)value);
                 }
                 if (objType == typeof(long))
                 {
-                    return EditorGUILayout.LongField(label, (long)value);
+                    return EditorGUILayout.LongField(content, (long)value);
                 }
                 if (objType == typeof(float))
                 {
-                    return EditorGUILayout.FloatField(label, (float)value);
+                    return EditorGUILayout.FloatField(content, (float)value);
                 }
                 if (objType == typeof(double))
                 {
-                    return EditorGUILayout.DoubleField(label, (double)value);
+                    return EditorGUILayout.DoubleField(content, (double)value);
                 }
                 if (objType == typeof(string))
                 {
-                    return EditorGUILayout.TextField(label, (string)value);
+                    return EditorGUILayout.TextField(content, (string)value);
                 }
                 if (objType == typeof(Vector2))
                 {
-                    return EditorGUILayout.Vector2Field(label, (Vector2)value);
+                    return EditorGUILayout.Vector2Field(content, (Vector2)value);
                 }
                 if (objType == typeof(Vector3))
                 {
-                    return EditorGUILayout.Vector3Field(label, (Vector3)value);
+                    return EditorGUILayout.Vector3Field(content, (Vector3)value);
                 }
                 if (objType == typeof(Vector4))
                 {
-                    return EditorGUILayout.Vector4Field(label, (Vector4)value);
+                    return EditorGUILayout.Vector4Field(content, (Vector4)value);
                 }
                 if (objType == typeof(Color))
                 {
-                    return EditorGUILayout.ColorField(label, (Color)value);
+                    return EditorGUILayout.ColorField(content, (Color)value);
                 }
                 if (objType == typeof(Bounds))
                 {
-                    return EditorGUILayout.BoundsField(label, (Bounds)value);
+                    return EditorGUILayout.BoundsField(content, (Bounds)value);
                 }
                 if (objType == typeof(Rect))
                 {
-                    return EditorGUILayout.RectField(label, (Rect)value);
+                    return EditorGUILayout.RectField(content, (Rect)value);
                 }
                 if (typeof(Object).IsAssignableFrom(objType))
                 {
-                    return EditorGUILayout.ObjectField(label, (Object)value, objType, true);
+                    return EditorGUILayout.ObjectField(content, (Object)value, objType, true);
                 }
                 if (objType.BaseType == typeof(Enum))
                 {
-                    return EditorGUILayout.EnumPopup(label, (Enum)value);
+                    return EditorGUILayout.EnumPopup(content, (Enum)value);
                 }
                 if (objType.BaseType == typeof(TypeInfo))
                 {
-                    return EditorGUILayout.TextField(label, value.ToString());
+                    return EditorGUILayout.TextField(content, value.ToString());
                 }
             }
 

@@ -255,9 +255,49 @@ namespace Assets.Scripts.Utils {
                 }
             }
         }
-    
-        public static object GetDefaultValue(Type t) => t.IsValueType ? Activator.CreateInstance(t) : null;
-    
+
+        public static GUIContent GetGUIContent(FieldInfo field) {
+            var niceName = ObjectNames.NicifyVariableName(field.Name);
+            var label = field.GetCustomAttribute<HideLabelAttribute>() == null ? 
+                $"[private] {niceName}" : string.Empty;
+            
+            var content = new GUIContent(label);
+            var tooltip = field.GetCustomAttribute<PropertyTooltipAttribute>();
+            if (tooltip != null) {
+                content.tooltip = tooltip.Text;
+            }
+
+            return content;
+        }
+
+        
+        public static GUIContent GetGUIContent(PropertyInfo property) {
+            var niceName = ObjectNames.NicifyVariableName(property.Name);
+            var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
+                $"[property] {niceName}" : string.Empty;
+            
+            var content = new GUIContent(label);
+            var tooltip = property.GetCustomAttribute<PropertyTooltipAttribute>();
+            if (tooltip != null) {
+                content.tooltip = tooltip.Text;
+            }
+
+            return content;
+        }
+        
+        public static GUIContent GetGUIContent(SerializedProperty property) {
+            var label = TryGetAttribute<HideLabelAttribute>(property) == null ? 
+                $"{property.displayName}" : string.Empty;
+            
+            var content = new GUIContent(label);
+            var tooltip = TryGetAttribute<PropertyTooltipAttribute>(property);
+            if (tooltip != null) {
+                content.tooltip = tooltip.Text;
+            }
+
+            return content;
+        }
+        
         public static bool IsUnitySerialized(this FieldInfo fieldInfo) {
             var attr = fieldInfo.GetCustomAttributes(true);
             if (attr.Any(x => x is NonSerializedAttribute))

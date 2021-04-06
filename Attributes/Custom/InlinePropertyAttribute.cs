@@ -11,7 +11,7 @@ namespace Assets.Scripts.Attributes.Custom {
         public int LabelWitdh { get; set; }
 
         public InlinePropertyAttribute() {
-            LabelWitdh = 0;
+            LabelWitdh = 10;
         }
     }
 }
