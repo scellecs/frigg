@@ -47,7 +47,7 @@ namespace Assets.Scripts.Editor {
                 EditorGUIUtility.wideMode   = true;
                 EditorGUIUtility.labelWidth = EditorGUIUtility.currentViewWidth - PROPERTY_MIN_WIDTH ;
             }
-            
+
             EditorGUILayout.PropertyField(property, label, false);
             
             if(EditorGUI.EndChangeCheck())
@@ -66,6 +66,8 @@ namespace Assets.Scripts.Editor {
             }
             
             var type = CoreUtilities.GetPropertyType(property);
+            if (type == null)
+                return false;
 
             //Not used directly on the property
             if (type.IsSerializable) {
