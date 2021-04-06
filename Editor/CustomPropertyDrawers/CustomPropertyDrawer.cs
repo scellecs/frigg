@@ -15,8 +15,13 @@
             var isVisible = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property);
 
             var isDisabled = isVisible == null;
-
-            var content = CoreUtilities.GetGUIContent(property);
+            
+            var content  = CoreUtilities.GetGUIContent(property);
+            
+            var hideAttr = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property);
+            if (hideAttr != null) {
+                content.text = string.Empty;
+            }
             
             //We need this to handle CustomProperty for Readonly behaviour
             using(new EditorGUI.DisabledScope(!isDisabled)){
