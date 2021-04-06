@@ -35,14 +35,14 @@
                         (property);
 
                     if (attr != null) {
-                        drawer.labelWidth = attr.LabelWitdh;
+                        drawer.labelWidth = attr.LabelWidth;
                     }
 
                     else {
                         var type = CoreUtilities.GetPropertyType(property);
                         attr = (InlinePropertyAttribute) Attribute.GetCustomAttribute(type,
                             typeof(InlinePropertyAttribute));
-                        drawer.labelWidth = attr.LabelWitdh;
+                        drawer.labelWidth = attr.LabelWidth;
                     }
 
                     this.CreateAndDraw(rect, property, content);

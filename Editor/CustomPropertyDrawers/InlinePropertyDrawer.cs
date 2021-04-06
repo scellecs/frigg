@@ -11,8 +11,9 @@
         public int labelWidth;
         
         protected override void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label) {
-
+            var cachedWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = this.labelWidth;
+            
             EditorGUILayout.BeginHorizontal();
             if(label != GUIContent.none)
                EditorGUILayout.LabelField(label);
@@ -26,7 +27,7 @@
             }
 
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+            EditorGUIUtility.labelWidth = cachedWidth;
         }
     }
 }
