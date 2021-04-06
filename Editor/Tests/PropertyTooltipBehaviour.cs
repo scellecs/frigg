@@ -1,5 +1,7 @@
 ﻿namespace Assets.Scripts.Tests {
+    using System;
     using Attributes;
+    using Attributes.Custom;
     using Attributes.Meta;
     using UnityEngine;
 
@@ -19,6 +21,16 @@
         [Button]
         public void ButtonTest() {
             
+        }
+
+        [InlineProperty]
+        [PropertyTooltip("Inline stuff")]
+        public SomeSerializable some;
+        
+        [Serializable]
+        public struct SomeSerializable {
+            public int one;
+            public int two;
         }
     }
 }
