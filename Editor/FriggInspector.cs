@@ -69,25 +69,24 @@
                     if (element == null)
                         return;
                     
-                    var type = element.GetType();
+                    var type = element.GetType().GetTypeInfo();
 
                     if (type.FullName == null) {
                         continue;
                     }
 
-                    //Todo: Handle this better. (e.g type == typeof(PropertyField)...)
-                    if (type.FullName.Contains("MonoProperty")) {
+                    if (type.IsSubclassOf(typeof(PropertyInfo))) { 
                         this.DrawNativeProperty((PropertyInfo) element);
                     }
-
-                    if (type.FullName.Contains("MonoMethod")) {
-                        this.DrawButton((MethodInfo) element);
+                    
+                    if (type.IsSubclassOf(typeof(MethodInfo))) {
+                            this.DrawButton((MethodInfo) element);
                     }
 
-                    if (type.FullName.Contains("MonoField")) {
+                    if (type.IsSubclassOf(typeof(FieldInfo))) {
                         this.DrawNonSerializedField((FieldInfo) element);
                     }
-
+                    
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
