@@ -1,5 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Packages.Frigg.Attributes;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     public class RequiredBehaviour : MonoBehaviour {

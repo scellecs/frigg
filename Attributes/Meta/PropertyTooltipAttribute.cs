@@ -1,6 +1,5 @@
-﻿namespace Assets.Scripts.Attributes.Meta {
+﻿namespace Frigg {
     using System;
-    using Frigg;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
     public class PropertyTooltipAttribute : Attribute, IAttribute {

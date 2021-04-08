@@ -1,14 +1,12 @@
-﻿namespace Assets.Scripts.Editor.PropertyDrawers {
+﻿namespace Frigg.Editor {
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using Attributes;
     using UnityEditor;
     using UnityEngine;
     using Utils;
-    using Object = UnityEngine.Object;
 
-    [CustomPropertyDrawer(typeof(DropdownAttribute))]
+    [UnityEditor.CustomPropertyDrawer(typeof(DropdownAttribute))]
     public class DropdownDrawer : BaseDrawer {
         protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);

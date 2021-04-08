@@ -1,6 +1,5 @@
-﻿namespace Assets.Scripts.Tests {
+﻿namespace Frigg.Tests {
     using System;
-    using Attributes;
     using UnityEngine;
 
     public class EnumFlagsBehaviour : MonoBehaviour {

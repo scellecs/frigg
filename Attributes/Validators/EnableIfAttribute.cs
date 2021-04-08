@@ -1,6 +1,4 @@
-﻿namespace Packages.Frigg.Attributes.Validators {
-    using System;
-
+﻿namespace Frigg {
     public class EnableIfAttribute : ValidatorAttribute {
         public EnableIfAttribute(string name) : base(name) {
         }

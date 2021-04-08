@@ -1,8 +1,5 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes;
-    using Attributes.Meta;
-    using Packages.Frigg;
-    using Packages.Frigg.Attributes;
+﻿namespace Frigg.Tests {
+    using Frigg;
     using UnityEngine;
 
     public class TitleBehaviour : MonoBehaviour {

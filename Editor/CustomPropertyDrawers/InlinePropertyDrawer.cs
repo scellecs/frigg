@@ -1,9 +1,6 @@
-﻿namespace Assets.Scripts.Editor.PropertyDrawers {
-    using Attributes.Custom;
+﻿namespace Frigg.Editor {
     using UnityEditor;
     using UnityEngine;
-    using Utils;
-    using CustomPropertyDrawer = CustomPropertyDrawers.CustomPropertyDrawer;
 
     public class InlinePropertyDrawer : CustomPropertyDrawer {
         public static readonly InlinePropertyDrawer instance = new InlinePropertyDrawer();

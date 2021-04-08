@@ -1,7 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes;
-    using Attributes.Meta;
-    using Packages.Frigg.Attributes;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     public class InfoBoxBehaviour : MonoBehaviour {

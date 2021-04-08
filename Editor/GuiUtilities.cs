@@ -1,18 +1,10 @@
-﻿using Assets.Scripts.Attributes.Meta;
-
-namespace Assets.Scripts.Editor {
+﻿namespace Frigg.Editor {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Attributes;
-    using Attributes.Custom;
-    using CustomPropertyDrawers;
     using UnityEditor;
     using UnityEngine;
     using Utils;
-    using CustomAttributeExtensions = CustomPropertyDrawers.CustomAttributeExtensions;
-    using CustomPropertyDrawer = UnityEditor.CustomPropertyDrawer;
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {

@@ -1,6 +1,5 @@
-﻿namespace Assets.Scripts.Tests {
+﻿namespace Frigg.Tests {
     using System.Collections.Generic;
-    using Attributes;
     using UnityEngine;
     using Utils;
 

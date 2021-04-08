@@ -1,6 +1,5 @@
-﻿namespace Assets.Scripts.Attributes.Meta {
+﻿namespace Frigg {
     using System;
-    using Frigg;
 
     public class OnValueChangedAttribute : Attribute, IAttribute {
 

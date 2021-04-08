@@ -1,6 +1,5 @@
-﻿namespace Packages.Frigg.Attributes {
+﻿namespace Frigg {
     using System;
-    using Assets.Scripts.Attributes;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
     public class TitleAttribute : BaseDecoratorAttribute {

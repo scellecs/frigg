@@ -1,7 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using System.Collections.Generic;
-    using Attributes.Custom;
-    using Attributes.Meta;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     public class ShowInInspectorBehaviour : MonoBehaviour {

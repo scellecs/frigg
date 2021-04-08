@@ -1,5 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes.Meta;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     public class ListDrawerSettingsBehaviour : MonoBehaviour {

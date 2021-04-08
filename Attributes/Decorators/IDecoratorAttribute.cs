@@ -1,6 +1,4 @@
-﻿namespace Packages.Frigg.Attributes {
-    using global::Frigg;
-
+﻿namespace Frigg {
     public interface IDecoratorAttribute : IAttribute {
     }
 }

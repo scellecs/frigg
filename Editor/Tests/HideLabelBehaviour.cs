@@ -1,10 +1,7 @@
-﻿using Assets.Scripts.Attributes.Meta;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets.Scripts.Tests
-{
+namespace Frigg.Tests {
     using System.Collections.Generic;
-    using Attributes;
 
     public class HideLabelBehaviour : MonoBehaviour {
         

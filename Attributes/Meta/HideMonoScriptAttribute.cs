@@ -1,6 +1,5 @@
-﻿namespace Assets.Scripts.Attributes.Meta {
+﻿namespace Frigg {
     using System;
-    using Frigg;
 
     [AttributeUsage(AttributeTargets.Class)]
     public class HideMonoScriptAttribute : Attribute, IAttribute {

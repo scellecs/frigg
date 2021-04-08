@@ -1,8 +1,5 @@
-﻿namespace Assets.Scripts.Attributes.Custom {
+﻿namespace Frigg {
     using System;
-    using System.Collections.Generic;
-    using Frigg;
-    using UnityEditor;
 
     public class CustomAttribute : Attribute, IAttribute {
 

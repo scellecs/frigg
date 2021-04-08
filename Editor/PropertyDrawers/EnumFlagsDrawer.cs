@@ -1,11 +1,10 @@
-﻿namespace Assets.Scripts.Editor.PropertyDrawers {
+﻿namespace Frigg.Editor {
     using System;
-    using Attributes;
     using UnityEditor;
     using UnityEngine;
     using Utils;
 
-    [CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
+    [UnityEditor.CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
     public class EnumFlagsDrawer : BaseDrawer {
         protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);

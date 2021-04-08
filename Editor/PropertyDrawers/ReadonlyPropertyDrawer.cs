@@ -1,9 +1,8 @@
-﻿namespace Assets.Scripts.Editor.PropertyDrawers {
-    using Attributes;
+﻿namespace Frigg.Editor {
     using UnityEditor;
     using UnityEngine;
 
-    [CustomPropertyDrawer(typeof(ReadonlyAttribute))]
+    [UnityEditor.CustomPropertyDrawer(typeof(ReadonlyAttribute))]
     public class ReadonlyPropertyDrawer : BaseDrawer {
         protected override void OnDrawerGUI(Rect rect, SerializedProperty prop, GUIContent label) {
             using (new EditorGUI.DisabledScope(true)) {

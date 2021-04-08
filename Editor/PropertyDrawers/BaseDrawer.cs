@@ -1,6 +1,4 @@
-﻿namespace Assets.Scripts.Editor.PropertyDrawers {
-    using System;
-    using Attributes.Meta;
+﻿namespace Frigg.Editor {
     using UnityEngine;
     using UnityEditor;
     using Utils;

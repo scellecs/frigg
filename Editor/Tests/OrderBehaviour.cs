@@ -1,7 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes;
-    using Attributes.Custom;
-    using Attributes.Meta;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     [HideMonoScript]

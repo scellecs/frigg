@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts.Utils {
+﻿namespace Frigg.Utils {
     using System.Collections;
     using System.Collections.Generic;
 

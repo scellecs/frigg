@@ -1,4 +1,4 @@
-﻿namespace Packages.Frigg.Attributes {
+﻿namespace Frigg {
     using System;
 
     public class BaseDecoratorAttribute : Attribute, IDecoratorAttribute {

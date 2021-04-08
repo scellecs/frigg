@@ -7,14 +7,8 @@ using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
-namespace Assets.Scripts.Utils {
-    using Attributes.Meta;
-    using Editor.DecoratorDrawers;
-    using Packages.Frigg.Attributes;
-    using Packages.Frigg.Attributes.Validators;
-
-    public static class CoreUtilities
-    {
+namespace Frigg.Utils {
+    public static class CoreUtilities {
         #region reflection
 
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {

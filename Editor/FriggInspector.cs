@@ -1,14 +1,8 @@
-﻿namespace Assets.Scripts.Editor {
+﻿namespace Frigg.Editor {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Attributes;
-    using Attributes.Custom;
-    using Attributes.Meta;
-    using CustomPropertyDrawers;
-    using Frigg;
-    using Packages.Frigg.Attributes;
     using UnityEditor;
     using UnityEngine;
     using Utils;

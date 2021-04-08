@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts.Attributes.Meta {
+﻿namespace Frigg {
     using System;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]

@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Assets.Scripts.Attributes {
+﻿namespace Frigg {
     using System;
 
     [AttributeUsage(AttributeTargets.Method)]
@@ -8,7 +6,7 @@ namespace Assets.Scripts.Attributes {
         public string Text { get; private set; }
 
         public ButtonAttribute(string text = "Button") {
-            Text = text;
+            this.Text = text;
         }
     }
 }

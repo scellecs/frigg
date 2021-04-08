@@ -1,7 +1,6 @@
-﻿namespace Assets.Scripts.Editor.CustomPropertyDrawers {
+﻿namespace Frigg.Editor {
     using System;
     using System.Collections.Generic;
-    using Attributes.Meta;
     using UnityEditor;
     using UnityEditor.Graphs;
     using UnityEditorInternal;

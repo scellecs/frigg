@@ -1,6 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes;
-    using Attributes.Meta;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     public class ButtonBehaviour : MonoBehaviour {

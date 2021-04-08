@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts.Attributes.Custom {
+﻿namespace Frigg {
     using System;
 
     [AttributeUsage(AttributeTargets.Field)]

@@ -1,6 +1,4 @@
-﻿namespace Packages.Frigg.Attributes.Validators {
-    using System;
-
+﻿namespace Frigg {
     public class HideIfAttribute : ValidatorAttribute {
         public HideIfAttribute(string name) : base(name) {
         }

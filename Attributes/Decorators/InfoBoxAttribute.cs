@@ -1,6 +1,5 @@
-﻿namespace Packages.Frigg.Attributes {
+﻿namespace Frigg {
     using System;
-    using UnityEditor;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
     public class InfoBoxAttribute : BaseDecoratorAttribute {
@@ -28,7 +27,7 @@
         }
 
         public InfoBoxAttribute(string text) {
-            Text = text;
+            this.Text = text;
         }
 
         public bool HasCustomHeight => this.height != DEFAULT_HEIGHT;

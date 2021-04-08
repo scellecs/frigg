@@ -1,5 +1,5 @@
-﻿namespace Assets.Scripts.Editor.DecoratorDrawers {
-    using Packages.Frigg.Attributes;
+﻿namespace Frigg.Editor {
+    using Frigg;
     using UnityEditor;
     using UnityEngine;
 

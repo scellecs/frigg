@@ -1,7 +1,5 @@
-﻿namespace Assets.Scripts.Tests {
+﻿namespace Frigg.Tests {
     using System.Collections.Generic;
-    using Attributes.Custom;
-    using Attributes.Meta;
     using UnityEngine;
 
     public class ReorderableListBehaviour : MonoBehaviour{

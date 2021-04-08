@@ -1,6 +1,5 @@
-﻿namespace Packages.Frigg.Attributes.Validators {
+﻿namespace Frigg {
     using System;
-    using global::Frigg;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method,
         Inherited = false, AllowMultiple = true)]

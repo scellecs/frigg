@@ -1,8 +1,5 @@
-﻿using System;
-
-namespace Assets.Scripts.Attributes.Custom {
-    using Custom;
-    using Frigg;
+﻿namespace Frigg {
+    using System;
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | 
                     AttributeTargets.Field | AttributeTargets.Property, Inherited = false)]
@@ -11,7 +8,7 @@ namespace Assets.Scripts.Attributes.Custom {
         public int LabelWidth { get; set; }
 
         public InlinePropertyAttribute() {
-            LabelWidth = 10;
+            this.LabelWidth = 10;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Packages.Frigg {
+﻿namespace Frigg {
     using System;
     using UnityEngine;
 

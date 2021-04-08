@@ -1,6 +1,4 @@
-﻿namespace Assets.Scripts.Tests {
-    using Attributes.Meta;
-    using Packages.Frigg.Attributes.Validators;
+﻿namespace Frigg.Tests {
     using UnityEngine;
 
     [HideMonoScript]

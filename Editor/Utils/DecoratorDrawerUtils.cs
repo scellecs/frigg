@@ -1,12 +1,8 @@
-﻿namespace Assets.Scripts.Utils {
+﻿namespace Frigg.Utils {
     using System;
     using System.Collections.Generic;
-    using Attributes.Custom;
-    using Editor.DecoratorDrawers;
-    using Editor.PropertyDrawers;
-    using Packages.Frigg.Attributes;
-    using UnityEditor;
-    using CustomPropertyDrawer = Editor.CustomPropertyDrawers.CustomPropertyDrawer;
+    using Editor;
+    using Frigg;
 
     public static class DecoratorDrawerUtils {
         private static readonly Dictionary<Type, BaseDecoratorDrawer> drawers;
