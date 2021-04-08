@@ -9,15 +9,23 @@
         public sealed override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginChangeCheck();
 
-            label = CoreUtilities.GetGUIContent(property);
-            var hideAttr = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property);
-            if(hideAttr != null)
-                label.text = string.Empty;
+            var isVisible = CoreUtilities.IsPropertyVisible(property);
+            if (!isVisible)
+                return;
 
-            this.OnDrawerGUI(position, property, label);
-            
-            if (EditorGUI.EndChangeCheck()) {
-                CoreUtilities.OnDataChanged(property);
+            var isEnabled = CoreUtilities.IsPropertyEnabled(property);
+
+            using (new EditorGUI.DisabledScope(!isEnabled)) {
+                label = CoreUtilities.GetGUIContent(property);
+                var hideAttr = CoreUtilities.TryGetAttribute<HideLabelAttribute>(property);
+                if (hideAttr != null)
+                    label.text = string.Empty;
+
+                this.OnDrawerGUI(position, property, label);
+
+                if (EditorGUI.EndChangeCheck()) {
+                    CoreUtilities.OnDataChanged(property);
+                }
             }
         }
 
