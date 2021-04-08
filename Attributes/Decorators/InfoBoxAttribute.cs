@@ -4,7 +4,7 @@
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
     public class InfoBoxAttribute : BaseDecoratorAttribute {
-        public const int DEFAULT_HEIGHT = 30;
+        public const int DEFAULT_HEIGHT = 38;
         private const int DEFAULT_FONT = 14;
         
         private InfoMessageType infoMessageType = InfoMessageType.Info;

@@ -1,9 +1,11 @@
 ﻿namespace Assets.Scripts.Editor.DecoratorDrawers {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using Packages.Frigg.Attributes;
     using UnityEditor;
     using UnityEditor.VersionControl;
     using UnityEngine;
+    using Random = System.Random;
 
     public class InfoBoxDecoratorDrawer : BaseDecoratorDrawer {
         protected override float GetHeight(Rect rect) {
@@ -11,12 +13,13 @@
             
             return attr.Height;
         }
-
+        
         protected override void DrawDecorator(Rect rect, object target) {
             var attr = (InfoBoxAttribute) this.attribute;
 
-            rect.height += attr.Height;
-            
+            rect.height = attr.HasCustomHeight ? attr.Height : InfoBoxAttribute.DEFAULT_HEIGHT;
+            rect.width  = EditorGUIUtility.currentViewWidth;
+
             MessageType messageType;
             switch (attr.InfoMessageType) {
                 case InfoMessageType.None:
@@ -45,25 +48,14 @@
             //we need to recalculate height each time our text wrapping to the next line
             if (!attr.HasCustomHeight) {
                 var height = style.CalcHeight(content, rect.width);
-                if (rect.height < height) {
-                    var diff = Math.Abs(height - rect.height);
+                if (rect.height < height) { 
+                    var diff    =  Math.Abs(height - rect.height);
                     rect.height += diff;
                 }
             }
-
-            GUI.Label(rect, content, style);
-            var newRect = this.GetHeight(EditorGUILayout.GetControlRect());
-
-            if (newRect < InfoBoxAttribute.DEFAULT_HEIGHT) {
-                EditorGUILayout.Space(newRect - (InfoBoxAttribute.DEFAULT_HEIGHT - newRect));
-                return;
-            }
             
-            if (newRect > InfoBoxAttribute.DEFAULT_HEIGHT) {
-                EditorGUILayout.Space(InfoBoxAttribute.DEFAULT_HEIGHT - (InfoBoxAttribute.DEFAULT_HEIGHT - newRect));
-                return;
-            }
-            EditorGUILayout.Space(attr.Height);
+            EditorGUILayout.Space(rect.height);
+            GUI.Label(rect, content, style);
         }
     }
 }
