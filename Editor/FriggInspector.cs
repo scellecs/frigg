@@ -59,16 +59,18 @@
 
             if(this.mixedData.Count <= 0)
                 return;
-            
-            var max    = this.mixedData.Max(x => x.Key);
 
-            for (var i = 0; i <= max; i++) {
+            var min = this.mixedData.Min(x => x.Key);
+            var max = this.mixedData.Max(x => x.Key);
+
+            for (var i = min; i <= max; i++) {
                 var elements = this.mixedData[i];
 
-                foreach (var element in elements) {
-                    if (element == null)
-                        return;
-                    
+                var enumerable = elements.ToList();
+                if(!enumerable.Any())
+                    continue;
+
+                foreach (var element in enumerable) {
                     var type = element.GetType().GetTypeInfo();
 
                     if (type.FullName == null) {
@@ -221,37 +223,42 @@
             }
         }
 
-        private static ILookup<int, object> SortAll(IEnumerable<SerializedProperty> serProps, 
-            IEnumerable<PropertyInfo> props, IEnumerable<FieldInfo> fields, 
+        private static ILookup<int, object> SortAll(IEnumerable<SerializedProperty> serProps,
+            IEnumerable<PropertyInfo> props, IEnumerable<FieldInfo> fields,
             IEnumerable<MethodInfo> methods) {
 
             var pairs = new List<KeyValuePair<int, object>>();
 
             foreach (var method in methods) {
                 var attr = (OrderAttribute) method.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
-                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, method) 
+                pairs.Add(attr != null
+                    ? new KeyValuePair<int, object>(attr.Order, method)
                     : new KeyValuePair<int, object>(0, method));
             }
 
             foreach (var prop in serProps) {
                 var attr = CoreUtilities.TryGetAttribute<OrderAttribute>(prop);
-                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, prop)
-                    : new KeyValuePair<int, object>(0, prop));
-            }
-            
-            foreach (var field in fields) {
-                var attr = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
-                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, field) 
-                    : new KeyValuePair<int, object>(0, field));
-            }
-            
-            foreach (var prop in props) {
-                var attr = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
-                pairs.Add(attr != null ? new KeyValuePair<int, object>(attr.Order, prop) 
+                pairs.Add(attr != null
+                    ? new KeyValuePair<int, object>(attr.Order, prop)
                     : new KeyValuePair<int, object>(0, prop));
             }
 
-            return pairs.OrderBy(s => s.Key).ToLookup(pair =>
+            foreach (var field in fields) {
+                var attr = (OrderAttribute) field.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                pairs.Add(attr != null
+                    ? new KeyValuePair<int, object>(attr.Order, field)
+                    : new KeyValuePair<int, object>(0, field));
+            }
+
+            foreach (var prop in props) {
+                var attr = (OrderAttribute) prop.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                pairs.Add(attr != null
+                    ? new KeyValuePair<int, object>(attr.Order, prop)
+                    : new KeyValuePair<int, object>(0, prop));
+            }
+
+            var kvPairs = pairs.OrderBy(s => s.Key);
+            return kvPairs.ToLookup(pair =>
                 pair.Key, pair => pair.Value);
         }
     }
