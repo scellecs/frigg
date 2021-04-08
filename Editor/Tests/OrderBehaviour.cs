@@ -4,6 +4,7 @@
     using Attributes.Meta;
     using UnityEngine;
 
+    [HideMonoScript]
     public class OrderBehaviour : MonoBehaviour {
 
         [Readonly, Order(3)]
@@ -39,5 +40,19 @@
         [Order]
         [ShowInInspector]
         public int TestProperty { get; set;}
+        
+        [Order(-1)]
+        [ShowInInspector]
+        public int TestPropertySuperSecond { get; set;}
+        
+        [Order(-2)]
+        [ShowInInspector]
+        public int TestPropertySuperFirst { get; set;}
+
+        [Order(-2)]
+        [Button]
+        public void TestButtonSuperDuperFirst() {
+            
+        }
     }
 }
