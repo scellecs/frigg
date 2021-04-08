@@ -245,6 +245,108 @@ namespace Frigg.Utils {
 
             return obj;
         }
+        
+        public static void SetDefaultValue(SerializedProperty property, Type type) {
+            if (type == typeof(bool)) {
+                property.boolValue = default;
+            }
+            if (type == typeof(int))
+            {
+                property.intValue = default;
+            }
+            if (type == typeof(long))
+            {
+                property.longValue = default;
+            }
+            if (type == typeof(float))
+            {
+                property.floatValue = default;
+            }
+            if (type == typeof(double))
+            {
+                property.doubleValue = default;
+            }
+            if (type == typeof(string))
+            {
+                property.stringValue = default;
+            }
+            if (type == typeof(Vector2))
+            {
+                property.vector2Value = default;
+            }
+            if (type == typeof(Vector3))
+            {
+                property.vector3Value = default;
+            }
+            if (type == typeof(Vector4))
+            {
+                property.vector4Value = default;
+            }
+            if (type == typeof(Color))
+            {
+                property.colorValue = default;
+            }
+            if (type == typeof(Bounds))
+            {
+                property.boundsValue = default;
+            }
+            if (type == typeof(Rect))
+            {
+                property.rectValue = default;
+            }
+        }
+        
+        public static bool HasDefaultValue(SerializedProperty property, Type type) {
+            if (type == typeof(bool)) {
+                return property.boolValue == default;
+            }
+            if (type == typeof(int))
+            {
+                return property.intValue == default;
+            }
+            if (type == typeof(long))
+            {
+                return property.longValue == default;
+            }
+            if (type == typeof(float))
+            {
+                return property.floatValue == default;
+            }
+            if (type == typeof(double))
+            {
+                return property.doubleValue == default;
+            }
+            if (type == typeof(string))
+            {
+                return property.stringValue == default;
+            }
+            if (type == typeof(Vector2))
+            {
+                return property.vector2Value == default;
+            }
+            if (type == typeof(Vector3))
+            {
+                return property.vector3Value == default;
+            }
+            if (type == typeof(Vector4))
+            {
+                return property.vector4Value == default;
+            }
+            if (type == typeof(Color))
+            {
+                return property.colorValue == default;
+            }
+            if (type == typeof(Bounds))
+            {
+                return property.boundsValue == default;
+            }
+            if (type == typeof(Rect))
+            {
+                return property.rectValue == default;
+            }
+
+            return true;
+        }
     
         private static object GetValue_Imp(object source, string name)
         {
