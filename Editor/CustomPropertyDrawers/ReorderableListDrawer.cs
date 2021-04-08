@@ -80,7 +80,7 @@
 
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
 
-                SetDefaultValue(element, type);
+                CoreUtilities.SetDefaultValue(element, type);
             };
 
             reorderableList.onRemoveCallback = delegate {
@@ -95,56 +95,6 @@
 
             reorderableList.elementHeightCallback = index
                 => EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
-        }
-        
-        private static void SetDefaultValue(SerializedProperty property, Type type) {
-            if (type == typeof(bool)) {
-                property.boolValue = default;
-            }
-            if (type == typeof(int))
-            {
-                property.intValue = default;
-            }
-            if (type == typeof(long))
-            {
-                property.longValue = default;
-            }
-            if (type == typeof(float))
-            {
-                property.floatValue = default;
-            }
-            if (type == typeof(double))
-            {
-                property.doubleValue = default;
-            }
-            if (type == typeof(string))
-            {
-                property.stringValue = default;
-            }
-            if (type == typeof(Vector2))
-            {
-                property.vector2Value = default;
-            }
-            if (type == typeof(Vector3))
-            {
-                property.vector3Value = default;
-            }
-            if (type == typeof(Vector4))
-            {
-                property.vector4Value = default;
-            }
-            if (type == typeof(Color))
-            {
-                property.colorValue = default;
-            }
-            if (type == typeof(Bounds))
-            {
-                property.boundsValue = default;
-            }
-            if (type == typeof(Rect))
-            {
-                property.rectValue = default;
-            }
         }
     }
 }
