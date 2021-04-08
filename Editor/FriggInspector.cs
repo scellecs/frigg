@@ -76,7 +76,7 @@
                     }
                     
                     if (type.IsSubclassOf(typeof(MethodInfo))) {
-                            this.DrawButton((MethodInfo) element);
+                        this.DrawButton((MethodInfo) element);
                     }
 
                     if (type.IsSubclassOf(typeof(FieldInfo))) {

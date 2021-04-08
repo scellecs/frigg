@@ -8,14 +8,14 @@
         
         private InfoMessageType infoMessageType = InfoMessageType.Info;
 
-        private int height   = DEFAULT_HEIGHT;
-        private int fontSize = DEFAULT_FONT;
-        
+        private int    height   = DEFAULT_HEIGHT;
+        private int    fontSize = DEFAULT_FONT;
+
         public InfoMessageType InfoMessageType {
             get => this.infoMessageType;
             set => this.infoMessageType = value;
         }
-
+        
         public int Height {
             get => this.height;
             set => this.height = value;

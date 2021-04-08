@@ -1,10 +1,7 @@
 ﻿namespace Frigg.Editor {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using UnityEditor;
-    using UnityEditor.VersionControl;
     using UnityEngine;
-    using Random = System.Random;
 
     public class InfoBoxDecoratorDrawer : BaseDecoratorDrawer {
         protected override float GetHeight(Rect rect) {
