@@ -12,9 +12,11 @@
     public abstract class CustomPropertyDrawer {
         public void OnGUI(Rect rect, SerializedProperty property) {
 
-            var isVisible = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property);
+            var isVisible = CoreUtilities.IsPropertyVisible(property);
+            if (!isVisible)
+                return;
 
-            var isDisabled = isVisible == null;
+            var isEnabled = CoreUtilities.IsPropertyEnabled(property);
             
             var content  = CoreUtilities.GetGUIContent(property);
             
@@ -23,8 +25,8 @@
                 content.text = string.Empty;
             }
             
-            //We need this to handle CustomProperty for Readonly behaviour
-            using(new EditorGUI.DisabledScope(!isDisabled)){
+            //We need this to handle CustomProperty for Readonly & Validator behaviour
+            using(new EditorGUI.DisabledScope(!isEnabled)){
                 EditorGUI.BeginChangeCheck();
 
                 if (this.GetType() == typeof(InlinePropertyDrawer)) {
