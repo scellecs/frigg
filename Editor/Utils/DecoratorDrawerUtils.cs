@@ -19,7 +19,7 @@
                 [typeof(PropertySpaceAttribute)] = new PropertySpaceDecoratorDrawer()
             };
 
-        public static BaseDecoratorDrawer GetDecorator(IDecoratorAttribute attribute)
-            => drawers.TryGetValue(attribute.GetType(), out var drawer) ? drawer : null;
+        public static BaseDecoratorDrawer GetDecorator(Type decoratorType)
+            => drawers.TryGetValue(decoratorType, out var drawer) ? drawer : null;
     }
 }
