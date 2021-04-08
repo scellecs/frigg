@@ -5,7 +5,7 @@
 
     public class RequiredDecoratorDrawer : BaseDecoratorDrawer {
         protected override float GetHeight(Rect rect) {
-            return EditorGUIUtility.singleLineHeight + SPACE_AMOUNT;
+            return EditorGUIUtility.singleLineHeight;
         }
 
         protected override void DrawDecorator(Rect rect, object target) {
@@ -22,7 +22,9 @@
             }
             
             else { 
-                attr.Text = $"{nameof(RequiredAttribute)} can be used only on reference types";
+                if (string.IsNullOrEmpty(attr.Text)) {
+                    attr.Text = $"{serializedProperty.displayName} is required!";
+                }
             }
             
             var content = EditorGUIUtility.TrTextContentWithIcon(attr.Text, MessageType.Error);

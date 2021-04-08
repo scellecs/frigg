@@ -40,7 +40,17 @@
                 }
 
                 if (attr is RequiredAttribute) {
-                    if (this.property.objectReferenceValue != null) {
+                    var propertyType = CoreUtilities.GetPropertyType(this.property);
+
+                    //If objectReferenceValue is null - we need to draw Required InfoBox, otherwise - return.
+                    if (this.property.propertyType == SerializedPropertyType.ObjectReference) {
+                        if (this.property.objectReferenceValue != null) {
+                            return;
+                        }
+                    }
+                    
+                    //If value is not default - we don't need to draw Required InfoBox.
+                    if (!CoreUtilities.HasDefaultValue(this.property, propertyType)) {
                         return;
                     }
                 }
