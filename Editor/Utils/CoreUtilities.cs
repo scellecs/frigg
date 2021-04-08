@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace Assets.Scripts.Utils {
     using Attributes.Meta;
+    using Editor.DecoratorDrawers;
+    using Packages.Frigg.Attributes;
+    using Packages.Frigg.Attributes.Validators;
 
     public static class CoreUtilities
     {
@@ -99,6 +102,71 @@ namespace Assets.Scripts.Utils {
             var fieldInfo  = parentType.GetField(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             return fieldInfo?.FieldType;
+        }
+
+        public static bool IsPropertyVisible(SerializedProperty property) {
+            ValidatorAttribute attr = TryGetAttribute<HideIfAttribute>(property);
+
+            if (attr != null) {
+                return GetConditionValue(property, attr, false);
+            }
+
+            attr = TryGetAttribute<ShowIfAttribute>(property);
+            return attr == null || GetConditionValue(property, attr, true);
+        }
+
+        public static bool IsPropertyEnabled(SerializedProperty property) {
+            ValidatorAttribute attr = TryGetAttribute<DisableIfAttribute>(property);
+
+            if (attr != null) {
+                return GetConditionValue(property, attr, false);
+            }
+
+            attr = TryGetAttribute<EnableIfAttribute>(property);
+            return attr == null || GetConditionValue(property, attr, true);
+        }
+
+        private static bool GetConditionValue(SerializedProperty property, ValidatorAttribute attr, bool invertedScope) {
+            var target = GetTargetObjectWithProperty(property);
+            var field  = target.TryGetField(attr.FieldName);
+            if (field == null) {
+                return true;
+            }
+            
+            var fieldValue = field.GetValue(target);
+
+            if (fieldValue is bool boolValue) {
+                if (!invertedScope) {
+                    return boolValue != attr.Condition;
+                }
+
+                return boolValue == attr.Condition;
+            }
+
+            var fieldValueType = fieldValue.GetType();
+            var attrValueType  = attr.Value.GetType();
+
+            if (fieldValueType != attrValueType) {
+                var infoBoxParams = new InfoBoxAttribute(
+                    $"'{attr.FieldName}' type is not the same Type as {fieldValueType}.") {
+                    InfoMessageType = InfoMessageType.Error
+                };
+                
+                var infoBox = DecoratorDrawerUtils.GetDecorator(typeof(InfoBoxAttribute));
+                infoBox.OnGUI(EditorGUILayout.GetControlRect(true, 0),
+                    property, infoBoxParams);
+
+                return false;
+            }
+
+            var currentEnumValue  = Enum.Parse(fieldValueType, fieldValue.ToString());
+            var expectedEnumValue = Enum.Parse(fieldValueType, attr.Value.ToString());
+
+            if (!invertedScope) {
+                return !currentEnumValue.Equals(expectedEnumValue);
+            }
+
+            return currentEnumValue.Equals(expectedEnumValue);
         }
 
         public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
