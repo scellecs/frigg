@@ -4,6 +4,7 @@
     using Frigg;
     using UnityEditor;
     using UnityEngine;
+    using Utils;
 
     public abstract class BaseDecoratorDrawer {
         public       BaseDecoratorAttribute attribute;
@@ -17,8 +18,26 @@
         public void OnGUI(Rect rect, object target, IDecoratorAttribute attr) {
             var type = target.GetType();
 
+            this.attribute = (BaseDecoratorAttribute) attr;
+            
             if (type == typeof(SerializedProperty)) {
                 this.property = (SerializedProperty) target;
+                var  propTarget = CoreUtilities.GetTargetObjectWithProperty(this.property);
+                bool boolValue;
+                
+                var field  = propTarget.TryGetField(this.attribute.Member);
+                if (field != null) {
+                    boolValue = (bool) field.GetValue(propTarget);
+                    if (!boolValue)
+                        return;
+                }
+                
+                var prop = propTarget.TryGetProperty(this.attribute.Member);
+                if (prop != null) {
+                    boolValue = (bool) prop.GetValue(propTarget);
+                    if (!boolValue)
+                        return;
+                }
 
                 if (attr is RequiredAttribute) {
                     if (this.property.objectReferenceValue != null) {
@@ -26,18 +45,6 @@
                     }
                 }
             }
-
-            if (type == typeof(MethodInfo))
-                this.methodInfo = (MethodInfo) target;
-            
-            if (type == typeof(FieldInfo))
-                this.fieldInfo = (FieldInfo) target;
-            
-            if (type == typeof(PropertyInfo))
-                this.propertyInfo = (PropertyInfo) target;
-
-            this.attribute = (BaseDecoratorAttribute) attr;
-            
             this.DrawDecorator(rect, target);
         }
 
