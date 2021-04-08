@@ -38,9 +38,6 @@ namespace Assets.Scripts.Editor {
             if(CoreUtilities.TryGetAttribute<HideLabelAttribute>(property) != null)
                 label.text = string.Empty;
 
-            //finally - draw PropertyField
-            EditorGUI.BeginChangeCheck();
-            
             //Check if Editor is in wide mode so we won't wrap any properties to the next line
             if (!EditorGUIUtility.wideMode)
             {
@@ -48,7 +45,20 @@ namespace Assets.Scripts.Editor {
                 EditorGUIUtility.labelWidth = EditorGUIUtility.currentViewWidth - PROPERTY_MIN_WIDTH ;
             }
 
-            EditorGUILayout.PropertyField(property, label, includeChildren);
+            var isVisible = CoreUtilities.IsPropertyVisible(property);
+            if (!isVisible) {
+                return;
+            }
+            
+            var isEnabled = CoreUtilities.IsPropertyEnabled(property);
+
+            //finally - draw PropertyField
+            EditorGUI.BeginChangeCheck();
+            
+            using (new EditorGUI.DisabledScope(!isEnabled))
+            {
+                EditorGUILayout.PropertyField(property, label, includeChildren);
+            }
             
             if(EditorGUI.EndChangeCheck())
                 CoreUtilities.OnDataChanged(property);
