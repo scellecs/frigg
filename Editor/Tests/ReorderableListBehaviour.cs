@@ -27,6 +27,7 @@
 
         [ReorderableList]
         [ShowInInspector]
+        [ListDrawerSettings(AllowDrag = false, HideAddButton = true, HideHeader = false, HideRemoveButton = true)]
         private List<int> privateListTestWithAttr;
         
         [ReorderableList]
