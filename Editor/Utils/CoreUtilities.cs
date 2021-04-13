@@ -420,22 +420,8 @@ namespace Frigg.Utils {
             }
         }
 
-        public static GUIContent GetGUIContent(FieldInfo field) {
-            var niceName = ObjectNames.NicifyVariableName(field.Name);
-            var label = field.GetCustomAttribute<HideLabelAttribute>() == null ? 
-                $"[private] {niceName}" : string.Empty;
-            
-            var content = new GUIContent(label);
-            var tooltip = field.GetCustomAttribute<PropertyTooltipAttribute>();
-            if (tooltip != null) {
-                content.tooltip = tooltip.Text;
-            }
 
-            return content;
-        }
-
-        
-        public static GUIContent GetGUIContent(PropertyInfo property) {
+        public static GUIContent GetGUIContent(MemberInfo property) {
             var niceName = ObjectNames.NicifyVariableName(property.Name);
             var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
                 $"[property] {niceName}" : string.Empty;
