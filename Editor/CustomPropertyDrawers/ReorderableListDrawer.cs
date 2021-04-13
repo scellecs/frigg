@@ -1,6 +1,8 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
+    using System.Reflection;
     using UnityEditor;
     using UnityEditor.Graphs;
     using UnityEditorInternal;
@@ -10,7 +12,7 @@
     public class ReorderableListDrawer : CustomPropertyDrawer {
         public static ReorderableListDrawer instance = new ReorderableListDrawer();
 
-        private Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
+        private readonly Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
 
         public static void ClearData() {
             instance = new ReorderableListDrawer();
@@ -19,6 +21,48 @@
         private string GetPropertyKey(SerializedProperty property) => 
             property.serializedObject.targetObject.GetInstanceID() + "." + property.name;
 
+        protected override void CreateAndDraw(object target, Rect rect, MemberInfo memberInfo, GUIContent label) {
+            ReorderableList             list;
+            object                      value = null;
+            ListDrawerSettingsAttribute attr  = null;
+            Type                        type  = null;
+
+            if (!instance.reorderableLists.ContainsKey(memberInfo.Name)) {
+
+                if (memberInfo.GetType().IsSubclassOf(typeof(FieldInfo))) {
+                    var fieldInfo = (FieldInfo) memberInfo;
+                    type  = typeof(FieldInfo);
+                    attr  = fieldInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
+                    value = fieldInfo.GetValue(target);
+                }
+
+                if (memberInfo.GetType().IsSubclassOf(typeof(PropertyInfo))) {
+                    var propertyInfo = (PropertyInfo) memberInfo;
+                    type  = typeof(PropertyInfo);
+                    attr  = propertyInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
+                    value = propertyInfo.GetValue(target);
+                }
+
+                if (attr != null) {
+                    var hideHeader = attr.HideHeader;
+                    list = new ReorderableList((IList) value, value.GetType(), attr.AllowDrag, !attr.HideHeader,
+                        !attr.HideAddButton, !attr.HideRemoveButton);
+                    SetCallbacks(type, target, memberInfo, list, hideHeader);
+                    list.DoLayoutList();
+                    return;
+                }
+
+                list = new ReorderableList((IList) value, value?.GetType(), true, true, true, true);
+
+                SetCallbacks(type, target, memberInfo, list);
+
+                instance.reorderableLists[memberInfo.Name] = list;
+            }
+
+            list = instance.reorderableLists[memberInfo.Name];
+            list.DoLayoutList();
+        }
+        
         protected override void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label) {
             var name = property.propertyPath.Split('.');
             var p    = property.serializedObject.FindProperty(name[0]);
@@ -50,6 +94,36 @@
             reorderableList.DoLayoutList();
         }
 
+        private static void SetCallbacks(Type type, object target, MemberInfo memberInfo, ReorderableList reorderableList, bool hideHeader = false) {
+            if (!hideHeader) {
+                reorderableList.drawHeaderCallback = tempRect => {
+                    EditorGUI.LabelField(tempRect,
+                        new GUIContent($"{ObjectNames.NicifyVariableName(memberInfo.Name)} - {reorderableList.count} elements"));
+                };
+            }
+            
+            reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
+                var element = reorderableList.list[index];
+                tempRect.y     += 2.0f;
+                tempRect.x     += 10.0f;
+                tempRect.width -= 10.0f;
+
+                if (type == typeof(PropertyInfo)) {
+                    var property = (PropertyInfo) memberInfo;
+                    if (!property.CanWrite) {
+                        using(new EditorGUI.DisabledScope(true)) {
+                            reorderableList.draggable  = false;
+                            reorderableList.displayAdd = reorderableList.displayRemove = false;
+                            GuiUtilities.Field(element, tempRect, new GUIContent($"Element {index}"));
+                        }
+                        return;
+                    }
+                }
+                
+                reorderableList.list[index] = GuiUtilities.Field(element, tempRect, new GUIContent($"Element {index}"));
+            };
+        }
+        
         private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
 
             if (!hideHeader) {
@@ -68,11 +142,7 @@
                 EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, 
                     EditorGUIUtility.singleLineHeight), element, true);
             };
-
-            reorderableList.onChangedCallback = list => {
-                
-            };
-
+            
             reorderableList.onAddCallback = delegate {
                 property.arraySize++;
 
