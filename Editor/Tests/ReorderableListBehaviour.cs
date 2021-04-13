@@ -4,7 +4,7 @@
 
     public class ReorderableListBehaviour : MonoBehaviour{
         
-        [ReorderableList]
+        /*[ReorderableList]
         public int[] intArray;
 
         [ReorderableList]
@@ -20,6 +20,27 @@
         public Vector3[] vectorArray;
         
         [ReorderableList]
-        public List<Vector3> vectorlist;
+        public List<Vector3> vectorlist;*/
+        
+        [ReorderableList]
+        public List<int> intlist;
+
+        [ReorderableList]
+        [ShowInInspector]
+        private List<int> privateListTestWithAttr;
+        
+        [ReorderableList]
+        [ShowInInspector]
+        private List<int> privateListTestWithAttrDummy = new List<int>{1,2,3,4};
+
+        [ReorderableList]
+        [ShowInInspector]
+        private List<int> PrivatePropertyTestWithAttr => new List<int>{1,2,3,4,5};
+        
+        [ShowInInspector]
+        private List<int> privateListTestWith;
+        
+        [ShowInInspector]
+        private List<int> PrivatePropertyTestWith => new List<int>{1,2,3,4,5};
     }
 }
