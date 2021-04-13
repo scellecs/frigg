@@ -454,8 +454,11 @@ namespace Frigg.Utils {
             {
                 return false;
             }
-        
-            return !fieldInfo.IsPrivate || attr.Any(x => x is SerializeField);
+
+            if (fieldInfo.IsPrivate || !fieldInfo.IsFamilyOrAssembly || !attr.Any(x => x is SerializeField))
+                return false;
+
+            return true;
         }
     }
 }
