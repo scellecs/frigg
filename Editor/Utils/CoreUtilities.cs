@@ -424,7 +424,7 @@ namespace Frigg.Utils {
         public static GUIContent GetGUIContent(MemberInfo property) {
             var niceName = ObjectNames.NicifyVariableName(property.Name);
             var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
-                $"[property] {niceName}" : string.Empty;
+                $"[{property.GetType().Name}] {niceName}" : string.Empty;
             
             var content = new GUIContent(label);
             var tooltip = property.GetCustomAttribute<PropertyTooltipAttribute>();
