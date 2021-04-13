@@ -1,11 +1,19 @@
 ﻿namespace Frigg.Editor {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using UnityEditor;
     using UnityEngine;
     using Utils;
 
     public abstract class CustomPropertyDrawer {
+        public void OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
+            var attr = memberInfo.GetCustomAttribute<ReadonlyAttribute>();
+            using (new EditorGUI.DisabledScope(attr != null)) {
+                this.CreateAndDraw(target, rect, memberInfo, content);
+            }
+        }
+        
         public void OnGUI(Rect rect, SerializedProperty property) {
 
             var isVisible = CoreUtilities.IsPropertyVisible(property);
@@ -57,6 +65,7 @@
         }
         
         protected abstract void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label);
+        protected abstract void CreateAndDraw(object target, Rect rect, MemberInfo member, GUIContent label);
     }
     
     public static class CustomAttributeExtensions {
