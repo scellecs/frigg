@@ -25,6 +25,8 @@
         [ReorderableList]
         public List<int> intlist;
 
+        public List<string> stringTest;
+
         [ReorderableList]
         [ShowInInspector]
         [ListDrawerSettings(AllowDrag = false, HideAddButton = true, HideHeader = false, HideRemoveButton = true)]

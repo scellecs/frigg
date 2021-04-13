@@ -182,7 +182,7 @@
             
             var content = CoreUtilities.GetGUIContent(field);
 
-            if (typeof(IEnumerable).IsAssignableFrom(field.FieldType)) {
+            if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
                 drawer.OnGUI(this.target, Rect.zero, field, content);
                 return;
@@ -204,7 +204,7 @@
 
             var content = CoreUtilities.GetGUIContent(prop);
             
-            if (typeof(IEnumerable).IsAssignableFrom(prop.PropertyType)) {
+            if (typeof(IEnumerable).IsAssignableFrom(prop.PropertyType) && prop.PropertyType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
                 drawer.OnGUI(this.target, Rect.zero, prop, content);
                 return;
