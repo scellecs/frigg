@@ -118,7 +118,7 @@
             field.SetValue(target, values[newIndex]);
         }
 
-        public static object Field(object value, GUIContent content, bool canWrite = true) {
+        public static object LayoutField(object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
                 var objType = value.GetType();
 
@@ -181,6 +181,75 @@
                 if (objType.BaseType == typeof(TypeInfo))
                 {
                     return EditorGUILayout.TextField(content, value.ToString());
+                }
+            }
+
+            return null;
+        }
+        
+         public static object Field(object value, Rect rect, GUIContent content, bool canWrite = true) {
+            using (new EditorGUI.DisabledScope(!canWrite)) {
+                var objType = value.GetType();
+
+                if (objType == typeof(bool))
+                {
+                    return EditorGUI.Toggle(rect, content, (bool)value);
+                }
+                if (objType == typeof(int))
+                {
+                    return EditorGUI.IntField(rect, content, (int)value);
+                }
+                if (objType == typeof(long))
+                {
+                    return EditorGUI.LongField(rect, content, (long)value);
+                }
+                if (objType == typeof(float))
+                {
+                    return EditorGUI.FloatField(rect, content, (float)value);
+                }
+                if (objType == typeof(double))
+                {
+                    return EditorGUI.DoubleField(rect, content, (double)value);
+                }
+                if (objType == typeof(string))
+                {
+                    return EditorGUI.TextField(rect, content, (string)value);
+                }
+                if (objType == typeof(Vector2))
+                {
+                    return EditorGUI.Vector2Field(rect, content, (Vector2)value);
+                }
+                if (objType == typeof(Vector3))
+                {
+                    return EditorGUI.Vector3Field(rect, content, (Vector3)value);
+                }
+                if (objType == typeof(Vector4))
+                {
+                    return EditorGUI.Vector4Field(rect, content, (Vector4)value);
+                }
+                if (objType == typeof(Color))
+                {
+                    return EditorGUI.ColorField(rect, content, (Color)value);
+                }
+                if (objType == typeof(Bounds))
+                {
+                    return EditorGUI.BoundsField(rect, content, (Bounds)value);
+                }
+                if (objType == typeof(Rect))
+                {
+                    return EditorGUI.RectField(rect, content, (Rect)value);
+                }
+                if (typeof(Object).IsAssignableFrom(objType))
+                {
+                    return EditorGUI.ObjectField(rect, content, (Object)value, objType, true);
+                }
+                if (objType.BaseType == typeof(Enum))
+                {
+                    return EditorGUI.EnumPopup(rect, content, (Enum)value);
+                }
+                if (objType.BaseType == typeof(TypeInfo))
+                {
+                    return EditorGUI.TextField(rect, content, value.ToString());
                 }
             }
 
