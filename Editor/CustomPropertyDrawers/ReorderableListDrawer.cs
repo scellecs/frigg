@@ -12,7 +12,8 @@
     public class ReorderableListDrawer : CustomPropertyDrawer {
         public static ReorderableListDrawer instance = new ReorderableListDrawer();
 
-        private readonly Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
+        private readonly Dictionary<string, ReorderableList> reorderableLists   = new Dictionary<string, ReorderableList>();
+        private readonly Dictionary<string, bool>            reorderableLayouts = new Dictionary<string, bool>();
 
         public static void ClearData() {
             instance = new ReorderableListDrawer();
@@ -119,9 +120,19 @@
                         return;
                     }
                 }
+
+                if (memberInfo.GetCustomAttribute<HideLabelAttribute>() != null) {
+                    reorderableList.list[index] = GuiUtilities.Field(element, tempRect,
+                        GUIContent.none);
+                    return;
+                }
                 
-                reorderableList.list[index] = GuiUtilities.Field(element, tempRect, new GUIContent($"Element {index}"));
+                reorderableList.list[index] = GuiUtilities.Field(element, tempRect,
+                    new GUIContent($"Element {index}"));
             };
+            
+            reorderableList.elementHeightCallback = index
+                => EditorGUIUtility.singleLineHeight;
         }
         
         private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
@@ -134,13 +145,66 @@
             }
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
-                var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
+                var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index); //Element 0, Element 1, etc...
                 tempRect.y     += 2.0f;
                 tempRect.x     += 10.0f;
                 tempRect.width -= 10.0f;
+
+                var copy = element.Copy();
+
+                var enumerator = element.GetEnumerator();
+                enumerator.MoveNext();
+
+                if (element.propertyType == SerializedPropertyType.Generic) {
+                    
+                    var type   = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(element));
+                    var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    var count = fields.Length;
+                    if (count == 1) {
+                        //var newElement = (SerializedProperty) enumerator.Current;
+
+                        EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                            EditorGUIUtility.singleLineHeight), element, CoreUtilities.GetGUIContent(element), true);
+
+                        return;
+                    }
+
+                    if (!instance.reorderableLayouts.ContainsKey(copy.propertyPath))
+                        instance.reorderableLayouts.Add(copy.propertyPath, false);
+
+                    var status = instance.reorderableLayouts[copy.propertyPath];
+                    instance.reorderableLayouts[copy.propertyPath] = EditorGUI.Foldout(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                        EditorGUIUtility.singleLineHeight), status, copy.displayName);
+
+                    if (!instance.reorderableLayouts[copy.propertyPath]) {
+                        return;
+                    }
+
+                    enumerator = copy.GetEnumerator();
+
+                    var currentElement = 0;
+                    while (enumerator.MoveNext()) {
+                        var current = (SerializedProperty) enumerator.Current;
+
+                        tempRect.x += currentElement * EditorGUIUtility.singleLineHeight;
+                        tempRect.y += currentElement * EditorGUIUtility.singleLineHeight;
+
+                        reorderableList.elementHeightCallback = _
+                            => EditorGUIUtility.singleLineHeight + 5.0f;
+
+                        var content = CoreUtilities.GetGUIContent(current);
+                        EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y + EditorGUIUtility.singleLineHeight, tempRect.width,
+                            EditorGUIUtility.singleLineHeight), current, content, true);
+
+                        currentElement++;
+                    }
+
+                    return;
+                }
                 
-                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width, 
-                    EditorGUIUtility.singleLineHeight), element, true);
+                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                        EditorGUIUtility.singleLineHeight), element, CoreUtilities.GetGUIContent(element), true);
             };
             
             reorderableList.onAddCallback = delegate {
@@ -164,7 +228,7 @@
             };
 
             reorderableList.elementHeightCallback = index
-                => EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
+                => EditorGUIUtility.singleLineHeight + 5.0f;
         }
     }
 }
