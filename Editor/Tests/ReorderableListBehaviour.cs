@@ -1,26 +1,11 @@
 ﻿namespace Frigg.Tests {
+    using System;
     using System.Collections.Generic;
     using UnityEngine;
 
-    public class ReorderableListBehaviour : MonoBehaviour{
-        
-        /*[ReorderableList]
-        public int[] intArray;
-
-        [ReorderableList]
-        public List<int> intlist;
-        
-        [ReorderableList]
-        public float[] floatArray;
-        
-        [ReorderableList]
-        public List<float> floatlist;
-        
-        [ReorderableList]
-        public Vector3[] vectorArray;
-        
-        [ReorderableList]
-        public List<Vector3> vectorlist;*/
+    public class ReorderableListBehaviour : MonoBehaviour {
+        public List<TestClass> testClasses = new List<TestClass>();
+        public List<TestClassSingle> testClassesSingles = new List<TestClassSingle>();
         
         [ReorderableList]
         public List<int> intlist;
@@ -45,5 +30,20 @@
         
         [ShowInInspector]
         private List<int> PrivatePropertyTestWith => new List<int>{1,2,3,4,5};
+
+        [Serializable]
+        public class TestClass {
+            [HideLabel]
+            public int testIntegerClass;
+
+            [HideLabel]
+            public string testStringClass;
+        }
+        
+        [Serializable]
+        public class TestClassSingle {
+            [HideLabel]
+            public int testIntegerSingle;
+        }
     }
 }

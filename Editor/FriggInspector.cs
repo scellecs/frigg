@@ -155,7 +155,6 @@
         }
 
         private void DrawNonSerializedField(FieldInfo field) {
-            
             if (field.IsUnitySerialized()) {
                 return;
             }
