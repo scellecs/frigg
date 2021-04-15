@@ -258,10 +258,10 @@ namespace Frigg.Utils {
                         copy.boolValue = default;
                         break;
                     case SerializedPropertyType.Integer:
-                        copy.intValue = default;
+                        copy.longValue = default;
+                        copy.intValue  = default;
                         break;
                     case SerializedPropertyType.Float:
-                        copy.longValue   = default;
                         copy.floatValue  = default;
                         copy.doubleValue = default;
                         break;
