@@ -12,7 +12,7 @@
 
         public List<string> stringTest;
 
-        [ReorderableList]
+        /*[ReorderableList]
         [ShowInInspector]
         [ListDrawerSettings(AllowDrag = false, HideAddButton = true, HideHeader = false, HideRemoveButton = true)]
         private List<int> privateListTestWithAttr;
@@ -29,12 +29,18 @@
         private List<int> privateListTestWith;
         
         [ShowInInspector]
-        private List<int> PrivatePropertyTestWith => new List<int>{1,2,3,4,5};
+        private List<int> PrivatePropertyTestWith => new List<int>{1,2,3,4,5};*/
 
         [Serializable]
         public class TestClass {
-            [HideLabel]
+            //[HideLabel]
             public int testIntegerClass;
+            
+            //[HideLabel]
+            public string testFloatClass;
+            
+            [HideLabel]
+            public double testDoubleClass;
 
             [HideLabel]
             public string testStringClass;
@@ -42,7 +48,7 @@
         
         [Serializable]
         public class TestClassSingle {
-            [HideLabel]
+            //[HideLabel]
             public int testIntegerSingle;
         }
     }
