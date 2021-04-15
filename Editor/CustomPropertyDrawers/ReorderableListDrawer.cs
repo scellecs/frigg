@@ -241,9 +241,8 @@
 
                 if(!instance.reorderableLayouts[path])
                     return EditorGUIUtility.singleLineHeight + 5.0f;
-
-                Debug.Log($"Has {path} and expanded");
-                return EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
+                
+                return EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(0)) + 5.0f;
             };
         }
     }
