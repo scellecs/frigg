@@ -246,54 +246,39 @@ namespace Frigg.Utils {
             return obj;
         }
         
-        public static void SetDefaultValue(SerializedProperty property, Type type) {
-            if (type == typeof(bool)) {
-                property.boolValue = default;
-            }
-            if (type == typeof(int))
-            {
-                property.intValue = default;
-            }
-            if (type == typeof(long))
-            {
-                property.longValue = default;
-            }
-            if (type == typeof(float))
-            {
-                property.floatValue = default;
-            }
-            if (type == typeof(double))
-            {
-                property.doubleValue = default;
-            }
-            if (type == typeof(string))
-            {
-                property.stringValue = default;
-            }
-            if (type == typeof(Vector2))
-            {
-                property.vector2Value = default;
-            }
-            if (type == typeof(Vector3))
-            {
-                property.vector3Value = default;
-            }
-            if (type == typeof(Vector4))
-            {
-                property.vector4Value = default;
-            }
-            if (type == typeof(Color))
-            {
-                property.colorValue = default;
-            }
-            if (type == typeof(Bounds))
-            {
-                property.boundsValue = default;
-            }
-            if (type == typeof(Rect))
-            {
-                property.rectValue = default;
-            }
+        public static void SetDefaultValue(SerializedProperty baseProperty, SerializedProperty element) {
+
+            var copy = element.Copy();
+            
+            do {
+                var type = copy.propertyType;
+
+                switch (type) {
+                    case SerializedPropertyType.Boolean:
+                        copy.boolValue = default;
+                        break;
+                    case SerializedPropertyType.Integer:
+                        copy.intValue = default;
+                        break;
+                    case SerializedPropertyType.Float:
+                        copy.longValue   = default;
+                        copy.floatValue  = default;
+                        copy.doubleValue = default;
+                        break;
+                    case SerializedPropertyType.String:
+                        copy.stringValue = default;
+                        break;
+                    case SerializedPropertyType.Vector2:
+                        copy.vector2Value = default;
+                        break;
+                    case SerializedPropertyType.Vector3:
+                        copy.vector3Value = default;
+                        break;
+                    case SerializedPropertyType.Vector4:
+                        copy.vector4Value = default;
+                        break;
+                }
+            } while (copy.NextVisible(true));
         }
         
         public static bool HasDefaultValue(SerializedProperty property, Type type) {
