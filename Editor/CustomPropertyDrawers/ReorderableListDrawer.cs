@@ -8,6 +8,7 @@
     using UnityEditorInternal;
     using UnityEngine;
     using Utils;
+    using Random = UnityEngine.Random;
 
     public class ReorderableListDrawer : CustomPropertyDrawer {
         public static ReorderableListDrawer instance = new ReorderableListDrawer();
@@ -136,7 +137,7 @@
         }
         
         private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
-
+            
             if (!hideHeader) {
                 reorderableList.drawHeaderCallback = tempRect => {
                     EditorGUI.LabelField(tempRect,
@@ -145,66 +146,69 @@
             }
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
+                var level   = EditorGUI.indentLevel;
+                
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index); //Element 0, Element 1, etc...
                 tempRect.y     += 2.0f;
                 tempRect.x     += 10.0f;
                 tempRect.width -= 10.0f;
-
+                
                 var copy = element.Copy();
 
-                var enumerator = element.GetEnumerator();
-                enumerator.MoveNext();
+                var target = CoreUtilities.GetTargetObjectOfProperty(copy);
 
-                if (element.propertyType == SerializedPropertyType.Generic) {
-                    
-                    var type   = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(element));
-                    var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                var indentLevel = EditorGUI.indentLevel;
+                var num         = indentLevel - copy.depth;
 
-                    var count = fields.Length;
-                    if (count == 1) {
-                        //var newElement = (SerializedProperty) enumerator.Current;
+                var count = target.GetType().GetFields().Length;
 
-                        EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
-                            EditorGUIUtility.singleLineHeight), element, CoreUtilities.GetGUIContent(element), true);
+                copy = element.Copy();
 
-                        return;
-                    }
+                EditorGUI.indentLevel = copy.depth + num;
+                tempRect.height       = EditorGUI.GetPropertyHeight(element);
 
-                    if (!instance.reorderableLayouts.ContainsKey(copy.propertyPath))
-                        instance.reorderableLayouts.Add(copy.propertyPath, false);
-
-                    var status = instance.reorderableLayouts[copy.propertyPath];
-                    instance.reorderableLayouts[copy.propertyPath] = EditorGUI.Foldout(new Rect(tempRect.x, tempRect.y, tempRect.width,
-                        EditorGUIUtility.singleLineHeight), status, copy.displayName);
-
-                    if (!instance.reorderableLayouts[copy.propertyPath]) {
-                        return;
-                    }
-
-                    enumerator = copy.GetEnumerator();
-
-                    var currentElement = 0;
-                    while (enumerator.MoveNext()) {
-                        var current = (SerializedProperty) enumerator.Current;
-
-                        tempRect.x += currentElement * EditorGUIUtility.singleLineHeight;
-                        tempRect.y += currentElement * EditorGUIUtility.singleLineHeight;
-
-                        reorderableList.elementHeightCallback = _
-                            => EditorGUIUtility.singleLineHeight + 5.0f;
-
-                        var content = CoreUtilities.GetGUIContent(current);
-                        EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y + EditorGUIUtility.singleLineHeight, tempRect.width,
-                            EditorGUIUtility.singleLineHeight), current, content, true);
-
-                        currentElement++;
-                    }
+                if (copy.propertyType != SerializedPropertyType.Generic) {
+                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                        EditorGUIUtility.singleLineHeight), element, true);
 
                     return;
                 }
+
+                var cachedPath = copy.propertyPath;
                 
-                EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
-                        EditorGUIUtility.singleLineHeight), element, CoreUtilities.GetGUIContent(element), true);
+                if (count == 1) {
+                    copy.NextVisible(true);
+                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                        EditorGUIUtility.singleLineHeight), copy, CoreUtilities.GetGUIContent(copy), false);
+                        
+                    EditorGUI.indentLevel = level;
+                    return;
+                }
+                
+                var endProperty = copy.GetEndProperty();
+                
+                if (!instance.reorderableLayouts.ContainsKey(cachedPath)) {
+                    instance.reorderableLayouts.Add(cachedPath, false);
+                }
+
+                var status = instance.reorderableLayouts[cachedPath];
+
+                instance.reorderableLayouts[cachedPath] = EditorGUI.Foldout(new Rect(tempRect.x, tempRect.y, tempRect.width,
+                    EditorGUIUtility.singleLineHeight), status, $"Element {index}");
+                
+                if(!instance.reorderableLayouts[cachedPath])
+                    return;
+
+                copy.NextVisible(true);
+                do {
+                    var content = CoreUtilities.GetGUIContent(copy);
+                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y + EditorGUIUtility.singleLineHeight, 
+                        tempRect.width, EditorGUIUtility.singleLineHeight), copy, content, true);
+                        
+                    EditorGUI.indentLevel =  level;
+                    tempRect.y            += EditorGUIUtility.singleLineHeight + 3.0f;
+
+                } while (copy.NextVisible(true) && !SerializedProperty.EqualContents(copy, endProperty));
             };
             
             reorderableList.onAddCallback = delegate {
@@ -214,7 +218,8 @@
 
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
 
-                CoreUtilities.SetDefaultValue(element, type);
+                Debug.Log("added");
+                CoreUtilities.SetDefaultValue(property, element);
             };
 
             reorderableList.onRemoveCallback = delegate {
@@ -228,7 +233,18 @@
             };
 
             reorderableList.elementHeightCallback = index
-                => EditorGUIUtility.singleLineHeight + 5.0f;
+                => {
+                var path = reorderableList.serializedProperty.GetArrayElementAtIndex(index).propertyPath;
+                if (!instance.reorderableLayouts.ContainsKey(path)) {
+                    return EditorGUIUtility.singleLineHeight + 5.0f;
+                }
+
+                if(!instance.reorderableLayouts[path])
+                    return EditorGUIUtility.singleLineHeight + 5.0f;
+
+                Debug.Log($"Has {path} and expanded");
+                return EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(index)) + 5.0f;
+            };
         }
     }
 }
