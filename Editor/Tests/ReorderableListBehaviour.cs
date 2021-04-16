@@ -4,8 +4,10 @@
     using UnityEngine;
 
     public class ReorderableListBehaviour : MonoBehaviour {
-        public List<TestClass> testClasses = new List<TestClass>();
-        public List<TestClassSingle> testClassesSingles = new List<TestClassSingle>();
+        public List<TestClass>              testClasses             = new List<TestClass>();
+        public List<TestClassSingle>        testClassesSingles      = new List<TestClassSingle>();
+        public List<TestClassPrivate>       testClassPrivates       = new List<TestClassPrivate>();
+        public List<TestClassPrivateSingle> testClassPrivateSingles = new List<TestClassPrivateSingle>();
         
         [ReorderableList]
         public List<int> intlist;
@@ -45,10 +47,28 @@
             [HideLabel]
             public string testStringClass;
         }
+
+        [Serializable]
+        public class TestClassPrivate {
+            [SerializeField]
+            [HideLabel]
+            private bool testPrivateBool;
+            
+            [SerializeField]
+            [HideLabel]
+            public string testPrivateString;
+        }
+        
+        [Serializable]
+        public class TestClassPrivateSingle {
+            [SerializeField]
+            [HideLabel]
+            private bool testPrivateBoolSingle;
+        }
         
         [Serializable]
         public class TestClassSingle {
-            //[HideLabel]
+            [HideLabel]
             public int testIntegerSingle;
         }
     }
