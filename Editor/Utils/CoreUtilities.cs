@@ -29,11 +29,10 @@ namespace Frigg.Utils {
         public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
             if (target != null) {
                 var data = target.GetType()
-                    .GetFields(BindingFlags.Instance 
-                               | BindingFlags.Static
+                    .GetFields(BindingFlags.Instance
                                | BindingFlags.NonPublic 
                                | BindingFlags.Public).Where(predicate);
-            
+                
                 return data;
             }
         
@@ -164,10 +163,10 @@ namespace Frigg.Utils {
         }
 
         public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
-            var fInfo = GetTargetObjectWithProperty(property).TryGetField(property.name);
+            var target = GetTargetObjectWithProperty(property);
+            var fInfo  = target.TryGetField(property.name);
 
-            if (fInfo == null)
-            {
+            if (fInfo == null) {
                 return new T[] { };
             }
         
@@ -424,6 +423,9 @@ namespace Frigg.Utils {
             var label = TryGetAttribute<HideLabelAttribute>(property) == null ? 
                 $"{property.displayName}" : string.Empty;
             
+            if(string.IsNullOrEmpty(label))
+                return GUIContent.none;
+            
             var content = new GUIContent(label);
             var tooltip = TryGetAttribute<PropertyTooltipAttribute>(property);
             if (tooltip != null) {
@@ -440,10 +442,13 @@ namespace Frigg.Utils {
                 return false;
             }
 
-            if (fieldInfo.IsPrivate || !fieldInfo.IsFamilyOrAssembly || !attr.Any(x => x is SerializeField))
-                return false;
+            if (fieldInfo.IsPublic)
+                return true;
 
-            return true;
+            if (!fieldInfo.IsPrivate && !fieldInfo.IsFamilyOrAssembly) {
+                return false;
+            }
+            return attr.Any(x => x is SerializeField);
         }
     }
 }
