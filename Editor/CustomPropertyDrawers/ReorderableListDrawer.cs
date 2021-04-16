@@ -238,15 +238,25 @@
 
             reorderableList.elementHeightCallback = index
                 => {
-                var path = reorderableList.serializedProperty.GetArrayElementAtIndex(index).propertyPath;
+                var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
+                var path    = element.propertyPath;
+                
                 if (!instance.reorderableLayouts.ContainsKey(path)) {
                     return EditorGUIUtility.singleLineHeight + 5.0f;
                 }
 
                 if(!instance.reorderableLayouts[path])
                     return EditorGUIUtility.singleLineHeight + 5.0f;
-                
-                return EditorGUI.GetPropertyHeight(reorderableList.serializedProperty.GetArrayElementAtIndex(0)) + 5.0f;
+
+                var copy = element.Copy();
+                var last = copy.GetEndProperty();
+
+                float height = 0;
+                do {
+                    height += EditorGUIUtility.singleLineHeight;
+                } while (copy.NextVisible(true) && !SerializedProperty.EqualContents(copy, last));
+
+                return height + 8.0f;
             };
         }
     }
