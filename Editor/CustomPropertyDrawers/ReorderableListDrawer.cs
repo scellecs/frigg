@@ -7,6 +7,7 @@
     using UnityEditor.Graphs;
     using UnityEditorInternal;
     using UnityEngine;
+    using System.Linq;
     using Utils;
     using Random = UnityEngine.Random;
 
@@ -156,12 +157,15 @@
                 var copy = element.Copy();
 
                 var target = CoreUtilities.GetTargetObjectOfProperty(copy);
+                if (target == null)
+                    target = CoreUtilities.GetTargetObjectWithProperty(copy);
 
                 var indentLevel = EditorGUI.indentLevel;
                 var num         = indentLevel - copy.depth;
 
-                var count = target.GetType().GetFields().Length;
-
+                var count = target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => x.IsUnitySerialized());
+                
                 copy = element.Copy();
 
                 EditorGUI.indentLevel = copy.depth + num;
@@ -176,7 +180,7 @@
 
                 var cachedPath = copy.propertyPath;
                 
-                if (count == 1) {
+                if (count.Count() == 1) {
                     copy.NextVisible(true);
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
                         EditorGUIUtility.singleLineHeight), copy, CoreUtilities.GetGUIContent(copy), false);
