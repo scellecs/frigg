@@ -72,7 +72,7 @@
                         continue;
                     }
 
-                    if (type.IsSubclassOf(typeof(PropertyInfo))) { 
+                    if (type.IsSubclassOf(typeof(PropertyInfo))) {
                         this.DrawNativeProperty((PropertyInfo) element);
                     }
                     
@@ -87,7 +87,7 @@
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
-                    
+
                     var prop = (SerializedProperty) element;
 
                     if (prop.name == "m_Script") {

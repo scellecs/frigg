@@ -221,8 +221,7 @@
                 var type = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(property));
 
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
-
-                Debug.Log("added");
+                
                 CoreUtilities.SetDefaultValue(property, element);
             };
 
