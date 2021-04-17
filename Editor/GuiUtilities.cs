@@ -56,6 +56,40 @@
                 CoreUtilities.OnDataChanged(property);
         }
         #endregion
+
+        public static void HandleDecorators(MemberInfo element, Rect rect = default) {
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+
+            if (!attr.Any()) {
+                return;
+            }
+
+            foreach (var obj in attr) {
+                if (rect == default) {
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
+                    continue;
+                }
+                    
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj);
+            }
+        }
+        
+        public static void HandleDecorators(SerializedProperty element, Rect rect = default) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
+
+            if (!attr.Any()) {
+                return;
+            }
+
+            foreach (var obj in attr) {
+                if (rect == default) {
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
+                    continue;
+                }
+                    
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj);
+            }
+        }
         
         private static bool HandleCustomDrawer(Rect rect, SerializedProperty property) {
             //Check for custom attributes
@@ -93,7 +127,7 @@
             new ReorderableListDrawer().OnGUI(rect, property);
             return true;
         }
-        
+
         #region elements
         public static void Button(Object obj, MethodInfo info) {
             var attr = (ButtonAttribute)info.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
