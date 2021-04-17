@@ -13,11 +13,22 @@ namespace Frigg.Utils {
 
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
-                    .GetMethods(BindingFlags.Instance 
-                                | BindingFlags.Static
-                                | BindingFlags.NonPublic 
-                                | BindingFlags.Public).Where(predicate);
+                var type = target.GetType();
+                var data = new List<MethodInfo>();
+                data.AddRange(target.GetType()
+                    .GetMethods(BindingFlags.Instance
+                                   | BindingFlags.NonPublic 
+                                   | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetMethods(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
 
                 return data;
             }
@@ -28,10 +39,22 @@ namespace Frigg.Utils {
 
         public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
+                var             type = target.GetType();
+                var data = new List<FieldInfo>();
+                data.AddRange(target.GetType()
                     .GetFields(BindingFlags.Instance
                                | BindingFlags.NonPublic 
-                               | BindingFlags.Public).Where(predicate);
+                               | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetFields(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
                 
                 return data;
             }
@@ -42,11 +65,22 @@ namespace Frigg.Utils {
     
         public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
-                    .GetProperties(BindingFlags.Instance 
-                                   | BindingFlags.Static
-                                   | BindingFlags.NonPublic 
-                                   | BindingFlags.Public).Where(predicate);
+                var type = target.GetType();
+                var data = new List<PropertyInfo>();
+                data.AddRange(target.GetType()
+                    .GetProperties(BindingFlags.Instance
+                               | BindingFlags.NonPublic 
+                               | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetProperties(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
             
                 return data;
             }
@@ -164,12 +198,13 @@ namespace Frigg.Utils {
 
         public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
             var target = GetTargetObjectWithProperty(property);
+            
             var fInfo  = target.TryGetField(property.name);
 
             if (fInfo == null) {
                 return new T[] { };
             }
-        
+
             var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
 
             return data;
@@ -177,7 +212,7 @@ namespace Frigg.Utils {
 
         public static T TryGetAttribute<T>(SerializedProperty property) where T : class {
             var attr = TryGetAttributes<T>(property);
-
+            
             return (attr.Length > 0) ? attr[0] : null;
         }
 
