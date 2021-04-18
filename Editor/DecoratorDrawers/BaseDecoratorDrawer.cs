@@ -15,7 +15,7 @@
         public FieldInfo          fieldInfo    = null;
         public PropertyInfo       propertyInfo = null;
 
-        public void OnGUI(Rect rect, object target, IDecoratorAttribute attr) {
+        public void OnGUI(Rect rect, object target, IDecoratorAttribute attr, bool isArray = false) {
             var type = target.GetType();
 
             this.attribute = (BaseDecoratorAttribute) attr;
@@ -55,11 +55,11 @@
                     }
                 }
             }
-            this.DrawDecorator(rect, target);
+            this.DrawDecorator(rect, target, isArray);
         }
 
         protected abstract float GetHeight(Rect rect);
 
-        protected abstract void DrawDecorator(Rect rect, object target);
+        protected abstract void DrawDecorator(Rect rect, object target, bool isArray);
     }
 }
