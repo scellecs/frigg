@@ -7,14 +7,11 @@
         protected override float GetHeight(Rect rect) {
             var attr = (InfoBoxAttribute) this.attribute;
             
-            return attr.Height;
+            return attr.Height - EditorGUIUtility.singleLineHeight;
         }
         
-        protected override void DrawDecorator(Rect rect, object target) {
+        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (InfoBoxAttribute) this.attribute;
-
-            rect.height = attr.HasCustomHeight ? attr.Height : InfoBoxAttribute.DEFAULT_HEIGHT;
-            rect.width  = EditorGUIUtility.currentViewWidth;
 
             MessageType messageType;
             switch (attr.InfoMessageType) {
@@ -49,9 +46,11 @@
                     rect.height += diff;
                 }
             }
-            
-            EditorGUILayout.Space(rect.height);
+
             GUI.Label(rect, content, style);
+            
+            if(!isArray)
+                EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
         }
-    }
+    }   
 }

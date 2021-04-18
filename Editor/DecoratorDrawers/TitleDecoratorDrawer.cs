@@ -5,11 +5,10 @@
     
     public class TitleDecoratorDrawer : BaseDecoratorDrawer {
         protected override float GetHeight(Rect rect) {
-            var attr = (TitleAttribute) this.attribute;
             return rect.height + SPACE_AMOUNT;
         }
 
-        protected override void DrawDecorator(Rect rect, object target) {
+        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (TitleAttribute) this.attribute;
 
             var style = new GUIStyle {fontSize = attr.fontSize};
@@ -31,7 +30,7 @@
                     break;
             }
 
-            rect.y += SPACE_AMOUNT * 2;
+            //rect.y += SPACE_AMOUNT * 2;
 
             EditorGUI.LabelField(rect, new GUIContent(attr.Text), style);
             
@@ -42,7 +41,8 @@
             if(attr.drawLine)
                 EditorGUI.DrawRect(rect, attr.lineColor.ToColor());
             
-            EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()) + SPACE_AMOUNT);
+            if(!isArray)
+               EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()) + SPACE_AMOUNT);
         }
     }
 }

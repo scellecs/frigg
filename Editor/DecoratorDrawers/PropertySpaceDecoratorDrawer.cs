@@ -9,7 +9,7 @@
             return attr.SpaceBefore;
         }
 
-        protected override void DrawDecorator(Rect rect, object target) {
+        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (PropertySpaceAttribute) this.attribute;
             
             EditorGUILayout.Space(this.GetHeight(rect));

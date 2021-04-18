@@ -1,5 +1,6 @@
 ﻿namespace Frigg {
     using System;
+    using UnityEditor;
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
     public class TitleAttribute : BaseDecoratorAttribute {
@@ -16,7 +17,8 @@
         public ColorUtils.FriggColor lineColor = ColorUtils.FriggColor.Gray;
 
         public TitleAttribute(string title) {
-            this.Text = title;
+            this.Text   = title;
+            this.Height = this.lineHeight + EditorGUIUtility.singleLineHeight;
         }
     }
 
