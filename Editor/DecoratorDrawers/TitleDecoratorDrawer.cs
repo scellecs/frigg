@@ -30,7 +30,8 @@
                     break;
             }
 
-            //rect.y += SPACE_AMOUNT * 2;
+            if(!isArray)
+               rect.y += SPACE_AMOUNT * 2;
 
             EditorGUI.LabelField(rect, new GUIContent(attr.Text), style);
             

@@ -37,14 +37,19 @@
                 fontSize = attr.FontSize,
                 alignment = TextAnchor.MiddleLeft
             };
-            
+
             //we need to recalculate height each time our text wrapping to the next line
             if (!attr.HasCustomHeight) {
-                var height = style.CalcHeight(content, rect.width);
+                rect.height = BaseDecoratorAttribute.DEFAULT_HEIGHT;
+                var height  = style.CalcHeight(content, EditorGUIUtility.currentViewWidth);
                 if (rect.height < height) { 
                     var diff    =  Math.Abs(height - rect.height);
                     rect.height += diff;
                 }
+            }
+
+            else {
+                rect.height = this.attribute.Height;
             }
 
             GUI.Label(rect, content, style);
