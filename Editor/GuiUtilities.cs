@@ -8,7 +8,8 @@
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
-        private const int PROPERTY_MIN_WIDTH = 212;
+        public const  float SPACE              = 5.0f;
+        private const int   PROPERTY_MIN_WIDTH = 212;
         
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
@@ -57,7 +58,42 @@
         }
         #endregion
 
-        public static void HandleDecorators(MemberInfo element, Rect rect = default) {
+        //Return total allocated height
+        public static float DecoratorsHeight(MemberInfo element) {
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+            if (!attr.Any()) {
+                return 0;
+            }
+
+            var height = 0f;
+            foreach (var obj in attr) {
+                height += obj.Height;
+            }
+
+            return height;
+        }
+
+        public static int AmountOfDecorators(SerializedProperty property) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(property).ToList();
+            return !attr.Any() ? 0 : attr.Count;
+        }
+        
+        public static float DecoratorsHeight(SerializedProperty element) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
+            if (!attr.Any()) {
+                return 0;
+            }
+
+            var height = 0f;
+            foreach (var obj in attr) {
+                height += obj.Height;
+            }
+
+            return height;
+        }
+        
+
+        public static void HandleDecorators(MemberInfo element, Rect rect = default, bool isArray = false) {
             var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
 
             if (!attr.Any()) {
@@ -66,7 +102,7 @@
 
             foreach (var obj in attr) {
                 if (rect == default) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj, isArray);
                     continue;
                 }
                     
@@ -74,7 +110,7 @@
             }
         }
         
-        public static void HandleDecorators(SerializedProperty element, Rect rect = default) {
+        public static void HandleDecorators(SerializedProperty element, Rect rect = default, bool isArray = false) {
             var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
 
             if (!attr.Any()) {
@@ -83,11 +119,12 @@
 
             foreach (var obj in attr) {
                 if (rect == default) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj, isArray);
                     continue;
                 }
-                    
-                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj);
+                
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj, isArray);
+                rect.y += obj.Height + SPACE;
             }
         }
         

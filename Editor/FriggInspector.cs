@@ -124,33 +124,14 @@
         }
 
         private void DrawButton(MethodInfo element) {
-
-            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
-                }
-            }
-            
+            GuiUtilities.HandleDecorators(element);
             GuiUtilities.Button(this.serializedObject.targetObject, element);
         }
 
         private void DrawSerializedProperty(SerializedProperty prop) {
             this.serializedObject.Update();
 
-            if (!CoreUtilities.IsPropertyVisible(prop)) {
-                return;
-            }
-
-            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(prop);
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
-                }
-            }
-
+            GuiUtilities.HandleDecorators(prop);
             GuiUtilities.PropertyField(prop, true);
         }
 
@@ -171,13 +152,7 @@
 
             var canWrite = field.GetCustomAttribute<ReadonlyAttribute>() == null;
 
-            var attr = field.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), field, obj);
-                }
-            }
+            GuiUtilities.HandleDecorators(field);
             
             var content = CoreUtilities.GetGUIContent(field);
 
@@ -193,13 +168,7 @@
 
         private void DrawNativeProperty(PropertyInfo prop) {
 
-            var attr = prop.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
-                }
-            }
+            GuiUtilities.HandleDecorators(prop);
 
             var content = CoreUtilities.GetGUIContent(prop);
             
