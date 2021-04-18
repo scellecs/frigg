@@ -20,7 +20,8 @@
             if (!isVisible)
                 return;
 
-            var isEnabled = CoreUtilities.IsPropertyEnabled(property);
+            var isReadOnly = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property) != null;
+            var isEnabled  = CoreUtilities.IsPropertyEnabled(property) && !isReadOnly;
             
             var content  = CoreUtilities.GetGUIContent(property);
             
@@ -28,7 +29,7 @@
             if (hideAttr != null) {
                 content.text = string.Empty;
             }
-            
+
             //We need this to handle CustomProperty for Readonly & Validator behaviour
             using(new EditorGUI.DisabledScope(!isEnabled)){
                 EditorGUI.BeginChangeCheck();
