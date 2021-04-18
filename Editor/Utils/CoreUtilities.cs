@@ -13,11 +13,22 @@ namespace Frigg.Utils {
 
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
-                    .GetMethods(BindingFlags.Instance 
-                                | BindingFlags.Static
-                                | BindingFlags.NonPublic 
-                                | BindingFlags.Public).Where(predicate);
+                var type = target.GetType();
+                var data = new List<MethodInfo>();
+                data.AddRange(target.GetType()
+                    .GetMethods(BindingFlags.Instance
+                                   | BindingFlags.NonPublic 
+                                   | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetMethods(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
 
                 return data;
             }
@@ -28,12 +39,23 @@ namespace Frigg.Utils {
 
         public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
-                    .GetFields(BindingFlags.Instance 
-                               | BindingFlags.Static
+                var             type = target.GetType();
+                var data = new List<FieldInfo>();
+                data.AddRange(target.GetType()
+                    .GetFields(BindingFlags.Instance
                                | BindingFlags.NonPublic 
-                               | BindingFlags.Public).Where(predicate);
-            
+                               | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetFields(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
+                
                 return data;
             }
         
@@ -43,11 +65,22 @@ namespace Frigg.Utils {
     
         public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
             if (target != null) {
-                var data = target.GetType()
-                    .GetProperties(BindingFlags.Instance 
-                                   | BindingFlags.Static
-                                   | BindingFlags.NonPublic 
-                                   | BindingFlags.Public).Where(predicate);
+                var type = target.GetType();
+                var data = new List<PropertyInfo>();
+                data.AddRange(target.GetType()
+                    .GetProperties(BindingFlags.Instance
+                               | BindingFlags.NonPublic 
+                               | BindingFlags.Public).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetProperties(
+                        BindingFlags.Instance | 
+                        BindingFlags.NonPublic |
+                        BindingFlags.Public).Where(predicate));
+
+                    type = type.BaseType;
+                }
             
                 return data;
             }
@@ -164,13 +197,14 @@ namespace Frigg.Utils {
         }
 
         public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
-            var fInfo = GetTargetObjectWithProperty(property).TryGetField(property.name);
+            var target = GetTargetObjectWithProperty(property);
+            
+            var fInfo  = target.TryGetField(property.name);
 
-            if (fInfo == null)
-            {
+            if (fInfo == null) {
                 return new T[] { };
             }
-        
+
             var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
 
             return data;
@@ -178,7 +212,7 @@ namespace Frigg.Utils {
 
         public static T TryGetAttribute<T>(SerializedProperty property) where T : class {
             var attr = TryGetAttributes<T>(property);
-
+            
             return (attr.Length > 0) ? attr[0] : null;
         }
 
@@ -244,6 +278,93 @@ namespace Frigg.Utils {
             }
 
             return obj;
+        }
+        
+        public static void SetDefaultValue(SerializedProperty baseProperty, SerializedProperty element) {
+
+            var copy = element.Copy();
+            
+            do {
+                var type = copy.propertyType;
+
+                switch (type) {
+                    case SerializedPropertyType.Boolean:
+                        copy.boolValue = default;
+                        break;
+                    case SerializedPropertyType.Integer:
+                        copy.longValue = default;
+                        copy.intValue  = default;
+                        break;
+                    case SerializedPropertyType.Float:
+                        copy.floatValue  = default;
+                        copy.doubleValue = default;
+                        break;
+                    case SerializedPropertyType.String:
+                        copy.stringValue = default;
+                        break;
+                    case SerializedPropertyType.Vector2:
+                        copy.vector2Value = default;
+                        break;
+                    case SerializedPropertyType.Vector3:
+                        copy.vector3Value = default;
+                        break;
+                    case SerializedPropertyType.Vector4:
+                        copy.vector4Value = default;
+                        break;
+                }
+            } while (copy.NextVisible(true));
+        }
+        
+        public static bool HasDefaultValue(SerializedProperty property, Type type) {
+            if (type == typeof(bool)) {
+                return property.boolValue == default;
+            }
+            if (type == typeof(int))
+            {
+                return property.intValue == default;
+            }
+            if (type == typeof(long))
+            {
+                return property.longValue == default;
+            }
+            if (type == typeof(float))
+            {
+                return property.floatValue == default;
+            }
+            if (type == typeof(double))
+            {
+                return property.doubleValue == default;
+            }
+            if (type == typeof(string))
+            {
+                return property.stringValue == default;
+            }
+            if (type == typeof(Vector2))
+            {
+                return property.vector2Value == default;
+            }
+            if (type == typeof(Vector3))
+            {
+                return property.vector3Value == default;
+            }
+            if (type == typeof(Vector4))
+            {
+                return property.vector4Value == default;
+            }
+            if (type == typeof(Color))
+            {
+                return property.colorValue == default;
+            }
+            if (type == typeof(Bounds))
+            {
+                return property.boundsValue == default;
+            }
+            if (type == typeof(Rect))
+            {
+                return property.rectValue == default;
+            }
+
+            return true;
         }
     
         private static object GetValue_Imp(object source, string name)
@@ -318,25 +439,11 @@ namespace Frigg.Utils {
             }
         }
 
-        public static GUIContent GetGUIContent(FieldInfo field) {
-            var niceName = ObjectNames.NicifyVariableName(field.Name);
-            var label = field.GetCustomAttribute<HideLabelAttribute>() == null ? 
-                $"[private] {niceName}" : string.Empty;
-            
-            var content = new GUIContent(label);
-            var tooltip = field.GetCustomAttribute<PropertyTooltipAttribute>();
-            if (tooltip != null) {
-                content.tooltip = tooltip.Text;
-            }
 
-            return content;
-        }
-
-        
-        public static GUIContent GetGUIContent(PropertyInfo property) {
+        public static GUIContent GetGUIContent(MemberInfo property) {
             var niceName = ObjectNames.NicifyVariableName(property.Name);
             var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
-                $"[property] {niceName}" : string.Empty;
+                $"[{property.GetType().Name}] {niceName}" : string.Empty;
             
             var content = new GUIContent(label);
             var tooltip = property.GetCustomAttribute<PropertyTooltipAttribute>();
@@ -350,6 +457,9 @@ namespace Frigg.Utils {
         public static GUIContent GetGUIContent(SerializedProperty property) {
             var label = TryGetAttribute<HideLabelAttribute>(property) == null ? 
                 $"{property.displayName}" : string.Empty;
+            
+            if(string.IsNullOrEmpty(label))
+                return GUIContent.none;
             
             var content = new GUIContent(label);
             var tooltip = TryGetAttribute<PropertyTooltipAttribute>(property);
@@ -366,8 +476,14 @@ namespace Frigg.Utils {
             {
                 return false;
             }
-        
-            return !fieldInfo.IsPrivate || attr.Any(x => x is SerializeField);
+
+            if (fieldInfo.IsPublic)
+                return true;
+
+            if (!fieldInfo.IsPrivate && !fieldInfo.IsFamilyOrAssembly) {
+                return false;
+            }
+            return attr.Any(x => x is SerializeField);
         }
     }
 }

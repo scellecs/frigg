@@ -15,5 +15,14 @@
             get => this.spaceAfter;
             set => this.spaceAfter = value;
         }
+
+        public PropertySpaceAttribute() {
+            
+        }
+
+        public PropertySpaceAttribute(int space) {
+            this.spaceBefore = space;
+            this.Height      = space;
+        }
     }
 }

@@ -8,7 +8,8 @@
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
-        private const int PROPERTY_MIN_WIDTH = 212;
+        public const  float SPACE              = 5.0f;
+        private const int   PROPERTY_MIN_WIDTH = 212;
         
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
@@ -56,6 +57,76 @@
                 CoreUtilities.OnDataChanged(property);
         }
         #endregion
+
+        //Return total allocated height
+        public static float DecoratorsHeight(MemberInfo element) {
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+            if (!attr.Any()) {
+                return 0;
+            }
+
+            var height = 0f;
+            foreach (var obj in attr) {
+                height += obj.Height;
+            }
+
+            return height;
+        }
+
+        public static int AmountOfDecorators(SerializedProperty property) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(property).ToList();
+            return !attr.Any() ? 0 : attr.Count;
+        }
+        
+        public static float DecoratorsHeight(SerializedProperty element) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
+            if (!attr.Any()) {
+                return 0;
+            }
+
+            var height = 0f;
+            foreach (var obj in attr) {
+                height += obj.Height;
+            }
+
+            return height;
+        }
+        
+
+        public static void HandleDecorators(MemberInfo element, Rect rect = default, bool isArray = false) {
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
+
+            if (!attr.Any()) {
+                return;
+            }
+
+            foreach (var obj in attr) {
+                if (rect == default) {
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj, isArray);
+                    continue;
+                }
+                    
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj);
+            }
+        }
+        
+        public static void HandleDecorators(SerializedProperty element, Rect rect = default, bool isArray = false) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
+
+            if (!attr.Any()) {
+                return;
+            }
+
+            foreach (var obj in attr) {
+                if (rect == default) {
+                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj, isArray);
+                    continue;
+                }
+                
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect, element, obj, isArray);
+                rect.y += obj.Height + SPACE;
+            }
+        }
         
         private static bool HandleCustomDrawer(Rect rect, SerializedProperty property) {
             //Check for custom attributes
@@ -93,7 +164,7 @@
             new ReorderableListDrawer().OnGUI(rect, property);
             return true;
         }
-        
+
         #region elements
         public static void Button(Object obj, MethodInfo info) {
             var attr = (ButtonAttribute)info.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
@@ -118,7 +189,7 @@
             field.SetValue(target, values[newIndex]);
         }
 
-        public static object Field(object value, GUIContent content, bool canWrite = true) {
+        public static object LayoutField(object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
                 var objType = value.GetType();
 
@@ -181,6 +252,75 @@
                 if (objType.BaseType == typeof(TypeInfo))
                 {
                     return EditorGUILayout.TextField(content, value.ToString());
+                }
+            }
+
+            return null;
+        }
+        
+         public static object Field(object value, Rect rect, GUIContent content, bool canWrite = true) {
+            using (new EditorGUI.DisabledScope(!canWrite)) {
+                var objType = value.GetType();
+
+                if (objType == typeof(bool))
+                {
+                    return EditorGUI.Toggle(rect, content, (bool)value);
+                }
+                if (objType == typeof(int))
+                {
+                    return EditorGUI.IntField(rect, content, (int)value);
+                }
+                if (objType == typeof(long))
+                {
+                    return EditorGUI.LongField(rect, content, (long)value);
+                }
+                if (objType == typeof(float))
+                {
+                    return EditorGUI.FloatField(rect, content, (float)value);
+                }
+                if (objType == typeof(double))
+                {
+                    return EditorGUI.DoubleField(rect, content, (double)value);
+                }
+                if (objType == typeof(string))
+                {
+                    return EditorGUI.TextField(rect, content, (string)value);
+                }
+                if (objType == typeof(Vector2))
+                {
+                    return EditorGUI.Vector2Field(rect, content, (Vector2)value);
+                }
+                if (objType == typeof(Vector3))
+                {
+                    return EditorGUI.Vector3Field(rect, content, (Vector3)value);
+                }
+                if (objType == typeof(Vector4))
+                {
+                    return EditorGUI.Vector4Field(rect, content, (Vector4)value);
+                }
+                if (objType == typeof(Color))
+                {
+                    return EditorGUI.ColorField(rect, content, (Color)value);
+                }
+                if (objType == typeof(Bounds))
+                {
+                    return EditorGUI.BoundsField(rect, content, (Bounds)value);
+                }
+                if (objType == typeof(Rect))
+                {
+                    return EditorGUI.RectField(rect, content, (Rect)value);
+                }
+                if (typeof(Object).IsAssignableFrom(objType))
+                {
+                    return EditorGUI.ObjectField(rect, content, (Object)value, objType, true);
+                }
+                if (objType.BaseType == typeof(Enum))
+                {
+                    return EditorGUI.EnumPopup(rect, content, (Enum)value);
+                }
+                if (objType.BaseType == typeof(TypeInfo))
+                {
+                    return EditorGUI.TextField(rect, content, value.ToString());
                 }
             }
 

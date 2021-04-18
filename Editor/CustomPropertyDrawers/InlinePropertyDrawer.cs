@@ -1,4 +1,5 @@
 ﻿namespace Frigg.Editor {
+    using System.Reflection;
     using UnityEditor;
     using UnityEngine;
 
@@ -25,6 +26,10 @@
 
             EditorGUILayout.EndHorizontal();
             EditorGUIUtility.labelWidth = cachedWidth;
+        }
+
+        protected override void CreateAndDraw(object target, Rect rect, MemberInfo memberInfo, GUIContent label) {
+            throw new System.NotImplementedException();
         }
     }
 }

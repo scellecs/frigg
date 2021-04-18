@@ -5,10 +5,10 @@
 
     public class RequiredDecoratorDrawer : BaseDecoratorDrawer {
         protected override float GetHeight(Rect rect) {
-            return EditorGUIUtility.singleLineHeight + SPACE_AMOUNT;
+            return EditorGUIUtility.singleLineHeight;
         }
 
-        protected override void DrawDecorator(Rect rect, object target) {
+        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (RequiredAttribute) this.attribute;
 
             var serializedProperty = (SerializedProperty) target;
@@ -22,7 +22,9 @@
             }
             
             else { 
-                attr.Text = $"{nameof(RequiredAttribute)} can be used only on reference types";
+                if (string.IsNullOrEmpty(attr.Text)) {
+                    attr.Text = $"{serializedProperty.displayName} is required!";
+                }
             }
             
             var content = EditorGUIUtility.TrTextContentWithIcon(attr.Text, MessageType.Error);
@@ -30,15 +32,18 @@
                 fontSize  = 14,
                 alignment = TextAnchor.MiddleLeft
             };
-            
-            var height = style.CalcHeight(content, rect.width);
-            if (rect.height < height) {
-                rect.height += height - rect.height;
+
+            if (!attr.HasCustomHeight) {
+                var height = style.CalcHeight(content, rect.width);
+                if (rect.height < height) {
+                    rect.height += height - rect.height;
+                }
             }
-            
+
             GUI.Label(rect, content, style);
-            
-            EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
+
+            if(!isArray) 
+                EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
         }
     }
 }

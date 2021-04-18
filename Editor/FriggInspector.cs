@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -71,7 +72,7 @@
                         continue;
                     }
 
-                    if (type.IsSubclassOf(typeof(PropertyInfo))) { 
+                    if (type.IsSubclassOf(typeof(PropertyInfo))) {
                         this.DrawNativeProperty((PropertyInfo) element);
                     }
                     
@@ -86,7 +87,7 @@
                     if (type != typeof(SerializedProperty)) {
                         continue;
                     }
-                    
+
                     var prop = (SerializedProperty) element;
 
                     if (prop.name == "m_Script") {
@@ -123,38 +124,18 @@
         }
 
         private void DrawButton(MethodInfo element) {
-
-            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj);
-                }
-            }
-            
+            GuiUtilities.HandleDecorators(element);
             GuiUtilities.Button(this.serializedObject.targetObject, element);
         }
 
         private void DrawSerializedProperty(SerializedProperty prop) {
             this.serializedObject.Update();
 
-            if (!CoreUtilities.IsPropertyVisible(prop)) {
-                return;
-            }
-
-            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(prop);
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
-                }
-            }
-
+            GuiUtilities.HandleDecorators(prop);
             GuiUtilities.PropertyField(prop, true);
         }
 
         private void DrawNonSerializedField(FieldInfo field) {
-            
             if (field.IsUnitySerialized()) {
                 return;
             }
@@ -171,41 +152,41 @@
 
             var canWrite = field.GetCustomAttribute<ReadonlyAttribute>() == null;
 
-            var attr = field.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), field, obj);
-                }
-            }
+            GuiUtilities.HandleDecorators(field);
             
             var content = CoreUtilities.GetGUIContent(field);
-            
+
+            if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string)) {
+                var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
+                drawer.OnGUI(this.target, Rect.zero, field, content);
+                return;
+            }
+
             field.SetValue(this.target,
-                GuiUtilities.Field(value, content, canWrite));
+                GuiUtilities.LayoutField(value, content, canWrite));
         }
 
         private void DrawNativeProperty(PropertyInfo prop) {
 
-            var attr = prop.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (attr.Any()) {
-                foreach (var obj in attr) {
-                    DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), prop, obj);
-                }
-            }
+            GuiUtilities.HandleDecorators(prop);
 
             var content = CoreUtilities.GetGUIContent(prop);
             
+            if (typeof(IEnumerable).IsAssignableFrom(prop.PropertyType) && prop.PropertyType != typeof(string)) {
+                var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
+                drawer.OnGUI(this.target, Rect.zero, prop, content);
+                return;
+            }
+            
             if (!prop.CanWrite || prop.GetCustomAttribute<ReadonlyAttribute>() != null) {
-                GuiUtilities.Field(prop.GetValue(this.target), content, false);
+                GuiUtilities.LayoutField(prop.GetValue(this.target), content, false);
             }
 
             else {
                 var value = prop.GetValue(this.target);
                     
                 prop.SetValue(this.target, GuiUtilities
-                    .Field(prop.GetValue(this.target), content));
+                    .LayoutField(prop.GetValue(this.target), content));
 
                 var secondValue = prop.GetValue(this.target);
 

@@ -7,14 +7,11 @@
         protected override float GetHeight(Rect rect) {
             var attr = (InfoBoxAttribute) this.attribute;
             
-            return attr.Height;
+            return attr.Height - EditorGUIUtility.singleLineHeight;
         }
         
-        protected override void DrawDecorator(Rect rect, object target) {
+        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (InfoBoxAttribute) this.attribute;
-
-            rect.height = attr.HasCustomHeight ? attr.Height : InfoBoxAttribute.DEFAULT_HEIGHT;
-            rect.width  = EditorGUIUtility.currentViewWidth;
 
             MessageType messageType;
             switch (attr.InfoMessageType) {
@@ -40,18 +37,25 @@
                 fontSize = attr.FontSize,
                 alignment = TextAnchor.MiddleLeft
             };
-            
+
             //we need to recalculate height each time our text wrapping to the next line
             if (!attr.HasCustomHeight) {
-                var height = style.CalcHeight(content, rect.width);
+                rect.height = BaseDecoratorAttribute.DEFAULT_HEIGHT;
+                var height  = style.CalcHeight(content, EditorGUIUtility.currentViewWidth);
                 if (rect.height < height) { 
                     var diff    =  Math.Abs(height - rect.height);
                     rect.height += diff;
                 }
             }
-            
-            EditorGUILayout.Space(rect.height);
+
+            else {
+                rect.height = this.attribute.Height;
+            }
+
             GUI.Label(rect, content, style);
+            
+            if(!isArray)
+                EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
         }
-    }
+    }   
 }

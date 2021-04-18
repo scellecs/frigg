@@ -1,18 +1,27 @@
 ﻿namespace Frigg.Editor {
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using UnityEditor;
     using UnityEngine;
     using Utils;
 
     public abstract class CustomPropertyDrawer {
+        public void OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
+            var attr = memberInfo.GetCustomAttribute<ReadonlyAttribute>();
+            using (new EditorGUI.DisabledScope(attr != null)) {
+                this.CreateAndDraw(target, rect, memberInfo, content);
+            }
+        }
+        
         public void OnGUI(Rect rect, SerializedProperty property) {
 
             var isVisible = CoreUtilities.IsPropertyVisible(property);
             if (!isVisible)
                 return;
 
-            var isEnabled = CoreUtilities.IsPropertyEnabled(property);
+            var isReadOnly = CoreUtilities.TryGetAttribute<ReadonlyAttribute>(property) != null;
+            var isEnabled  = CoreUtilities.IsPropertyEnabled(property) && !isReadOnly;
             
             var content  = CoreUtilities.GetGUIContent(property);
             
@@ -20,7 +29,7 @@
             if (hideAttr != null) {
                 content.text = string.Empty;
             }
-            
+
             //We need this to handle CustomProperty for Readonly & Validator behaviour
             using(new EditorGUI.DisabledScope(!isEnabled)){
                 EditorGUI.BeginChangeCheck();
@@ -57,6 +66,7 @@
         }
         
         protected abstract void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label);
+        protected abstract void CreateAndDraw(object target, Rect rect, MemberInfo member, GUIContent label);
     }
     
     public static class CustomAttributeExtensions {
