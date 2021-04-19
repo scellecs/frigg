@@ -1,7 +1,8 @@
 ﻿namespace Frigg {
     using System;
 
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct, 
+        AllowMultiple = true)]
     public class PropertySpaceAttribute : BaseDecoratorAttribute {
         private int spaceBefore = 0;
         private int spaceAfter  = 0;

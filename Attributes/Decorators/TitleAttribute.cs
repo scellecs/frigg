@@ -2,7 +2,8 @@
     using System;
     using UnityEditor;
 
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct, 
+        AllowMultiple = true)]
     public class TitleAttribute : BaseDecoratorAttribute {
 
         public TitleAlignment titleAlighment = TitleAlignment.Left;
