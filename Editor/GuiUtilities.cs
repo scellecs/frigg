@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
@@ -93,6 +94,20 @@
         }
         
 
+        public static void HandleDecorators(Type targetType, Rect rect = default) {
+            var attr       = (BaseDecoratorAttribute[]) Attribute.GetCustomAttributes(targetType, typeof(BaseDecoratorAttribute));
+            
+            if (!attr.Any()) {
+                return;
+            }
+            
+            foreach (var obj in attr) {
+                DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect == default ?
+                    EditorGUILayout.GetControlRect(true, 0) : rect, targetType, obj);
+            }
+        }
+        
+        
         public static void HandleDecorators(MemberInfo element, Rect rect = default, bool isArray = false) {
             var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
 
@@ -253,9 +268,9 @@
                 {
                     return EditorGUILayout.TextField(content, value.ToString());
                 }
+                
+                return null;
             }
-
-            return null;
         }
         
          public static object Field(object value, Rect rect, GUIContent content, bool canWrite = true) {
