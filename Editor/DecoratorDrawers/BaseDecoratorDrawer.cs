@@ -55,6 +55,7 @@
                     }
                 }
             }
+            
             this.DrawDecorator(rect, target, isArray);
         }
 

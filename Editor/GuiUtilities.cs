@@ -92,7 +92,7 @@
 
             return height;
         }
-        
+            
 
         public static void HandleDecorators(Type targetType, Rect rect = default) {
             var attr       = (BaseDecoratorAttribute[]) Attribute.GetCustomAttributes(targetType, typeof(BaseDecoratorAttribute));
@@ -337,6 +337,8 @@
                 {
                     return EditorGUI.TextField(rect, content, value.ToString());
                 }
+                
+                Debug.Log(objType);
             }
 
             return null;

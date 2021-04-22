@@ -130,7 +130,7 @@
         }
         
         private void DrawButton((MethodInfo, object) method) {
-            var (methodInfo, _) = method;
+            var (methodInfo, obj) = method;
             
             GuiUtilities.HandleDecorators(methodInfo);
             GuiUtilities.Button(this.serializedObject.targetObject, methodInfo);
@@ -152,7 +152,7 @@
                 value = Activator.CreateInstance(fieldInfo.FieldType);
             }
             
-            GuiUtilities.HandleDecorators(value.GetType());
+            GuiUtilities.HandleDecorators(obj.GetType());
             GuiUtilities.HandleDecorators(fieldInfo);
             var content  = CoreUtilities.GetGUIContent(fieldInfo);
             var canWrite = fieldInfo.GetCustomAttribute<ReadonlyAttribute>() == null;
@@ -168,6 +168,7 @@
 
         private void DrawNativeProperty((PropertyInfo, object) property) {
             var (propertyInfo, obj) = property;
+            GuiUtilities.HandleDecorators(obj.GetType());
             GuiUtilities.HandleDecorators(propertyInfo);
 
             var content = CoreUtilities.GetGUIContent(propertyInfo);
