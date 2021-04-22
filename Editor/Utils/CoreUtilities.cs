@@ -8,17 +8,24 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Frigg.Utils {
+    using Object = UnityEngine.Object;
+
     public static class CoreUtilities {
+        public const BindingFlags FLAGS = BindingFlags.Instance | BindingFlags.NonPublic
+                                                                | BindingFlags.Public;
+
         #region reflection
 
+        private static bool IsPrimitive(Type type) => type.IsPrimitive || type.IsValueType || type == typeof(string);
+        
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
                 var type = target.GetType();
                 var data = new List<MethodInfo>();
                 data.AddRange(target.GetType()
                     .GetMethods(BindingFlags.Instance
-                                   | BindingFlags.NonPublic 
-                                   | BindingFlags.Public).Where(predicate));
+                                | BindingFlags.NonPublic 
+                                | BindingFlags.Public).Where(predicate));
 
                 type = type.BaseType;
                 while (type != null) {
@@ -36,22 +43,18 @@ namespace Frigg.Utils {
             Debug.LogError("There's no target specified.");
             return null;
         }
-
+        
         public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
             if (target != null) {
-                var             type = target.GetType();
+                var type = target.GetType();
                 var data = new List<FieldInfo>();
                 data.AddRange(target.GetType()
-                    .GetFields(BindingFlags.Instance
-                               | BindingFlags.NonPublic 
-                               | BindingFlags.Public).Where(predicate));
+                    .GetFields(FLAGS).Where(predicate));
 
                 type = type.BaseType;
                 while (type != null) {
                     data.AddRange(type.GetFields(
-                        BindingFlags.Instance | 
-                        BindingFlags.NonPublic |
-                        BindingFlags.Public).Where(predicate));
+                        FLAGS).Where(predicate));
 
                     type = type.BaseType;
                 }
@@ -68,16 +71,12 @@ namespace Frigg.Utils {
                 var type = target.GetType();
                 var data = new List<PropertyInfo>();
                 data.AddRange(target.GetType()
-                    .GetProperties(BindingFlags.Instance
-                               | BindingFlags.NonPublic 
-                               | BindingFlags.Public).Where(predicate));
+                    .GetProperties(FLAGS).Where(predicate));
 
                 type = type.BaseType;
                 while (type != null) {
                     data.AddRange(type.GetProperties(
-                        BindingFlags.Instance | 
-                        BindingFlags.NonPublic |
-                        BindingFlags.Public).Where(predicate));
+                        FLAGS).Where(predicate));
 
                     type = type.BaseType;
                 }
@@ -88,30 +87,114 @@ namespace Frigg.Utils {
             Debug.LogError("There's no target specified.");
             return null;
         }
-    
-        public static MethodInfo TryGetMethod(this object target, string name) {
+
+        public static void TryGetMembers(this object target, Func<MemberInfo, bool> predicate, List<(MemberInfo, object)> info) {
             if (target != null) {
-                return target.TryGetMethods(x => x.Name == name).FirstOrDefault();
+                var    type = target.GetType();
+                object prevTarget = null;
+                
+                while (type != null) {
+                    var elements = new List<MemberInfo>();
+                    
+                    var methods = type.GetMethods(FLAGS)
+                        .Where(method=> method.GetCustomAttributes(typeof(ButtonAttribute), true).Length > 0);
+                    
+                    var fields = type.GetFields(FLAGS)
+                        .Where(predicate);
+                    
+                    var properties = type.GetProperties(FLAGS)
+                        .Where(predicate);
+
+                    foreach (var method in methods) {
+                        elements.Add(method);
+                    }
+                    
+                    foreach (var field in fields) {
+                        elements.Add(field);
+                    }
+                    
+                    foreach (var property in properties) {
+                        elements.Add(property);
+                    }
+
+                    foreach (var element in elements) {
+                        var mType       = element.GetType();
+                        
+                        if (mType.IsSubclassOf(typeof(FieldInfo))) {
+                            var fInfo = (FieldInfo) element;
+                            mType  = fInfo.FieldType;
+
+                            if (!IsPrimitive(mType)) {
+                                prevTarget = target;
+                                target     = fInfo.GetValue(target);
+                            }
+                        }
+
+                        if (mType.IsSubclassOf(typeof(PropertyInfo))) {
+                            var pInfo = (PropertyInfo) element;
+                            mType  = pInfo.PropertyType;
+
+                            if (!IsPrimitive(mType)) {
+                                prevTarget = target;
+                                target     = pInfo.GetValue(target);
+                            }
+                        }
+                        
+                        if (mType.IsSubclassOf(typeof(MethodInfo))) {
+                            var mInfo = (MethodInfo) element;
+                            mType  = mInfo.ReturnType;
+                        }
+
+                        var isArray = typeof(IList).IsAssignableFrom(mType);
+                        
+                        if (isArray) {
+                            if(!info.Contains((element, prevTarget)))
+                                info.Add((element, prevTarget));
+                        }
+
+                        switch (IsPrimitive(mType)) {
+                            case true:
+                                if (!info.Contains((element, target))) {
+                                    info.Add((element, target));
+                                }
+                                break;
+                            case false when mType.BaseType != typeof(Object):
+                                type = mType;
+                                if(!target.Equals(prevTarget))
+                                    target.TryGetMembers(predicate, info);
+                                break;
+                        }
+                    }
+
+                    type = type.BaseType;
+                }
+
+                return;
             }
         
+            Debug.LogError("There's no target specified.");
+        }
+
+        public static MethodInfo TryGetMethod(this object target, string name) {
+            if(target != null)
+               return  target.TryGetMethods(x => x.Name == name).FirstOrDefault();
+
             Debug.LogError("There's no target specified.");
             return null;
         }
     
         public static FieldInfo TryGetField(this object target, string name) {
-            if (target != null) {
+            if (target != null)
                 return target.TryGetFields(x => x.Name == name).FirstOrDefault();
-            }
-        
+
             Debug.LogError("There's no target specified.");
             return null;
         }
     
         public static PropertyInfo TryGetProperty(this object target, string name) {
-            if (target != null) {
+            if (target != null)
                 return target.TryGetProperties(x => x.Name == name).FirstOrDefault();
-            }
-        
+
             Debug.LogError("There's no target specified.");
             return null;
         }
