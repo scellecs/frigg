@@ -337,8 +337,28 @@
                 {
                     return EditorGUI.TextField(rect, content, value.ToString());
                 }
+
+                var members = new List<(MemberInfo, object)>();
                 
-                Debug.Log(objType);
+                
+                value.TryGetMembers(info => 
+                    info.GetCustomAttributes(typeof(ShowInInspectorAttribute), true).Length > 0, members);
+
+                foreach (var (memberInfo, item2) in members) {
+                    
+                    Debug.Log(memberInfo.Name);
+                    rect.y += EditorGUIUtility.singleLineHeight;
+
+                    if (!memberInfo.GetType().IsSubclassOf(typeof(PropertyInfo))) {
+                        return Field(item2, rect, CoreUtilities.GetGUIContent(memberInfo));
+                    }
+
+                    var propInfo = (PropertyInfo) memberInfo;
+                    Debug.Log(propInfo.Name);
+                    canWrite = propInfo.CanWrite;
+
+                    return Field(item2, rect, CoreUtilities.GetGUIContent(memberInfo), canWrite);
+                }
             }
 
             return null;
