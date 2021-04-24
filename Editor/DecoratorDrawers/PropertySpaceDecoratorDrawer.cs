@@ -3,6 +3,8 @@
     using UnityEngine;
 
     public class PropertySpaceDecoratorDrawer : BaseDecoratorDrawer {
+        public override bool IsVisible(SerializedProperty prop) => true;
+
         protected override float GetHeight(Rect rect) {
             var attr = (PropertySpaceAttribute) this.attribute;
             

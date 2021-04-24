@@ -15,6 +15,8 @@
         public FieldInfo          fieldInfo    = null;
         public PropertyInfo       propertyInfo = null;
 
+        public abstract bool IsVisible(SerializedProperty prop);
+
         public void OnGUI(Rect rect, object target, IDecoratorAttribute attr, bool isArray = false) {
             var type = target.GetType();
 
@@ -40,23 +42,14 @@
                 }
 
                 if (attr is RequiredAttribute) {
-                    var propertyType = CoreUtilities.GetPropertyType(this.property);
-
-                    //If objectReferenceValue is null - we need to draw Required InfoBox, otherwise - return.
-                    if (this.property.propertyType == SerializedPropertyType.ObjectReference) {
-                        if (this.property.objectReferenceValue != null) {
-                            return;
-                        }
-                    }
-                    
-                    //If value is not default - we don't need to draw Required InfoBox.
-                    if (!CoreUtilities.HasDefaultValue(this.property, propertyType)) {
+                    if (!this.IsVisible(this.property)) {
                         return;
                     }
                 }
             }
             
             this.DrawDecorator(rect, target, isArray);
+            
         }
 
         protected abstract float GetHeight(Rect rect);

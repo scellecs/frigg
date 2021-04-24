@@ -4,6 +4,8 @@
     using UnityEngine;
 
     public class InfoBoxDecoratorDrawer : BaseDecoratorDrawer {
+        public override bool IsVisible(SerializedProperty prop) => true;
+
         protected override float GetHeight(Rect rect) {
             var attr = (InfoBoxAttribute) this.attribute;
             
