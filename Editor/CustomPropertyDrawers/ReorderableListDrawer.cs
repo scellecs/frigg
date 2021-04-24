@@ -156,19 +156,17 @@
                 
                 var copy = element.Copy();
 
-                var target = CoreUtilities.GetTargetObjectOfProperty(copy);
-                if (target == null)
-                    target = CoreUtilities.GetTargetObjectWithProperty(copy);
+                //var target = CoreUtilities.GetTargetObjectOfProperty(copy) ?? CoreUtilities.GetTargetObjectWithProperty(copy);
 
-                var indentLevel = EditorGUI.indentLevel;
-                var num         = indentLevel - copy.depth;
+                //var indentLevel = EditorGUI.indentLevel;
+                //var num         = indentLevel - copy.depth;
 
-                var count = target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Where(x => x.IsUnitySerialized());
+                /*var count = target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => x.IsUnitySerialized());*/
                 
-                copy = element.Copy();
+                //copy = element.Copy();
 
-                EditorGUI.indentLevel = copy.depth + num;
+                //EditorGUI.indentLevel = copy.depth + num;
                 tempRect.height       = EditorGUI.GetPropertyHeight(element);
 
                 if (copy.propertyType != SerializedPropertyType.Generic) {
@@ -178,20 +176,20 @@
                     return;
                 }
 
-                var cachedPath = copy.propertyPath;
+                //var cachedPath = copy.propertyPath;
                 
-                if (count.Count() == 1) {
+                /*if (count.Count() == 1) {
                     copy.NextVisible(true);
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
                         EditorGUIUtility.singleLineHeight), copy, CoreUtilities.GetGUIContent(copy), false);
                         
                     EditorGUI.indentLevel = level;
                     return;
-                }
+                }*/
                 
                 var endProperty = copy.GetEndProperty();
                 
-                if (!instance.reorderableLayouts.ContainsKey(cachedPath)) {
+                /*if (!instance.reorderableLayouts.ContainsKey(cachedPath)) {
                     instance.reorderableLayouts.Add(cachedPath, false);
                 }
 
@@ -201,7 +199,7 @@
                     EditorGUIUtility.singleLineHeight), status, $"Element {index}");
                 
                 if(!instance.reorderableLayouts[cachedPath])
-                    return;
+                    return;*/
 
                 copy.NextVisible(true);
 
@@ -211,13 +209,11 @@
                     
                     if (decoratorsHeight > 0) {
                         var amount = GuiUtilities.AmountOfDecorators(copy);
-                        tempRect.y += EditorGUIUtility.singleLineHeight;
                         GuiUtilities.HandleDecorators(copy, tempRect, true);
-                        tempRect.y -= EditorGUIUtility.singleLineHeight;
                         tempRect.y += decoratorsHeight + GuiUtilities.SPACE * amount;
                     }
 
-                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y + EditorGUIUtility.singleLineHeight, 
+                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, 
                         tempRect.width, EditorGUIUtility.singleLineHeight), copy, content, true);
                     
                     EditorGUI.indentLevel =  level;
@@ -250,12 +246,12 @@
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
                 var path    = element.propertyPath;
                 
-                if (!instance.reorderableLayouts.ContainsKey(path)) {
+                /*if (!instance.reorderableLayouts.ContainsKey(path)) {
                     return EditorGUIUtility.singleLineHeight + 5.0f;
                 }
 
                 if(!instance.reorderableLayouts[path])
-                    return EditorGUIUtility.singleLineHeight + 5.0f;
+                    return EditorGUIUtility.singleLineHeight + 5.0f;*/
 
                 var copy = element.Copy();
                 var last = copy.GetEndProperty();
@@ -275,6 +271,10 @@
 
                     amount          += currAmount;
                 } while (copy.NextVisible(true) && !SerializedProperty.EqualContents(copy, last));
+                
+                //Because it's last element.
+                if(element.propertyType == SerializedPropertyType.Generic)
+                   height -= EditorGUIUtility.singleLineHeight;
                 
                 return height + decoratorHeight + GuiUtilities.SPACE * amount + 8.0f;
             };
