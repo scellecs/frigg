@@ -87,7 +87,9 @@
 
             var height = 0f;
             foreach (var obj in attr) {
-                height += obj.Height;
+                var drawer = DecoratorDrawerUtils.GetDecorator(obj.GetType());
+                if (drawer.IsVisible(element))
+                   height += obj.Height;
             }
 
             return height;
