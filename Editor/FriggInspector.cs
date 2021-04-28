@@ -22,7 +22,7 @@
 
         private ILookup<int, object> mixedData;
         private void OnEnable() {
-            this.target.TryGetMembers(info => info.GetCustomAttributes(typeof(ShowInInspectorAttribute), true).Length > 0, this.members);
+            this.target.TryGetMembers(this.members);
 
             this.serializedProperties = this.GetSerializedProperties();
             
@@ -106,7 +106,7 @@
 
         private List<SerializedProperty> GetSerializedProperties() {
             var list = new List<SerializedProperty>();
-
+            
             var it = this.serializedObject.GetIterator();
 
             if (!it.NextVisible(true)) {
@@ -117,14 +117,15 @@
                 var prop = this.serializedObject.FindProperty(it.name);
                 list.Add(prop);
             }
-            while (it.NextVisible(false));
             
+            while (it.NextVisible(false));
+
             return list;
         }
 
         private void DrawSerializedProperty(SerializedProperty prop) {
             this.serializedObject.Update();
-
+            
             GuiUtilities.HandleDecorators(prop);
             GuiUtilities.PropertyField(prop, true);
         }
@@ -138,24 +139,17 @@
 
         private void DrawNonSerializedField((FieldInfo, object) field) {
             var (fieldInfo, obj) = field;
-
+            
             if (fieldInfo.IsUnitySerialized()) {
                 return;
             }
             
             var value = fieldInfo.GetValue(obj);
-            if (value == null) {
-                if(fieldInfo.FieldType.IsValueType) {
-                    return;
-                }
 
-                value = Activator.CreateInstance(fieldInfo.FieldType);
-            }
-            
             GuiUtilities.HandleDecorators(obj.GetType());
             GuiUtilities.HandleDecorators(fieldInfo);
             var content  = CoreUtilities.GetGUIContent(fieldInfo);
-            var canWrite = fieldInfo.GetCustomAttribute<ReadonlyAttribute>() == null;
+            var writable = CoreUtilities.IsWritable(fieldInfo);
 
             if (typeof(IEnumerable).IsAssignableFrom(fieldInfo.FieldType) && fieldInfo.FieldType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
@@ -163,14 +157,15 @@
                 return;
             }
             
-            fieldInfo.SetValue(obj, GuiUtilities.LayoutField(value, content, canWrite));
+            fieldInfo.SetValue(obj, GuiUtilities.LayoutField(fieldInfo.FieldType, value, content, writable));
         }
-
+        
         private void DrawNativeProperty((PropertyInfo, object) property) {
             var (propertyInfo, obj) = property;
+            
             GuiUtilities.HandleDecorators(obj.GetType());
             GuiUtilities.HandleDecorators(propertyInfo);
-
+            
             var content = CoreUtilities.GetGUIContent(propertyInfo);
             
             if (typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType) && propertyInfo.PropertyType != typeof(string)) {
@@ -179,24 +174,30 @@
                 return;
             }
 
-            if (!propertyInfo.CanWrite || propertyInfo.GetCustomAttribute<ReadonlyAttribute>() != null) {
-                GuiUtilities.LayoutField(propertyInfo.GetValue(obj), content, false);
+            var writable = CoreUtilities.IsWritable(propertyInfo);
+            var value    = propertyInfo.GetValue(obj);
+
+            if (CoreUtilities.IsPrimitiveUnityType(propertyInfo.PropertyType)) {
+                if(writable)
+                   propertyInfo.SetValue(obj, GuiUtilities
+                       .LayoutField(propertyInfo.PropertyType, propertyInfo.GetValue(obj), content));
+                else { 
+                    GuiUtilities.LayoutField(propertyInfo.PropertyType, propertyInfo.GetValue(obj), content, false);
+                }
             }
 
             else {
-                var value = propertyInfo.GetValue(obj);
-                    
                 propertyInfo.SetValue(obj, GuiUtilities
-                    .LayoutField(propertyInfo.GetValue(obj), content));
-
-                var secondValue = propertyInfo.GetValue(obj);
-
-                if (value.Equals(secondValue) || Application.isPlaying) {
-                    return;
-                }
-                
-                EditorUtility.SetDirty(this.target);
+                    .MultiFieldLayout(propertyInfo, propertyInfo.GetValue(obj), content, writable));
             }
+
+            var secondValue = propertyInfo.GetValue(obj);
+
+            if (value.Equals(secondValue) || Application.isPlaying) {
+                return;
+            }
+                
+            EditorUtility.SetDirty(this.target);
         }
 
         private static ILookup<int, object> SortAll(IEnumerable<SerializedProperty> serProps,
@@ -216,7 +217,7 @@
             }
 
             foreach (var member in members) {
-                var attr = (OrderAttribute) member.Item1.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                var attr  = (OrderAttribute) member.Item1.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
                 pairs.Add(attr != null
                     ? new KeyValuePair<int, object>(attr.Order, member)
                     : new KeyValuePair<int, object>(0, member));
