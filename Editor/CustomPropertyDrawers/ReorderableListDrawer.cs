@@ -15,7 +15,7 @@
         public static ReorderableListDrawer instance = new ReorderableListDrawer();
 
         private readonly Dictionary<string, ReorderableList> reorderableLists   = new Dictionary<string, ReorderableList>();
-        private readonly Dictionary<string, bool>            reorderableLayouts = new Dictionary<string, bool>();
+        //private readonly Dictionary<string, bool>            reorderableLayouts = new Dictionary<string, bool>();
 
         public static void ClearData() {
             instance = new ReorderableListDrawer();
@@ -24,46 +24,137 @@
         private string GetPropertyKey(SerializedProperty property) => 
             property.serializedObject.targetObject.GetInstanceID() + "." + property.name;
 
-        protected override void CreateAndDraw(object target, Rect rect, MemberInfo memberInfo, GUIContent label) {
+        protected override object CreateAndDraw(Rect rect, MemberInfo memberInfo, object target, GUIContent label) {
             ReorderableList             list;
             object                      value = null;
             ListDrawerSettingsAttribute attr  = null;
             Type                        type  = null;
 
+            //TODO:Refactor
             if (!instance.reorderableLists.ContainsKey(memberInfo.Name)) {
 
-                if (memberInfo.GetType().IsSubclassOf(typeof(FieldInfo))) {
-                    var fieldInfo = (FieldInfo) memberInfo;
-                    type  = typeof(FieldInfo);
-                    attr  = fieldInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
-                    value = fieldInfo.GetValue(target);
+                switch (memberInfo.MemberType) {
+                    case MemberTypes.Field: {
+                        var fieldInfo = (FieldInfo) memberInfo;
+                        type  = typeof(FieldInfo);
+                        attr  = fieldInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
+                        value = fieldInfo.GetValue(target) ?? Array.CreateInstance(CoreUtilities.TryGetListElementType(fieldInfo.FieldType), 0);
+                        break;
+                    }
+                    case MemberTypes.Property: {
+                        var propertyInfo = (PropertyInfo) memberInfo;
+                        type  = typeof(PropertyInfo);
+                        attr  = propertyInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
+                        value = propertyInfo.GetValue(target) ?? Array.CreateInstance(CoreUtilities.TryGetListElementType(propertyInfo.PropertyType), 0);
+                        break;
+                    }
                 }
-
-                if (memberInfo.GetType().IsSubclassOf(typeof(PropertyInfo))) {
-                    var propertyInfo = (PropertyInfo) memberInfo;
-                    type  = typeof(PropertyInfo);
-                    attr  = propertyInfo.GetCustomAttribute<ListDrawerSettingsAttribute>();
-                    value = propertyInfo.GetValue(target);
-                }
-
+                
                 if (attr != null) {
                     var hideHeader = attr.HideHeader;
-                    list = new ReorderableList((IList) value, value.GetType(), attr.AllowDrag, !attr.HideHeader,
+                    
+                    list = new ReorderableList(value as IList, value.GetType(), attr.AllowDrag, !attr.HideHeader,
                         !attr.HideAddButton, !attr.HideRemoveButton);
-                    SetCallbacks(type, target, memberInfo, list, hideHeader);
+                    
+                    SetCallbacks(type, 3, memberInfo, list, label, hideHeader);
+                    
                     list.DoLayoutList();
-                    return;
+                    return list.list;
                 }
 
-                list = new ReorderableList((IList) value, value?.GetType(), true, true, true, true);
+                if (value == null) {
+                    return null;
+                }
 
-                SetCallbacks(type, target, memberInfo, list);
+                list = new ReorderableList(value as IList, value.GetType(), true, true, true, true);
+
+                SetCallbacks(type, 3, memberInfo, list, label);
 
                 instance.reorderableLists[memberInfo.Name] = list;
             }
 
             list = instance.reorderableLists[memberInfo.Name];
             list.DoLayoutList();
+            
+            return list.list;
+        }
+
+        private static void SetCallbacks(Type type, int amountOfProperties, MemberInfo memberInfo, 
+            ReorderableList reorderableList, GUIContent label, bool hideHeader = false) {
+            
+            if (!hideHeader) {
+                reorderableList.drawHeaderCallback = tempRect => {
+                    EditorGUI.LabelField(tempRect,
+                        new GUIContent($"{ObjectNames.NicifyVariableName(memberInfo.Name)} - {reorderableList.count} elements"));
+                };
+            }
+
+            reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
+                var element = reorderableList.list[index];
+
+                tempRect.y += GuiUtilities.SPACE / 2f;
+                tempRect.height = EditorGUIUtility.singleLineHeight;
+                tempRect.x      += 10.0f;
+                tempRect.width  -= 10.0f;
+                
+                if (type == typeof(PropertyInfo)) {
+                    var property = (PropertyInfo) memberInfo;
+                    if (!property.CanWrite) {
+                        using(new EditorGUI.DisabledScope(true)) {
+                            reorderableList.draggable  = false;
+                            reorderableList.displayAdd = reorderableList.displayRemove = false;
+                            GuiUtilities.Field(property.PropertyType, element, tempRect, new GUIContent($"Element {index}"));
+                        }
+                        return;
+                    }
+                }
+
+                Type declaredType       = null;
+                switch (memberInfo.MemberType) {
+                    case MemberTypes.Field:
+                        declaredType = ((FieldInfo) memberInfo).FieldType.GetElementType();
+                        break;
+                    case MemberTypes.Property:
+                        declaredType = ((PropertyInfo) memberInfo).PropertyType.GetElementType();
+                        break;
+                }
+
+                if (CoreUtilities.IsPrimitiveUnityType(declaredType)) {
+                    reorderableList.list[index] = GuiUtilities.Field(declaredType, element, tempRect,
+                        label);
+                }
+
+                else {
+                    reorderableList.list[index] = GuiUtilities.MultiField(tempRect, memberInfo, element, label);
+                }
+            };
+            
+            var listType = CoreUtilities.TryGetListElementType(reorderableList.list.GetType());
+
+            reorderableList.onAddCallback = delegate {
+                var copy = reorderableList.list;
+                
+                reorderableList.list = Array.CreateInstance(listType, copy.Count + 1);
+                for (var i = 0; i < copy.Count; i++) {
+                    reorderableList.list[i] = copy[i];
+                }
+            };
+            
+            reorderableList.onRemoveCallback = delegate {
+                var copy      = reorderableList.list;
+                var newLength = copy.Count - 1;
+                
+                reorderableList.list = Array.CreateInstance(listType, newLength);
+                for (var i = 0; i < reorderableList.index; i++) 
+                    reorderableList.list[i] = copy[i];
+
+                for (var i = reorderableList.index; i < newLength; i++) 
+                    reorderableList.list[i] = copy[i + 1];
+            };
+
+            reorderableList.elementHeightCallback = index => {
+                return (EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE) * amountOfProperties ;
+            };
         }
         
         protected override void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label) {
@@ -95,46 +186,6 @@
             //if is null
             reorderableList = instance.reorderableLists[p.name];
             reorderableList.DoLayoutList();
-        }
-
-        private static void SetCallbacks(Type type, object target, MemberInfo memberInfo, ReorderableList reorderableList, bool hideHeader = false) {
-            if (!hideHeader) {
-                reorderableList.drawHeaderCallback = tempRect => {
-                    EditorGUI.LabelField(tempRect,
-                        new GUIContent($"{ObjectNames.NicifyVariableName(memberInfo.Name)} - {reorderableList.count} elements"));
-                };
-            }
-            
-            reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
-                var element = reorderableList.list[index];
-                tempRect.y     += 2.0f;
-                tempRect.x     += 10.0f;
-                tempRect.width -= 10.0f;
-                
-                if (type == typeof(PropertyInfo)) {
-                    var property = (PropertyInfo) memberInfo;
-                    if (!property.CanWrite) {
-                        using(new EditorGUI.DisabledScope(true)) {
-                            reorderableList.draggable  = false;
-                            reorderableList.displayAdd = reorderableList.displayRemove = false;
-                            GuiUtilities.Field(element, tempRect, new GUIContent($"Element {index}"));
-                        }
-                        return;
-                    }
-                }
-
-                if (memberInfo.GetCustomAttribute<HideLabelAttribute>() != null) {
-                    reorderableList.list[index] = GuiUtilities.Field(element, tempRect,
-                        GUIContent.none);
-                    return;
-                }
-                
-                reorderableList.list[index] = GuiUtilities.Field(element, tempRect,
-                    new GUIContent($"Element {index}"));
-            };
-            
-            reorderableList.elementHeightCallback = index
-                => EditorGUIUtility.singleLineHeight;
         }
         
         private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
@@ -205,7 +256,7 @@
 
                 do {
                     var content          = CoreUtilities.GetGUIContent(copy);
-                    var decoratorsHeight = GuiUtilities.DecoratorsHeight(copy);
+                    var decoratorsHeight = GuiUtilities.GetDecoratorsHeight(copy);
                     
                     if (decoratorsHeight > 0) {
                         var amount = GuiUtilities.AmountOfDecorators(copy);
@@ -262,7 +313,7 @@
 
                 //allocate total height.
                 do { 
-                    decoratorHeight += GuiUtilities.DecoratorsHeight(copy);
+                    decoratorHeight += GuiUtilities.GetDecoratorsHeight(copy);
                     height          += EditorGUIUtility.singleLineHeight;
                     
                     var currAmount = GuiUtilities.AmountOfDecorators(copy);
