@@ -61,8 +61,13 @@
         }
         #endregion
 
+        public static int AmountOfDecorators(SerializedProperty property) {
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(property).ToList();
+            return !attr.Any() ? 0 : attr.Count;
+        }
+        
         //Return total allocated height
-        public static float DecoratorsHeight(MemberInfo element) {
+        public static float GetDecoratorsHeight(MemberInfo element) {
             var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
             if (!attr.Any()) {
                 return 0;
@@ -75,13 +80,8 @@
 
             return height;
         }
-
-        public static int AmountOfDecorators(SerializedProperty property) {
-            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(property).ToList();
-            return !attr.Any() ? 0 : attr.Count;
-        }
         
-        public static float DecoratorsHeight(SerializedProperty element) {
+        public static float GetDecoratorsHeight(SerializedProperty element) {
             var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
             if (!attr.Any()) {
                 return 0;
@@ -208,14 +208,25 @@
             field.SetValue(target, values[newIndex]);
         }
 
-        public static object LayoutField(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
-            using (new EditorGUI.DisabledScope(!canWrite)) {
-                if (value == null)
-                    return null;
-                
-                var objType = value.GetType();
+        public static object MultiFieldLayout(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
+            //TODO: use method like "IsInline" instead.
+            /*if (info.GetCustomAttribute<InlinePropertyAttribute>() == null) {
+                return value;
+            }*/
 
-                if (!CoreUtilities.IsPrimitive(objType)) {
+            var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
+            return drawer.OnGUI(value, Rect.zero, info, content);
+        }
+        
+        public static object MultiField(Rect rect, MemberInfo info, object value, GUIContent content) {
+            var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
+            return drawer.OnGUI(value, rect, info, content);
+        }
+        
+        public static object LayoutField(Type objType, object value, GUIContent content, bool canWrite = true) {
+            using (new EditorGUI.DisabledScope(!canWrite)) {
+                
+                if (!CoreUtilities.IsPrimitiveUnityType(objType)) {
                     return null;
                 }
 
@@ -283,19 +294,8 @@
             }
         }
 
-        public static object MultiField(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
-            if (info.GetCustomAttribute<InlinePropertyAttribute>() != null) {
-                var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
-                return drawer.OnGUI(value, Rect.zero, info, content);
-            }
-
-            return value;
-        }
-        
-         public static object Field(MemberInfo info, object value, Rect rect, GUIContent content, bool canWrite = true) {
+        public static object Field(Type objType, object value, Rect rect, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
-                var objType = value.GetType();
-
                 if (objType == typeof(bool))
                 {
                     return EditorGUI.Toggle(rect, content, (bool)value);
@@ -346,13 +346,13 @@
                 }
                 if (typeof(Object).IsAssignableFrom(objType))
                 {
-                    return EditorGUI.ObjectField(rect, content, (Object)value, objType, true);
+                    return EditorGUI.ObjectField(rect, content, (Object) value, objType, true);
                 }
-                if (objType.BaseType == typeof(Enum))
+                if (typeof(Enum).IsAssignableFrom(objType))
                 {
                     return EditorGUI.EnumPopup(rect, content, (Enum)value);
                 }
-                if (objType.BaseType == typeof(TypeInfo))
+                if (typeof(TypeInfo).IsAssignableFrom(objType))
                 {
                     return EditorGUI.TextField(rect, content, value.ToString());
                 }
@@ -361,7 +361,7 @@
             return null;
         }
 
-         private static bool IsInlineProperty(MemberInfo type) {
+        private static bool IsInlineProperty(MemberInfo type) {
              var attr = type.GetCustomAttribute<InlinePropertyAttribute>();
              return attr != null;
          }
