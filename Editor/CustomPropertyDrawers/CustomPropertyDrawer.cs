@@ -7,10 +7,10 @@
     using Utils;
 
     public abstract class CustomPropertyDrawer {
-        public void OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
+        public object OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
             var attr = memberInfo.GetCustomAttribute<ReadonlyAttribute>();
             using (new EditorGUI.DisabledScope(attr != null)) {
-                this.CreateAndDraw(target, rect, memberInfo, content);
+                return this.CreateAndDraw(rect, memberInfo, target, content);
             }
         }
         
@@ -66,7 +66,7 @@
         }
         
         protected abstract void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label);
-        protected abstract void CreateAndDraw(object target, Rect rect, MemberInfo member, GUIContent label);
+        protected abstract object CreateAndDraw(Rect rect, MemberInfo member, object target, GUIContent label);
     }
     
     public static class CustomAttributeExtensions {
