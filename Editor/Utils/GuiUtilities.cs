@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -9,8 +10,9 @@
     using Object = UnityEngine.Object;
 
     public static class GuiUtilities {
-        public const  float SPACE              = 5.0f;
-        private const int   PROPERTY_MIN_WIDTH = 212;
+        public const   float SPACE              = 5.0f;
+        private const  int   PROPERTY_MIN_WIDTH = 212;
+        private static int   calledTimes        = 0;
         
         #region property implementations
         public static void PropertyField(SerializedProperty property, bool includeChildren) {
@@ -206,76 +208,91 @@
             field.SetValue(target, values[newIndex]);
         }
 
-        public static object LayoutField(object value, GUIContent content, bool canWrite = true) {
+        public static object LayoutField(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
+                if (value == null)
+                    return null;
+                
                 var objType = value.GetType();
 
-                if (objType == typeof(bool))
-                {
-                    return EditorGUILayout.Toggle(content, (bool)value);
+                if (!CoreUtilities.IsPrimitive(objType)) {
+                    return null;
                 }
-                if (objType == typeof(int))
-                {
-                    return EditorGUILayout.IntField(content, (int)value);
+
+                if (objType == typeof(bool)) {
+                    return EditorGUILayout.Toggle(content, (bool) value);
                 }
-                if (objType == typeof(long))
-                {
-                    return EditorGUILayout.LongField(content, (long)value);
+
+                if (objType == typeof(int)) {
+                    return EditorGUILayout.IntField(content, (int) value);
                 }
-                if (objType == typeof(float))
-                {
-                    return EditorGUILayout.FloatField(content, (float)value);
+
+                if (objType == typeof(long)) {
+                    return EditorGUILayout.LongField(content, (long) value);
                 }
-                if (objType == typeof(double))
-                {
-                    return EditorGUILayout.DoubleField(content, (double)value);
+
+                if (objType == typeof(float)) {
+                    return EditorGUILayout.FloatField(content, (float) value);
                 }
-                if (objType == typeof(string))
-                {
-                    return EditorGUILayout.TextField(content, (string)value);
+
+                if (objType == typeof(double)) {
+                    return EditorGUILayout.DoubleField(content, (double) value);
                 }
-                if (objType == typeof(Vector2))
-                {
-                    return EditorGUILayout.Vector2Field(content, (Vector2)value);
+
+                if (objType == typeof(string)) {
+                    return EditorGUILayout.TextField(content, (string) value);
                 }
-                if (objType == typeof(Vector3))
-                {
-                    return EditorGUILayout.Vector3Field(content, (Vector3)value);
+
+                if (objType == typeof(Vector2)) {
+                    return EditorGUILayout.Vector2Field(content, (Vector2) value);
                 }
-                if (objType == typeof(Vector4))
-                {
-                    return EditorGUILayout.Vector4Field(content, (Vector4)value);
+
+                if (objType == typeof(Vector3)) {
+                    return EditorGUILayout.Vector3Field(content, (Vector3) value);
                 }
-                if (objType == typeof(Color))
-                {
-                    return EditorGUILayout.ColorField(content, (Color)value);
+
+                if (objType == typeof(Vector4)) {
+                    return EditorGUILayout.Vector4Field(content, (Vector4) value);
                 }
-                if (objType == typeof(Bounds))
-                {
-                    return EditorGUILayout.BoundsField(content, (Bounds)value);
+
+                if (objType == typeof(Color)) {
+                    return EditorGUILayout.ColorField(content, (Color) value);
                 }
-                if (objType == typeof(Rect))
-                {
-                    return EditorGUILayout.RectField(content, (Rect)value);
+
+                if (objType == typeof(Bounds)) {
+                    return EditorGUILayout.BoundsField(content, (Bounds) value);
                 }
-                if (typeof(Object).IsAssignableFrom(objType))
-                {
-                    return EditorGUILayout.ObjectField(content, (Object)value, objType, true);
+
+                if (objType == typeof(Rect)) {
+                    return EditorGUILayout.RectField(content, (Rect) value);
                 }
-                if (objType.BaseType == typeof(Enum))
-                {
-                    return EditorGUILayout.EnumPopup(content, (Enum)value);
+
+                if (typeof(Object).IsAssignableFrom(objType)) {
+                    return EditorGUILayout.ObjectField(content, (Object) value, objType, true);
                 }
-                if (objType.BaseType == typeof(TypeInfo))
-                {
+
+                if (typeof(Enum).IsAssignableFrom(objType)) {
+                    return EditorGUILayout.EnumPopup(content, (Enum) value);
+                }
+
+                if (objType == typeof(TypeInfo)) {
                     return EditorGUILayout.TextField(content, value.ToString());
                 }
-                
+
                 return null;
             }
         }
+
+        public static object MultiField(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
+            if (info.GetCustomAttribute<InlinePropertyAttribute>() != null) {
+                var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
+                return drawer.OnGUI(value, Rect.zero, info, content);
+            }
+
+            return value;
+        }
         
-         public static object Field(object value, Rect rect, GUIContent content, bool canWrite = true) {
+         public static object Field(MemberInfo info, object value, Rect rect, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
                 var objType = value.GetType();
 
@@ -339,32 +356,15 @@
                 {
                     return EditorGUI.TextField(rect, content, value.ToString());
                 }
-
-                var members = new List<(MemberInfo, object)>();
-                
-                
-                value.TryGetMembers(info => 
-                    info.GetCustomAttributes(typeof(ShowInInspectorAttribute), true).Length > 0, members);
-
-                foreach (var (memberInfo, item2) in members) {
-                    
-                    Debug.Log(memberInfo.Name);
-                    rect.y += EditorGUIUtility.singleLineHeight;
-
-                    if (!memberInfo.GetType().IsSubclassOf(typeof(PropertyInfo))) {
-                        return Field(item2, rect, CoreUtilities.GetGUIContent(memberInfo));
-                    }
-
-                    var propInfo = (PropertyInfo) memberInfo;
-                    Debug.Log(propInfo.Name);
-                    canWrite = propInfo.CanWrite;
-
-                    return Field(item2, rect, CoreUtilities.GetGUIContent(memberInfo), canWrite);
-                }
             }
 
             return null;
         }
+
+         private static bool IsInlineProperty(MemberInfo type) {
+             var attr = type.GetCustomAttribute<InlinePropertyAttribute>();
+             return attr != null;
+         }
         #endregion
     }
 }
