@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,11 +11,23 @@ namespace Frigg.Utils {
 
     public static class CoreUtilities {
         public const BindingFlags FLAGS = BindingFlags.Instance | BindingFlags.NonPublic
-                                                                | BindingFlags.Public;
+                                                                | BindingFlags.Public
+                                                                | BindingFlags.DeclaredOnly;
 
         #region reflection
+        
+        public static bool IsWritable(MemberInfo member) {
+            var writable = member.GetCustomAttribute<ReadonlyAttribute>() == null;
 
-        private static bool IsPrimitive(Type type) => type.IsPrimitive || type.IsValueType || type == typeof(string);
+            if (member.MemberType != MemberTypes.Property) {
+                return writable;
+            }
+
+            var property = (PropertyInfo) member;
+            writable = property.CanWrite;
+
+            return writable;
+        }
         
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
@@ -88,22 +99,28 @@ namespace Frigg.Utils {
             return null;
         }
 
-        public static void TryGetMembers(this object target, Func<MemberInfo, bool> predicate, List<(MemberInfo, object)> info) {
+        public static void TryGetMembers(this object target, List<(MemberInfo, object)> info) {
             if (target != null) {
+                //get type of provided target
                 var    type = target.GetType();
-                object prevTarget = null;
-                
+
                 while (type != null) {
                     var elements = new List<MemberInfo>();
                     
+                    //Get all fields in provided type
                     var methods = type.GetMethods(FLAGS)
-                        .Where(method=> method.GetCustomAttributes(typeof(ButtonAttribute), true).Length > 0);
+                        .Where(method=> method.GetCustomAttribute<ButtonAttribute>() != null).ToList();
                     
+                    //Get all methods in provided type
                     var fields = type.GetFields(FLAGS)
-                        .Where(predicate);
+                        .Where(x => type.GetCustomAttribute<SerializableAttribute>() != null 
+                                    && (x.GetCustomAttribute<SerializableAttribute>() != null || x.IsPublic) 
+                                    || x.GetCustomAttribute<ShowInInspectorAttribute>() != null).ToList();
                     
+                    //Get all properties in provided type
                     var properties = type.GetProperties(FLAGS)
-                        .Where(predicate);
+                        .Where(x => x.GetCustomAttribute<SerializableAttribute>() != null 
+                                    || x.GetCustomAttribute<ShowInInspectorAttribute>() != null).ToList();
 
                     foreach (var method in methods) {
                         elements.Add(method);
@@ -112,57 +129,37 @@ namespace Frigg.Utils {
                     foreach (var field in fields) {
                         elements.Add(field);
                     }
-                    
+
                     foreach (var property in properties) {
                         elements.Add(property);
                     }
 
+                    //Iterate through each element of our list
                     foreach (var element in elements) {
-                        var mType       = element.GetType();
-                        
+                        var mType = element.GetType();
+
                         if (mType.IsSubclassOf(typeof(FieldInfo))) {
                             var fInfo = (FieldInfo) element;
-                            mType  = fInfo.FieldType;
+                            mType = fInfo.FieldType;
 
-                            if (!IsPrimitive(mType)) {
-                                prevTarget = target;
-                                target     = fInfo.GetValue(target);
+                            if (!info.Contains((element, target))) {
+                                info.Add((element, target));
                             }
                         }
 
                         if (mType.IsSubclassOf(typeof(PropertyInfo))) {
                             var pInfo = (PropertyInfo) element;
-                            mType  = pInfo.PropertyType;
+                            mType = pInfo.PropertyType;
 
-                            if (!IsPrimitive(mType)) {
-                                prevTarget = target;
-                                target     = pInfo.GetValue(target);
+                            if (!info.Contains((element, target))) {
+                                info.Add((element, target));
                             }
                         }
                         
                         if (mType.IsSubclassOf(typeof(MethodInfo))) {
-                            var mInfo = (MethodInfo) element;
-                            mType  = mInfo.ReturnType;
-                        }
-
-                        var isArray = typeof(IList).IsAssignableFrom(mType);
-                        
-                        if (isArray) {
-                            if(!info.Contains((element, prevTarget)))
-                                info.Add((element, prevTarget));
-                        }
-
-                        switch (IsPrimitive(mType)) {
-                            case true:
-                                if (!info.Contains((element, target))) {
-                                    info.Add((element, target));
-                                }
-                                break;
-                            case false when mType.BaseType != typeof(Object):
-                                type = mType;
-                                if(!target.Equals(prevTarget))
-                                    target.TryGetMembers(predicate, info);
-                                break;
+                            if (!info.Contains((element, target))) {
+                                info.Add((element, target));
+                            }
                         }
                     }
 
@@ -526,7 +523,7 @@ namespace Frigg.Utils {
         public static GUIContent GetGUIContent(MemberInfo property) {
             var niceName = ObjectNames.NicifyVariableName(property.Name);
             var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
-                $"[{property.GetType().Name}] {niceName}" : string.Empty;
+                $"{niceName}" : string.Empty;
             
             var content = new GUIContent(label);
             var tooltip = property.GetCustomAttribute<PropertyTooltipAttribute>();
@@ -568,5 +565,76 @@ namespace Frigg.Utils {
             }
             return attr.Any(x => x is SerializeField);
         }
+
+        public static bool IsPrimitiveUnityType(Type objType) {
+            if (objType == null)
+                return false;
+            
+            if (objType.IsPrimitive || objType == typeof(string))
+                return true;
+            
+            if (objType == typeof(bool))
+            {
+                return true;
+            }
+            if (objType == typeof(int))
+            {
+                return true;
+            }
+            if (objType == typeof(long))
+            {
+                return true;
+            }
+            if (objType == typeof(float))
+            {
+                return true;
+            }
+            if (objType == typeof(double))
+            {
+                return true;
+            }
+            if (objType == typeof(string))
+            {
+                return true;
+            }
+            if (objType == typeof(Vector2))
+            {
+                return true;
+            }
+            if (objType == typeof(Vector3))
+            {
+                return true;
+            }
+            if (objType == typeof(Vector4))
+            {
+                return true;
+            }
+            if (objType == typeof(Color))
+            {
+                return true;
+            }
+            if (objType == typeof(Bounds))
+            {
+                return true;
+            }
+            if (objType == typeof(Rect)) {
+                return true;
+            }
+            if (typeof(Object).IsAssignableFrom(objType))
+            {
+                return true;
+            }
+            if (typeof(Enum).IsAssignableFrom(objType))
+            {
+                return true;
+            }
+            if (typeof(TypeInfo).IsAssignableFrom(objType))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
     }
 }
