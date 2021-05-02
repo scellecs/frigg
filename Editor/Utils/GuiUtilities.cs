@@ -99,12 +99,11 @@
             
 
         public static void HandleDecorators(Type targetType, Rect rect = default) {
-            var attr       = (BaseDecoratorAttribute[]) Attribute.GetCustomAttributes(targetType, typeof(BaseDecoratorAttribute));
-            
-            if (!attr.Any()) {
+            if (!targetType.IsDefined(typeof(BaseDecoratorAttribute)))
                 return;
-            }
             
+            var attr       = (BaseDecoratorAttribute[]) Attribute.GetCustomAttributes(targetType, typeof(BaseDecoratorAttribute));
+
             foreach (var obj in attr) {
                 DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(rect == default ?
                     EditorGUILayout.GetControlRect(true, 0) : rect, targetType, obj);
@@ -113,11 +112,10 @@
         
         
         public static void HandleDecorators(MemberInfo element, Rect rect = default, bool isArray = false) {
-            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>().ToList();
-
-            if (!attr.Any()) {
+            if (!element.IsDefined(typeof(BaseDecoratorAttribute)))
                 return;
-            }
+            
+            var attr = element.GetCustomAttributes<BaseDecoratorAttribute>();
 
             foreach (var obj in attr) {
                 if (rect == default) {
@@ -130,12 +128,8 @@
         }
         
         public static void HandleDecorators(SerializedProperty element, Rect rect = default, bool isArray = false) {
-            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element).ToList();
-
-            if (!attr.Any()) {
-                return;
-            }
-
+            var attr = CoreUtilities.TryGetAttributes<BaseDecoratorAttribute>(element);
+            
             foreach (var obj in attr) {
                 if (rect == default) {
                     DecoratorDrawerUtils.GetDecorator(obj.GetType()).OnGUI(EditorGUILayout.GetControlRect(true, 0), element, obj, isArray);
