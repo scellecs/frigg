@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Frigg.Utils {
+    using Editor;
     using Object = UnityEngine.Object;
 
     public static class CoreUtilities {
@@ -17,7 +18,7 @@ namespace Frigg.Utils {
         #region reflection
         
         public static bool IsWritable(MemberInfo member) {
-            var writable = member.GetCustomAttribute<ReadonlyAttribute>() == null;
+            var writable = !member.IsDefined(typeof(ReadonlyAttribute));
 
             if (member.MemberType != MemberTypes.Property) {
                 return writable;
@@ -28,7 +29,7 @@ namespace Frigg.Utils {
 
             return writable;
         }
-        
+
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
                 var type = target.GetType();
@@ -54,112 +55,55 @@ namespace Frigg.Utils {
             Debug.LogError("There's no target specified.");
             return null;
         }
-        
-        public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
-            if (target != null) {
-                var type = target.GetType();
-                var data = new List<FieldInfo>();
-                data.AddRange(target.GetType()
-                    .GetFields(FLAGS).Where(predicate));
 
-                type = type.BaseType;
-                while (type != null) {
-                    data.AddRange(type.GetFields(
-                        FLAGS).Where(predicate));
-
-                    type = type.BaseType;
-                }
-                
-                return data;
-            }
-        
-            Debug.LogError("There's no target specified.");
-            return null;
-        }
-    
-        public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
-            if (target != null) {
-                var type = target.GetType();
-                var data = new List<PropertyInfo>();
-                data.AddRange(target.GetType()
-                    .GetProperties(FLAGS).Where(predicate));
-
-                type = type.BaseType;
-                while (type != null) {
-                    data.AddRange(type.GetProperties(
-                        FLAGS).Where(predicate));
-
-                    type = type.BaseType;
-                }
-            
-                return data;
-            }
-        
-            Debug.LogError("There's no target specified.");
-            return null;
-        }
-
-        public static void TryGetMembers(this object target, List<(MemberInfo, object)> info) {
+        public static void TryGetMembers(this object target, List<Member> info) {
             if (target != null) {
                 //get type of provided target
                 var    type = target.GetType();
 
                 while (type != null) {
-                    var elements = new List<MemberInfo>();
-                    
                     //Get all fields in provided type
-                    var methods = type.GetMethods(FLAGS)
-                        .Where(method=> method.GetCustomAttribute<ButtonAttribute>() != null).ToList();
-                    
+                    var methods = type.GetMethods(FLAGS);
+
                     //Get all methods in provided type
-                    var fields = type.GetFields(FLAGS)
-                        .Where(x => type.GetCustomAttribute<SerializableAttribute>() != null 
-                                    && (x.GetCustomAttribute<SerializableAttribute>() != null || x.IsPublic) 
-                                    || x.GetCustomAttribute<ShowInInspectorAttribute>() != null).ToList();
+                    var fields = type.GetFields(FLAGS);
                     
                     //Get all properties in provided type
-                    var properties = type.GetProperties(FLAGS)
-                        .Where(x => x.GetCustomAttribute<SerializableAttribute>() != null 
-                                    || x.GetCustomAttribute<ShowInInspectorAttribute>() != null).ToList();
+                    var properties = type.GetProperties(FLAGS);
 
                     foreach (var method in methods) {
-                        elements.Add(method);
+                        if (!method.IsDefined(typeof(ButtonAttribute))) {
+                            continue;
+                        }
+
+                        var member = new Member {memberInfo = method, target = target};
+                        if (!info.Contains(member)) {
+                            info.Add(member);
+                        }
                     }
                     
                     foreach (var field in fields) {
-                        elements.Add(field);
+                        if ((!type.IsDefined(typeof(SerializableAttribute))
+                             || !field.IsDefined(typeof(SerializableAttribute)) && !field.IsPublic) 
+                            && !field.IsDefined(typeof(ShowInInspectorAttribute))) {
+                            continue;
+                        }
+
+                        var member = new Member {memberInfo = field, target = target};
+                        if (!info.Contains(member)) {
+                            info.Add(member);
+                        }
                     }
 
                     foreach (var property in properties) {
-                        elements.Add(property);
-                    }
-
-                    //Iterate through each element of our list
-                    foreach (var element in elements) {
-                        var mType = element.GetType();
-
-                        if (mType.IsSubclassOf(typeof(FieldInfo))) {
-                            var fInfo = (FieldInfo) element;
-                            mType = fInfo.FieldType;
-
-                            if (!info.Contains((element, target))) {
-                                info.Add((element, target));
-                            }
+                        if (!property.IsDefined(typeof(SerializableAttribute)) 
+                            && !property.IsDefined(typeof(ShowInInspectorAttribute))) {
+                            continue;
                         }
 
-                        if (mType.IsSubclassOf(typeof(PropertyInfo))) {
-                            var pInfo = (PropertyInfo) element;
-                            mType = pInfo.PropertyType;
-
-                            if (!info.Contains((element, target))) {
-                                info.Add((element, target));
-                            }
-                        }
-                        
-                        if (mType.IsSubclassOf(typeof(MethodInfo))) {
-                            if (!info.Contains((element, target))) {
-                                info.Add((element, target));
-                            }
+                        var member = new Member {memberInfo = property, target = target};
+                        if (!info.Contains(member)) {
+                            info.Add(member);
                         }
                     }
 
@@ -182,7 +126,7 @@ namespace Frigg.Utils {
     
         public static FieldInfo TryGetField(this object target, string name) {
             if (target != null)
-                return target.TryGetFields(x => x.Name == name).FirstOrDefault();
+                return target.GetType().GetField("name");
 
             Debug.LogError("There's no target specified.");
             return null;
@@ -190,7 +134,7 @@ namespace Frigg.Utils {
     
         public static PropertyInfo TryGetProperty(this object target, string name) {
             if (target != null)
-                return target.TryGetProperties(x => x.Name == name).FirstOrDefault();
+                return target.GetType().GetProperty("name");
 
             Debug.LogError("There's no target specified.");
             return null;
@@ -522,14 +466,17 @@ namespace Frigg.Utils {
 
         public static GUIContent GetGUIContent(MemberInfo property) {
             var niceName = ObjectNames.NicifyVariableName(property.Name);
-            var label = property.GetCustomAttribute<HideLabelAttribute>() == null ? 
+            var label = !property.IsDefined(typeof(HideLabelAttribute)) ? 
                 $"{niceName}" : string.Empty;
             
             var content = new GUIContent(label);
-            var tooltip = property.GetCustomAttribute<PropertyTooltipAttribute>();
-            if (tooltip != null) {
-                content.tooltip = tooltip.Text;
+            var isDefined = property.IsDefined(typeof(PropertyTooltipAttribute));
+            if (!isDefined) {
+                return content;
             }
+
+            var toolTip = property.GetCustomAttribute<PropertyTooltipAttribute>();
+            content.tooltip = toolTip.Text;
 
             return content;
         }
@@ -551,19 +498,16 @@ namespace Frigg.Utils {
         }
         
         public static bool IsUnitySerialized(this FieldInfo fieldInfo) {
-            var attr = fieldInfo.GetCustomAttributes(true);
-            if (attr.Any(x => x is NonSerializedAttribute))
-            {
+            if (fieldInfo.IsDefined(typeof(NonSerializedAttribute)))
                 return false;
-            }
-
+            
             if (fieldInfo.IsPublic)
                 return true;
 
-            if (!fieldInfo.IsPrivate && !fieldInfo.IsFamilyOrAssembly) {
+            if (!fieldInfo.IsPrivate && !fieldInfo.IsFamilyOrAssembly) 
                 return false;
-            }
-            return attr.Any(x => x is SerializeField);
+
+            return fieldInfo.IsDefined(typeof(SerializableAttribute));
         }
 
         public static bool IsPrimitiveUnityType(Type objType) {
