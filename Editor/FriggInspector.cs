@@ -12,10 +12,11 @@
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Object), true)]
     public class FriggInspector : Editor {
-
+        public List<List<Member>> allMembers = new List<List<Member>>();
+        
         //Unity's Serialized properties (including fields)
-        private List<SerializedProperty>   serializedProperties = new List<SerializedProperty>();
-        private List<(MemberInfo, object)> members              = new List<(MemberInfo, object)>();
+        private List<SerializedProperty> serializedProperties = new List<SerializedProperty>();
+        private List<Member> members              = new List<Member>();
 
         private bool anySerialized;
         private bool hasArrays;
@@ -50,36 +51,31 @@
 
             foreach (var key in keys) {
                 var elements   = this.mixedData[key];
-                var enumerable = elements.ToList();
+                //var enumerable = elements.ToList();
 
-                if(!enumerable.Any())
-                    continue;
+                /*if(!enumerable.Any())
+                    continue;*/
 
-                foreach (var element in enumerable) {
+                foreach (var element in elements) {
                     var type = element.GetType();
-                    
+
                     if (type.FullName == null) {
                         continue;
                     }
 
-                    if (type == typeof(ValueTuple<MemberInfo, object>)) {
-                        var (memberInfo, obj) = ((MemberInfo, object)) element;
-                        
-                        var memberType = memberInfo.GetType();
-                        
-                        if (memberType.IsSubclassOf(typeof(PropertyInfo))) {
-                            var propertyTuple = new ValueTuple<PropertyInfo, object>(memberInfo as PropertyInfo, obj);
-                            this.DrawNativeProperty(propertyTuple);
-                        }
+                    if (type == typeof(Member)) {
+                        var member = (Member) element;
 
-                        if (memberType.IsSubclassOf(typeof(MethodInfo))) {
-                            var methodTuple = new ValueTuple<MethodInfo, object>(memberInfo as MethodInfo, obj);
-                            this.DrawButton(methodTuple);
-                        }
-
-                        if (memberType.IsSubclassOf(typeof(FieldInfo))) {
-                            var fieldTuple = new ValueTuple<FieldInfo, object>(memberInfo as FieldInfo, obj);
-                            this.DrawNonSerializedField(fieldTuple);
+                        switch (member.memberInfo.MemberType) {
+                            case MemberTypes.Field:
+                                DrawNonSerializedField(member);
+                                break;
+                            case MemberTypes.Method:
+                                this.DrawButton(member);
+                                break;
+                            case MemberTypes.Property:
+                                this.DrawNativeProperty(member);
+                                break;
                         }
                     }
 
@@ -91,10 +87,7 @@
 
                     if (prop.name == "m_Script") {
                         var propType = CoreUtilities.GetTargetObjectWithProperty(prop).GetType();
-                        var hasAttr  = (HideMonoScriptAttribute) Attribute.GetCustomAttribute(propType,
-                            typeof(HideMonoScriptAttribute));
-                        
-                        if (hasAttr != null) {
+                        if (propType.IsDefined(typeof(HideMonoScriptAttribute))) {
                             continue;
                         }
                     }
@@ -130,68 +123,70 @@
             GuiUtilities.PropertyField(prop, true);
         }
         
-        private void DrawButton((MethodInfo, object) method) {
-            var (methodInfo, obj) = method;
-            
-            GuiUtilities.HandleDecorators(methodInfo);
-            GuiUtilities.Button(this.serializedObject.targetObject, methodInfo);
+        private void DrawButton(Member member) {
+            var info = (MethodInfo) member.memberInfo;
+
+            GuiUtilities.HandleDecorators(info);
+            GuiUtilities.Button(this.serializedObject.targetObject, info);
         }
 
-        private void DrawNonSerializedField((FieldInfo, object) field) {
-            var (fieldInfo, obj) = field;
+        private static void DrawNonSerializedField(Member member) {
+            var info   = (FieldInfo) member.memberInfo;
+            var obj = member.target;
             
-            if (fieldInfo.IsUnitySerialized()) {
+            if (info.IsUnitySerialized()) {
                 return;
             }
             
-            var value = fieldInfo.GetValue(obj);
+            var value = info.GetValue(obj);
 
             GuiUtilities.HandleDecorators(obj.GetType());
-            GuiUtilities.HandleDecorators(fieldInfo);
-            var content  = CoreUtilities.GetGUIContent(fieldInfo);
-            var writable = CoreUtilities.IsWritable(fieldInfo);
+            GuiUtilities.HandleDecorators(info);
+            var content  = CoreUtilities.GetGUIContent(info);
+            var writable = CoreUtilities.IsWritable(info);
 
-            if (typeof(IEnumerable).IsAssignableFrom(fieldInfo.FieldType) && fieldInfo.FieldType != typeof(string)) {
+            if (typeof(IEnumerable).IsAssignableFrom(info.FieldType) && info.FieldType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
-                drawer.OnGUI(obj, Rect.zero, fieldInfo, content);
+                drawer.OnGUI(obj, Rect.zero, info, content);
                 return;
             }
             
-            fieldInfo.SetValue(obj, GuiUtilities.LayoutField(fieldInfo.FieldType, value, content, writable));
+            info.SetValue(obj, GuiUtilities.LayoutField(info.FieldType, value, content, writable));
         }
         
-        private void DrawNativeProperty((PropertyInfo, object) property) {
-            var (propertyInfo, obj) = property;
+        private void DrawNativeProperty(Member member) {
+            var info = (PropertyInfo) member.memberInfo;
+            var obj  = member.target;
             
             GuiUtilities.HandleDecorators(obj.GetType());
-            GuiUtilities.HandleDecorators(propertyInfo);
+            GuiUtilities.HandleDecorators(info);
             
-            var content = CoreUtilities.GetGUIContent(propertyInfo);
+            var content = CoreUtilities.GetGUIContent(info);
             
-            if (typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType) && propertyInfo.PropertyType != typeof(string)) {
+            if (typeof(IEnumerable).IsAssignableFrom(info.PropertyType) && info.PropertyType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
-                drawer.OnGUI(obj, Rect.zero, propertyInfo, content);
+                drawer.OnGUI(obj, Rect.zero, info, content);
                 return;
             }
 
-            var writable = CoreUtilities.IsWritable(propertyInfo);
-            var value    = propertyInfo.GetValue(obj);
+            var writable = CoreUtilities.IsWritable(info);
+            var value    = info.GetValue(obj);
 
-            if (CoreUtilities.IsPrimitiveUnityType(propertyInfo.PropertyType)) {
+            if (CoreUtilities.IsPrimitiveUnityType(info.PropertyType)) {
                 if(writable)
-                   propertyInfo.SetValue(obj, GuiUtilities
-                       .LayoutField(propertyInfo.PropertyType, propertyInfo.GetValue(obj), content));
+                    info.SetValue(obj, GuiUtilities
+                       .LayoutField(info.PropertyType, info.GetValue(obj), content));
                 else { 
-                    GuiUtilities.LayoutField(propertyInfo.PropertyType, propertyInfo.GetValue(obj), content, false);
+                    GuiUtilities.LayoutField(info.PropertyType, info.GetValue(obj), content, false);
                 }
             }
 
             else {
-                propertyInfo.SetValue(obj, GuiUtilities
-                    .MultiFieldLayout(propertyInfo, propertyInfo.GetValue(obj), content, writable));
+                info.SetValue(obj, GuiUtilities
+                    .MultiFieldLayout(info, info.GetValue(obj), content, writable));
             }
 
-            var secondValue = propertyInfo.GetValue(obj);
+            var secondValue = info.GetValue(obj);
 
             if (value.Equals(secondValue) || Application.isPlaying) {
                 return;
@@ -201,7 +196,7 @@
         }
 
         private static ILookup<int, object> SortAll(IEnumerable<SerializedProperty> serProps,
-            IEnumerable<(MemberInfo, object)> members) {
+            IEnumerable<Member> members) {
             var pairs = new List<KeyValuePair<int, object>>();
 
             foreach (var prop in serProps) {
@@ -217,7 +212,7 @@
             }
 
             foreach (var member in members) {
-                var attr  = (OrderAttribute) member.Item1.GetCustomAttributes(typeof(OrderAttribute)).FirstOrDefault();
+                var attr  = member.memberInfo.GetCustomAttribute<OrderAttribute>();
                 pairs.Add(attr != null
                     ? new KeyValuePair<int, object>(attr.Order, member)
                     : new KeyValuePair<int, object>(0, member));
