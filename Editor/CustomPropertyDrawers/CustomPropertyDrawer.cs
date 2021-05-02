@@ -8,8 +8,8 @@
 
     public abstract class CustomPropertyDrawer {
         public object OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
-            var attr = memberInfo.GetCustomAttribute<ReadonlyAttribute>();
-            using (new EditorGUI.DisabledScope(attr != null)) {
+            var isReadOnly = !CoreUtilities.IsWritable(memberInfo);
+            using (new EditorGUI.DisabledScope(isReadOnly)) {
                 return this.CreateAndDraw(rect, memberInfo, target, content);
             }
         }
@@ -34,30 +34,7 @@
             using(new EditorGUI.DisabledScope(!isEnabled)){
                 EditorGUI.BeginChangeCheck();
 
-                if (this.GetType() == typeof(InlinePropertyDrawer)) {
-                    var drawer = (InlinePropertyDrawer)
-                        CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
-
-                    var attr = CoreUtilities.TryGetAttribute<InlinePropertyAttribute>
-                        (property);
-
-                    if (attr != null) {
-                        drawer.labelWidth = attr.LabelWidth;
-                    }
-
-                    else {
-                        var type = CoreUtilities.GetPropertyType(property);
-                        attr = (InlinePropertyAttribute) Attribute.GetCustomAttribute(type,
-                            typeof(InlinePropertyAttribute));
-                        drawer.labelWidth = attr.LabelWidth;
-                    }
-
-                    this.CreateAndDraw(rect, property, content);
-                }
-
-                if (this.GetType() == typeof(ReorderableListDrawer)) {
-                    this.CreateAndDraw(rect, property, content);
-                }
+                this.CreateAndDraw(rect, property, content);
 
                 if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnDataChanged(property);
