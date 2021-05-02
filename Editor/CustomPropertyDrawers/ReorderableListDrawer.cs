@@ -14,7 +14,7 @@
     public class ReorderableListDrawer : CustomPropertyDrawer {
         public static ReorderableListDrawer instance = new ReorderableListDrawer();
 
-        private readonly Dictionary<string, ReorderableList> reorderableLists   = new Dictionary<string, ReorderableList>();
+        private readonly Dictionary<string, ReorderableList> reorderableLists = new Dictionary<string, ReorderableList>();
         //private readonly Dictionary<string, bool>            reorderableLayouts = new Dictionary<string, bool>();
 
         public static void ClearData() {
@@ -49,16 +49,20 @@
                         break;
                     }
                 }
-                
+
                 if (attr != null) {
                     var hideHeader = attr.HideHeader;
                     
                     list = new ReorderableList(value as IList, value.GetType(), attr.AllowDrag, !attr.HideHeader,
                         !attr.HideAddButton, !attr.HideRemoveButton);
+
+                    SetCallbacks(rect, type, memberInfo, list, label, hideHeader);
+
+                    if (rect == Rect.zero)
+                        list.DoLayoutList();
+                    else
+                        list.DoList(rect);
                     
-                    SetCallbacks(type, 3, memberInfo, list, label, hideHeader);
-                    
-                    list.DoLayoutList();
                     return list.list;
                 }
 
@@ -68,18 +72,21 @@
 
                 list = new ReorderableList(value as IList, value.GetType(), true, true, true, true);
 
-                SetCallbacks(type, 3, memberInfo, list, label);
+                SetCallbacks(rect, type, memberInfo, list, label);
 
                 instance.reorderableLists[memberInfo.Name] = list;
             }
 
             list = instance.reorderableLists[memberInfo.Name];
-            list.DoLayoutList();
+            if (rect == Rect.zero)
+                list.DoLayoutList();
+            else
+                list.DoList(rect);
             
             return list.list;
         }
 
-        private static void SetCallbacks(Type type, int amountOfProperties, MemberInfo memberInfo, 
+        private static void SetCallbacks(Rect rect, Type type, MemberInfo memberInfo, 
             ReorderableList reorderableList, GUIContent label, bool hideHeader = false) {
             
             if (!hideHeader) {
@@ -91,9 +98,10 @@
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 var element = reorderableList.list[index];
-
-                tempRect.y += GuiUtilities.SPACE / 2f;
-                tempRect.height = EditorGUIUtility.singleLineHeight;
+                
+                //rect.y          += EditorGUIUtility.singleLineHeight;
+                tempRect.y      += GuiUtilities.SPACE / 2f;
+                tempRect.height =  EditorGUIUtility.singleLineHeight;
                 tempRect.x      += 10.0f;
                 tempRect.width  -= 10.0f;
                 
@@ -125,7 +133,7 @@
                 }
 
                 else {
-                    reorderableList.list[index] = GuiUtilities.MultiField(tempRect, memberInfo, element, label);
+                    reorderableList.list[index] =  GuiUtilities.MultiField(tempRect, memberInfo, element, label);
                 }
             };
             
@@ -153,7 +161,7 @@
             };
 
             reorderableList.elementHeightCallback = index => {
-                return (EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE) * amountOfProperties ;
+                return (EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE) * 12;
             };
         }
         
@@ -227,45 +235,22 @@
                     return;
                 }
 
-                //var cachedPath = copy.propertyPath;
-                
-                /*if (count.Count() == 1) {
-                    copy.NextVisible(true);
-                    EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
-                        EditorGUIUtility.singleLineHeight), copy, CoreUtilities.GetGUIContent(copy), false);
-                        
-                    EditorGUI.indentLevel = level;
-                    return;
-                }*/
-                
                 var endProperty = copy.GetEndProperty();
                 
-                /*if (!instance.reorderableLayouts.ContainsKey(cachedPath)) {
-                    instance.reorderableLayouts.Add(cachedPath, false);
-                }
-
-                var status = instance.reorderableLayouts[cachedPath];
-
-                instance.reorderableLayouts[cachedPath] = EditorGUI.Foldout(new Rect(tempRect.x, tempRect.y, tempRect.width,
-                    EditorGUIUtility.singleLineHeight), status, $"Element {index}");
-                
-                if(!instance.reorderableLayouts[cachedPath])
-                    return;*/
-
                 copy.NextVisible(true);
 
                 do {
-                    var content          = CoreUtilities.GetGUIContent(copy);
-                    var decoratorsHeight = GuiUtilities.GetDecoratorsHeight(copy);
+                    //var content          = CoreUtilities.GetGUIContent(copy);
+                    /*var decoratorsHeight = GuiUtilities.GetDecoratorsHeight(copy);
                     
                     if (decoratorsHeight > 0) {
-                        var amount = GuiUtilities.AmountOfDecorators(copy);
+                        //var amount = GuiUtilities.AmountOfDecorators(copy);
                         GuiUtilities.HandleDecorators(copy, tempRect, true);
-                        tempRect.y += decoratorsHeight + GuiUtilities.SPACE * amount;
-                    }
+                        tempRect.y += decoratorsHeight + GuiUtilities.SPACE; //* amount;
+                    }*/
 
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, 
-                        tempRect.width, EditorGUIUtility.singleLineHeight), copy, content, true);
+                        tempRect.width, EditorGUIUtility.singleLineHeight), copy, GUIContent.none, true);
                     
                     EditorGUI.indentLevel =  level;
                     tempRect.y            += EditorGUIUtility.singleLineHeight;
@@ -274,9 +259,6 @@
             
             reorderableList.onAddCallback = delegate {
                 property.arraySize++;
-
-                var type = CoreUtilities.TryGetListElementType(CoreUtilities.GetPropertyType(property));
-
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
                 
                 CoreUtilities.SetDefaultValue(property, element);
@@ -284,7 +266,6 @@
 
             reorderableList.onRemoveCallback = delegate {
                 var size = property.arraySize;
-
                 for (var i = reorderableList.index; i < size - 1; i++) {
                     reorderableList.serializedProperty.MoveArrayElement(i + 1, i);
                 }
@@ -295,17 +276,7 @@
             reorderableList.elementHeightCallback = index
                 => {
                 var element = reorderableList.serializedProperty.GetArrayElementAtIndex(index);
-                var path    = element.propertyPath;
-                
-                /*if (!instance.reorderableLayouts.ContainsKey(path)) {
-                    return EditorGUIUtility.singleLineHeight + 5.0f;
-                }
-
-                if(!instance.reorderableLayouts[path])
-                    return EditorGUIUtility.singleLineHeight + 5.0f;*/
-
-                var copy = element.Copy();
-                var last = copy.GetEndProperty();
+                var last    = element.GetEndProperty();
 
                 float decoratorHeight = 0;
                 var   height          = 0f;
@@ -313,20 +284,17 @@
 
                 //allocate total height.
                 do { 
-                    decoratorHeight += GuiUtilities.GetDecoratorsHeight(copy);
+                    //decoratorHeight += GuiUtilities.GetDecoratorsHeight(element);
                     height          += EditorGUIUtility.singleLineHeight;
                     
-                    var currAmount = GuiUtilities.AmountOfDecorators(copy);
-                    if(currAmount <= 0)
+                    //var currAmount = GuiUtilities.AmountOfDecorators(element);
+                    /*if(currAmount <= 0)
                         continue;
 
-                    amount          += currAmount;
-                } while (copy.NextVisible(true) && !SerializedProperty.EqualContents(copy, last));
-                
-                //Because it's last element.
-                if(element.propertyType == SerializedPropertyType.Generic)
-                   height -= EditorGUIUtility.singleLineHeight;
-                
+                    amount          += currAmount;*/
+                } while (element.NextVisible(true) && !SerializedProperty.EqualContents(element, last));
+
+                height -= EditorGUIUtility.singleLineHeight;
                 return height + decoratorHeight + GuiUtilities.SPACE * amount + 8.0f;
             };
         }
