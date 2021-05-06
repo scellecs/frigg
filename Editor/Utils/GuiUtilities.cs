@@ -201,29 +201,25 @@
             Undo.RecordObject(serializedObject.targetObject, "Dropdown");
             field.SetValue(target, values[newIndex]);
         }
-
-        public static object MultiFieldLayout(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
-            //TODO: use method like "IsInline" instead.
-            /*if (info.GetCustomAttribute<InlinePropertyAttribute>() == null) {
-                return value;
-            }*/
-
-            var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
-            return drawer.OnGUI(value, Rect.zero, info, content);
-        }
         
         public static object MultiField(Rect rect, MemberInfo info, object value, GUIContent content) {
             var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
-            return drawer.OnGUI(value, rect, info, content);
+            return drawer.OnGUI(rect, value, info, content);
         }
         
-        public static object LayoutField(Type objType, object value, GUIContent content, bool canWrite = true) {
+        public static object MultiFieldLayout(MemberInfo info, object value, GUIContent content, bool canWrite = true) {
+            var drawer = CustomAttributeExtensions.GetCustomDrawer(typeof(InlinePropertyAttribute));
+            return drawer.OnGUI(Rect.zero, value, info, content);
+        }
+
+        
+        public static object FieldLayout(Type objType, object value, GUIContent content, bool canWrite = true) {
             using (new EditorGUI.DisabledScope(!canWrite)) {
                 
                 if (!CoreUtilities.IsPrimitiveUnityType(objType)) {
                     return null;
                 }
-
+                
                 if (objType == typeof(bool)) {
                     return EditorGUILayout.Toggle(content, (bool) value);
                 }
