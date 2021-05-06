@@ -9,12 +9,16 @@
         public List<TestClassPrivate>       testClassPrivates       = new List<TestClassPrivate>();
         public List<TestClassPrivateSingle> testClassPrivateSingles = new List<TestClassPrivateSingle>();
         
-        [ReorderableList]
+        //[ReorderableList]
+        [ShowInInspector]
+        private List<int> privateListTestWithAttrDummy = new List<int>{1,2,3,4};
+        
+        /*[ReorderableList]
         public List<int> intlist;
 
         public List<string> stringTest;
 
-        /*[ReorderableList]
+        [ReorderableList]
         [ShowInInspector]
         [ListDrawerSettings(AllowDrag = false, HideAddButton = true, HideHeader = false, HideRemoveButton = true)]
         private List<int> privateListTestWithAttr;

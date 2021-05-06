@@ -10,9 +10,8 @@
             if (prop.propertyType == SerializedPropertyType.ObjectReference) {
                 return prop.objectReferenceValue == null;
             }
-            
-            //If value is not default - we don't need to draw Required InfoBox.
-            return CoreUtilities.HasDefaultValue(prop, CoreUtilities.GetPropertyType(prop));
+
+            return false;
         }
 
         protected override float GetHeight(Rect rect) {
@@ -22,8 +21,11 @@
         protected override void DrawDecorator(Rect rect, object target, bool isArray) {
             var attr = (RequiredAttribute) this.attribute;
 
+            if (target.GetType() != typeof(SerializedProperty)) {
+                return;
+            }
+            
             var serializedProperty = (SerializedProperty) target;
-
             if (this.property.propertyType == SerializedPropertyType.ObjectReference) {
                 if (this.property.objectReferenceValue == null) {
                     if (string.IsNullOrEmpty(attr.Text)) {

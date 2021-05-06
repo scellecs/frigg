@@ -7,10 +7,10 @@
     using Utils;
 
     public abstract class CustomPropertyDrawer {
-        public object OnGUI(object target, Rect rect, MemberInfo memberInfo, GUIContent content) {
+        public object OnGUI(Rect rect, object target, MemberInfo memberInfo, GUIContent content) {
             var isReadOnly = !CoreUtilities.IsWritable(memberInfo);
             using (new EditorGUI.DisabledScope(isReadOnly)) {
-                return this.CreateAndDraw(rect, memberInfo, target, content);
+                return rect == Rect.zero ? this.CreateAndDrawLayout(memberInfo, target, content) : this.CreateAndDraw(rect, memberInfo, target, content);
             }
         }
         
@@ -34,7 +34,7 @@
             using(new EditorGUI.DisabledScope(!isEnabled)){
                 EditorGUI.BeginChangeCheck();
 
-                this.CreateAndDraw(rect, property, content);
+                this.CreateAndDraw(property, content);
 
                 if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnDataChanged(property);
@@ -42,7 +42,11 @@
             }
         }
         
-        protected abstract void CreateAndDraw(Rect rect, SerializedProperty property, GUIContent label);
+        //todo: layout version
+        protected abstract void CreateAndDrawLayout(SerializedProperty property, GUIContent label);
+        protected abstract object CreateAndDrawLayout(MemberInfo member, object target, GUIContent label);
+        
+        protected abstract void   CreateAndDraw(SerializedProperty property, GUIContent label);
         protected abstract object CreateAndDraw(Rect rect, MemberInfo member, object target, GUIContent label);
     }
     
@@ -52,7 +56,8 @@
         static CustomAttributeExtensions() =>
             drawers = new Dictionary<Type, CustomPropertyDrawer> {
                 [typeof(ReorderableListAttribute)] = ReorderableListDrawer.instance,
-                [typeof(InlinePropertyAttribute)]  = InlinePropertyDrawer.instance
+                [typeof(InlinePropertyAttribute)]  = InlinePropertyDrawer.instance,
+                [typeof(FoldoutPropertyDrawer)]  = FoldoutPropertyDrawer.instance
             };
 
         public static CustomPropertyDrawer GetCustomDrawer(CustomAttribute attribute)
