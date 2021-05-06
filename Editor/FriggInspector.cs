@@ -12,7 +12,7 @@
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Object), true)]
     public class FriggInspector : Editor {
-        public List<List<Member>> allMembers = new List<List<Member>>();
+        public static List<List<Member>> allMembers = new List<List<Member>>();
         
         //Unity's Serialized properties (including fields)
         private List<SerializedProperty> serializedProperties = new List<SerializedProperty>();
@@ -35,6 +35,10 @@
 
             ReorderableListDrawer.ClearData();
         }
+
+        private void OnDisable() {
+            allMembers = new List<List<Member>>();
+        }
         
         public override void OnInspectorGUI() {
             this.serializedObject.Update();
@@ -51,11 +55,6 @@
 
             foreach (var key in keys) {
                 var elements   = this.mixedData[key];
-                //var enumerable = elements.ToList();
-
-                /*if(!enumerable.Any())
-                    continue;*/
-
                 foreach (var element in elements) {
                     var type = element.GetType();
 
@@ -147,11 +146,11 @@
 
             if (typeof(IEnumerable).IsAssignableFrom(info.FieldType) && info.FieldType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
-                drawer.OnGUI(obj, Rect.zero, info, content);
+                drawer.OnGUI(Rect.zero, obj, info, content);
                 return;
             }
             
-            info.SetValue(obj, GuiUtilities.LayoutField(info.FieldType, value, content, writable));
+            info.SetValue(obj, GuiUtilities.FieldLayout(info.FieldType, value, content, writable));
         }
         
         private void DrawNativeProperty(Member member) {
@@ -165,7 +164,7 @@
             
             if (typeof(IEnumerable).IsAssignableFrom(info.PropertyType) && info.PropertyType != typeof(string)) {
                 var drawer = (ReorderableListDrawer) CustomAttributeExtensions.GetCustomDrawer(typeof(ReorderableListAttribute));
-                drawer.OnGUI(obj, Rect.zero, info, content);
+                drawer.OnGUI(Rect.zero, obj, info, content);
                 return;
             }
 
@@ -175,9 +174,9 @@
             if (CoreUtilities.IsPrimitiveUnityType(info.PropertyType)) {
                 if(writable)
                     info.SetValue(obj, GuiUtilities
-                       .LayoutField(info.PropertyType, info.GetValue(obj), content));
+                       .FieldLayout(info.PropertyType, info.GetValue(obj), content));
                 else { 
-                    GuiUtilities.LayoutField(info.PropertyType, info.GetValue(obj), content, false);
+                    GuiUtilities.FieldLayout(info.PropertyType, info.GetValue(obj), content, false);
                 }
             }
 
