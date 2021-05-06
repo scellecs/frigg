@@ -4,5 +4,6 @@
     public class Member {
         public MemberInfo memberInfo;
         public object     target;
+        public bool       isArray;
     }
 }

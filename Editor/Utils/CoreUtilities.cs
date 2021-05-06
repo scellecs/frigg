@@ -59,7 +59,7 @@ namespace Frigg.Utils {
         public static void TryGetMembers(this object target, List<Member> info) {
             if (target != null) {
                 //get type of provided target
-                var    type = target.GetType();
+                var      type = target.GetType();
 
                 while (type != null) {
                     //Get all fields in provided type
@@ -75,33 +75,33 @@ namespace Frigg.Utils {
                         if (!method.IsDefined(typeof(ButtonAttribute))) {
                             continue;
                         }
-
+                        
                         var member = new Member {memberInfo = method, target = target};
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
                     }
-                    
-                    foreach (var field in fields) {
+
+                    for (var i = 0; i < fields.Length; ++i) {
                         if ((!type.IsDefined(typeof(SerializableAttribute))
-                             || !field.IsDefined(typeof(SerializableAttribute)) && !field.IsPublic) 
-                            && !field.IsDefined(typeof(ShowInInspectorAttribute))) {
+                             || !fields[i].IsDefined(typeof(SerializableAttribute)) && !fields[i].IsPublic) 
+                            && !fields[i].IsDefined(typeof(ShowInInspectorAttribute))) {
                             continue;
                         }
 
-                        var member = new Member {memberInfo = field, target = target};
+                        var member = new Member {memberInfo = fields[i], target = target};
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
                     }
 
-                    foreach (var property in properties) {
-                        if (!property.IsDefined(typeof(SerializableAttribute)) 
-                            && !property.IsDefined(typeof(ShowInInspectorAttribute))) {
+                    for (var i = 0; i < properties.Length; ++i) {
+                        if (!properties[i].IsDefined(typeof(SerializableAttribute)) 
+                            && !properties[i].IsDefined(typeof(ShowInInspectorAttribute))) {
                             continue;
                         }
-
-                        var member = new Member {memberInfo = property, target = target};
+                        
+                        var member = new Member {memberInfo = properties[i], target = target};
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
