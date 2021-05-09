@@ -8,11 +8,13 @@
     using UnityEditorInternal;
     using UnityEngine;
     using System.Linq;
+    using Groups;
     using Utils;
     using Random = UnityEngine.Random;
 
     public class ReorderableListDrawer : CustomPropertyDrawer {
-        public static ReorderableListDrawer instance           = new ReorderableListDrawer();
+        public static    ReorderableListDrawer                              instance = new ReorderableListDrawer();
+        private readonly Dictionary<SerializedProperty, BaseGroupAttribute> groups   = new Dictionary<SerializedProperty, BaseGroupAttribute>();
 
         private readonly Dictionary<string, ReorderableList>          reorderableLists  = new Dictionary<string, ReorderableList>();
 
@@ -235,8 +237,16 @@
             reorderableList = instance.reorderableLists[p.name];
             reorderableList.DoLayoutList();
         }
+
+        private Rect GetElementRect(Rect rect, SerializedProperty prop, BaseGroupAttribute attribute) {
+            var property   = instance.groups[prop];
+            var returnRect = rect;
+            rect.width += attribute.LabelWidth;
+
+            return rect;
+        }
         
-        private static void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
+        private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
             
             if (!hideHeader) {
                 reorderableList.drawHeaderCallback = tempRect => {
@@ -267,7 +277,7 @@
 
                 //EditorGUI.indentLevel = copy.depth + num;
                 tempRect.height       = EditorGUI.GetPropertyHeight(element);
-
+                
                 if (copy.propertyType != SerializedPropertyType.Generic) {
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, tempRect.width,
                         EditorGUIUtility.singleLineHeight), element, true);
@@ -288,6 +298,9 @@
                         GuiUtilities.HandleDecorators(copy, tempRect, true);
                         tempRect.y += decoratorsHeight + GuiUtilities.SPACE; //* amount;
                     }*/
+
+                    var group = CoreUtilities.TryGetAttribute<BaseGroupAttribute>(copy);
+                    var rect  = this.GetElementRect(tempRect, copy, group);
 
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, 
                         tempRect.width, EditorGUIUtility.singleLineHeight), copy, GUIContent.none, true);

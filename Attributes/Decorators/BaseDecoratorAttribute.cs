@@ -6,7 +6,7 @@
         public float Height { get; set; } = DEFAULT_HEIGHT;
         
         public string Text   { get; set; }
-        public string Member { get; set; }
+        public string Member { get; set; } = null;
         
         public bool HasCustomHeight => (int)this.Height != DEFAULT_HEIGHT;
     }

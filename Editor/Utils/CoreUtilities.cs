@@ -55,6 +55,50 @@ namespace Frigg.Utils {
             Debug.LogError("There's no target specified.");
             return null;
         }
+        
+        public static IEnumerable<FieldInfo> TryGetFields(this object target, Func<FieldInfo, bool> predicate) {
+            if (target != null) {
+                var type = target.GetType();
+                var data = new List<FieldInfo>();
+                data.AddRange(target.GetType()
+                    .GetFields(FLAGS).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetFields(
+                        FLAGS).Where(predicate));
+
+                    type = type.BaseType;
+                }
+                
+                return data;
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
+    
+        public static IEnumerable<PropertyInfo> TryGetProperties(this object target, Func<PropertyInfo, bool> predicate) {
+            if (target != null) {
+                var type = target.GetType();
+                var data = new List<PropertyInfo>();
+                data.AddRange(target.GetType()
+                    .GetProperties(FLAGS).Where(predicate));
+
+                type = type.BaseType;
+                while (type != null) {
+                    data.AddRange(type.GetProperties(
+                        FLAGS).Where(predicate));
+
+                    type = type.BaseType;
+                }
+            
+                return data;
+            }
+        
+            Debug.LogError("There's no target specified.");
+            return null;
+        }
 
         public static void TryGetMembers(this object target, List<Member> info) {
             if (target != null) {
@@ -116,6 +160,7 @@ namespace Frigg.Utils {
             Debug.LogError("There's no target specified.");
         }
 
+        //TODO: fix allocations
         public static MethodInfo TryGetMethod(this object target, string name) {
             if(target != null)
                return  target.TryGetMethods(x => x.Name == name).FirstOrDefault();
@@ -124,17 +169,21 @@ namespace Frigg.Utils {
             return null;
         }
     
+        //TODO: fix allocations
         public static FieldInfo TryGetField(this object target, string name) {
-            if (target != null)
-                return target.GetType().GetField("name");
+            if (target != null) {
+                return  target.TryGetFields(x => x.Name == name).FirstOrDefault();
+            }
 
             Debug.LogError("There's no target specified.");
             return null;
         }
     
+        //TODO: fix allocations
         public static PropertyInfo TryGetProperty(this object target, string name) {
-            if (target != null)
-                return target.GetType().GetProperty("name");
+            if (target != null) {
+                return  target.TryGetProperties(x => x.Name == name).FirstOrDefault();
+            }
 
             Debug.LogError("There's no target specified.");
             return null;
@@ -230,7 +279,6 @@ namespace Frigg.Utils {
             }
 
             var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
-
             return data;
         }
 
