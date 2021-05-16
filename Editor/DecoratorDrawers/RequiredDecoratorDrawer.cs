@@ -25,7 +25,7 @@
                 return;
             }
             
-            var serializedProperty = (SerializedProperty) target;
+            /*var serializedProperty = (SerializedProperty) target;
             if (this.property.propertyType == SerializedPropertyType.ObjectReference) {
                 if (this.property.objectReferenceValue == null) {
                     if (string.IsNullOrEmpty(attr.Text)) {
@@ -38,7 +38,7 @@
                 if (string.IsNullOrEmpty(attr.Text)) {
                     attr.Text = $"{serializedProperty.displayName} is required!";
                 }
-            }
+            }*/
             
             var content = EditorGUIUtility.TrTextContentWithIcon(attr.Text, MessageType.Error);
             var style = new GUIStyle(EditorStyles.helpBox) {

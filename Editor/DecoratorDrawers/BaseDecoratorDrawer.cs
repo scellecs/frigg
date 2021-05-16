@@ -10,10 +10,7 @@
         public       BaseDecoratorAttribute attribute;
         public const float                  SPACE_AMOUNT = 8.0f;
 
-        public SerializedProperty property     = null;
-        public MethodInfo         methodInfo   = null;
-        public FieldInfo          fieldInfo    = null;
-        public PropertyInfo       propertyInfo = null;
+        public FriggProperty property     = null;
 
         public abstract bool IsVisible(SerializedProperty prop);
 
@@ -22,9 +19,9 @@
 
             this.attribute = (BaseDecoratorAttribute) attr;
             
-            if (type == typeof(SerializedProperty)) {
-                this.property = (SerializedProperty) target;
-                var  propTarget = CoreUtilities.GetTargetObjectWithProperty(this.property);
+            /*if (type == typeof(SerializedProperty)) {
+                this.property = (FriggProperty) target;
+                var  propTarget = CoreUtilities.GetTargetObjectWithProperty(this.FriggProperty);
                 bool boolValue;
                 
                 var field  = propTarget.TryGetField(this.attribute.Member);
@@ -46,7 +43,7 @@
                         return;
                     }
                 }
-            }
+            }*/
             
             this.DrawDecorator(rect, target, isArray);
             

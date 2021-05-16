@@ -149,7 +149,5 @@
         public override SerializedObject SerializedObject => this.serializedObject;
         public override Type             TargetType       => this.targetType;
         public override List<object>     MemberTargets    => this.memberTargets;
-        
-        public 
     }
 }

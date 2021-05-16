@@ -238,14 +238,6 @@
             reorderableList.DoLayoutList();
         }
 
-        private Rect GetElementRect(Rect rect, SerializedProperty prop, BaseGroupAttribute attribute) {
-            var property   = instance.groups[prop];
-            var returnRect = rect;
-            rect.width += attribute.LabelWidth;
-
-            return rect;
-        }
-        
         private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
             
             if (!hideHeader) {
@@ -300,7 +292,6 @@
                     }*/
 
                     var group = CoreUtilities.TryGetAttribute<BaseGroupAttribute>(copy);
-                    var rect  = this.GetElementRect(tempRect, copy, group);
 
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, 
                         tempRect.width, EditorGUIUtility.singleLineHeight), copy, GUIContent.none, true);
