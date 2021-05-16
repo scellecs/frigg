@@ -2,13 +2,13 @@
     using System.Collections.Generic;
     using UnityEngine;
 
-    public class UniversalProperty {
+    public class FriggProperty {
         public GUIContent Label { get; set; }
 
-        public UniversalProperty ParentProperty { get; set; }
+        public FriggProperty ParentProperty { get; set; }
 
         public PropertyTree PropertyTree { get; set; }
 
-        private IEnumerable<UniversalProperty> ChildrenProperties { get; set; }
+        private IEnumerable<FriggProperty> ChildrenProperties { get; set; }
     }
 }
