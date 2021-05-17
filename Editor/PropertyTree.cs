@@ -2,13 +2,15 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
     using UnityEditor;
 
     public abstract class PropertyTree {
         public abstract SerializedObject SerializedObject { get; }
         
         public abstract Type             TargetType       { get; }
-        public abstract List<object>     MemberTargets    { get; }
+        
+        public virtual List<object>     MemberTargets    { get; }
         
         public static PropertyTree InitTree(object target) {
             if (target == null)
@@ -130,7 +132,7 @@
                 serializedObject = new SerializedObject(objs);
             }
 
-            return (PropertyTree)Activator.CreateInstance(treeType, targetArray, serializedObject);
+            return (PropertyTree) Activator.CreateInstance(treeType, targetArray, serializedObject);
         }
 
         public void Draw() {
@@ -140,14 +142,27 @@
 
     public class PropertyTree<T> : PropertyTree {
         private SerializedObject serializedObject;
-        private Type             targetType;
-        private List<object>     memberTargets;
 
+        private T[] memberTargets;
+
+        public List<T> Targets => this.memberTargets.ToList();
+        
         private static bool isValueType   = typeof(T).IsValueType;
         private static bool isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(typeof(T));
 
         public override SerializedObject SerializedObject => this.serializedObject;
-        public override Type             TargetType       => this.targetType;
-        public override List<object>     MemberTargets    => this.memberTargets;
+        public override Type             TargetType       => typeof(T);
+
+        public PropertyTree(SerializedObject serializedObject) : this(serializedObject.targetObjects.Cast<T>().ToArray(), serializedObject) {
+            
+        }
+
+        public PropertyTree(T[] targets) : this(targets, null) {
+        }
+
+        public PropertyTree(T[] targetObjects, SerializedObject serializedObject) {
+            this.serializedObject = serializedObject;
+            this.memberTargets    = targetObjects;
+        }
     }
 }
