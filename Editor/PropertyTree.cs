@@ -4,14 +4,18 @@
     using System.Collections.Generic;
     using System.Linq;
     using UnityEditor;
+    using UnityEngine;
+    using Utils;
 
     public abstract class PropertyTree {
         public abstract SerializedObject SerializedObject { get; }
-        
+
+        public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
+
         public abstract Type             TargetType       { get; }
-        
-        public virtual List<object>     MemberTargets    { get; }
-        
+
+        public abstract FriggProperty RootProperty { get; }
+
         public static PropertyTree InitTree(object target) {
             if (target == null)
                 throw new ArgumentNullException("target");
@@ -37,7 +41,7 @@
             if (target == null)
                 throw new ArgumentNullException("target");
 
-            return InitTree(new object[] {target}, null);
+            return InitTree(target.targetObjects, target);
         }
 
         private static PropertyTree InitTree(IList targets, SerializedObject serializedObject) {
@@ -53,7 +57,7 @@
 
             if (serializedObject != null)
             {
-                bool valid = true;
+                var valid = true;
                 var targetObjects = serializedObject.targetObjects;
 
                 if (targets.Count != targetObjects.Length)
@@ -62,13 +66,13 @@
                 }
                 else
                 {
-                    for (int i = 0; i < targets.Count; i++)
-                    {
-                        if (!object.ReferenceEquals(targets[i], targetObjects[i]))
-                        {
-                            valid = false;
-                            break;
+                    for (var i = 0; i < targets.Count; i++) {
+                        if (ReferenceEquals(targets[i], targetObjects[i])) {
+                            continue;
                         }
+
+                        valid = false;
+                        break;
                     }
                 }
 
@@ -80,10 +84,10 @@
 
             Type targetType = null;
 
-            for (int i = 0; i < targets.Count; i++)
+            for (var i = 0; i < targets.Count; i++)
             {
                 Type otherType;
-                object target = targets[i];
+                var target = targets[i];
 
                 if (ReferenceEquals(target, null))
                 {
@@ -99,15 +103,13 @@
                     if (targetType.IsAssignableFrom(otherType))
                     {
                         continue;
-                    } 
-                    
-                    if (otherType.IsAssignableFrom(targetType))
-                    {
-                        targetType = otherType;
-                        continue;
                     }
 
-                    throw new ArgumentException("Expected targets of type " + targetType.Name + ", but got an incompatible target of type " + otherType.Name + " at index " + i + ".");
+                    if (!otherType.IsAssignableFrom(targetType)) {
+                        throw new ArgumentException("Expected targets of type " + targetType.Name + ", but got an incompatible target of type " + otherType.Name + " at index " + i + ".");
+                    }
+
+                    targetType = otherType;
                 }
             }
 
@@ -126,7 +128,7 @@
 
             if (serializedObject == null && targetType.IsAssignableFrom(typeof(UnityEngine.Object)))
             {
-                UnityEngine.Object[] objs = new UnityEngine.Object[targets.Count];
+                var objs = new UnityEngine.Object[targets.Count];
                 targets.CopyTo(objs, 0);
 
                 serializedObject = new SerializedObject(objs);
@@ -135,9 +137,7 @@
             return (PropertyTree) Activator.CreateInstance(treeType, targetArray, serializedObject);
         }
 
-        public void Draw() {
-            
-        }
+        public abstract void Draw();
     }
 
     public class PropertyTree<T> : PropertyTree {
@@ -145,16 +145,17 @@
 
         private T[] memberTargets;
 
+        public override FriggProperty RootProperty { get; }
+
         public List<T> Targets => this.memberTargets.ToList();
         
         private static bool isValueType   = typeof(T).IsValueType;
         private static bool isUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(typeof(T));
 
-        public override SerializedObject SerializedObject => this.serializedObject;
-        public override Type             TargetType       => typeof(T);
+        public override        SerializedObject SerializedObject => this.serializedObject;
+        public sealed override Type             TargetType       => typeof(T);
 
         public PropertyTree(SerializedObject serializedObject) : this(serializedObject.targetObjects.Cast<T>().ToArray(), serializedObject) {
-            
         }
 
         public PropertyTree(T[] targets) : this(targets, null) {
@@ -163,6 +164,36 @@
         public PropertyTree(T[] targetObjects, SerializedObject serializedObject) {
             this.serializedObject = serializedObject;
             this.memberTargets    = targetObjects;
+
+            this.RootProperty = FriggProperty.DoProperty(this, null, targetObjects[0], new PropertyMeta {
+                    Name       = targetObjects[0].GetType().Name,
+                    MemberType = this.TargetType
+                }
+            );
+        }
+
+        public override void Draw() {
+            foreach (var prop in this.EnumerateTree(false)) {
+                prop.Draw();
+            }
+        }
+
+        public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
+        {
+            for (var i = 0; i < this.RootProperty.ChildrenProperties.AmountOfChildren; i++)
+            {
+                var root = this.RootProperty.ChildrenProperties[i];
+
+                yield return root;
+
+                if (includeChildren)
+                {
+                    foreach (var child in root.ChildrenProperties.RecurseChildren())
+                    {
+                        yield return child;
+                    }
+                }
+            }
         }
     }
 }
