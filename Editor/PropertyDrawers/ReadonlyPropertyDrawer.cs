@@ -1,14 +1,29 @@
 ﻿namespace Frigg.Editor {
     using UnityEditor;
     using UnityEngine;
-
-    [UnityEditor.CustomPropertyDrawer(typeof(ReadonlyAttribute))]
+    
     public class ReadonlyPropertyDrawer : BaseDrawer {
-        protected override void OnDrawerGUI(Rect rect, SerializedProperty prop, GUIContent label) {
+        public ReadonlyPropertyDrawer(FriggProperty prop) : base(prop) {
+        }
+        
+        public override void DrawLayout() {
             using (new EditorGUI.DisabledScope(true)) {
-                
-                EditorGUI.PropertyField(rect, prop, label);
+                //foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                    this.property.CallNextDrawer();
+                //}
             }
         }
+
+        public override void Draw(Rect rect) {
+            using (new EditorGUI.DisabledScope(true)) {
+                //foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                    this.property.CallNextDrawer(rect);
+                //}
+            }
+        }
+
+        public override float GetHeight() => 0f;
+
+        public override bool IsVisible => true;
     }
 }
