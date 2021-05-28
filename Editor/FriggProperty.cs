@@ -101,20 +101,12 @@
             total += EditorGUIUtility.singleLineHeight;
 
             var properties = includeChildren ? prop.ChildrenProperties : prop.ChildrenProperties.RecurseChildren(true);
-            foreach (var property in properties) {/*
-                if (property.MetaInfo.isArray) {
-                    total += property.MetaInfo.arraySize * (EditorGUIUtility.singleLineHeight + 8F + GuiUtilities.SPACE); //list element total padding
-                }*/
-                
+            foreach (var property in properties) {
                 do {
                     if (property.QueueEnumerator.Current == null) {
                         continue; 
                     }
                     
-                    //Debug.Log(property.QueueEnumerator.Current.GetType() + " " + property.QueueEnumerator.Current.IsVisible);
-                    //bool t
-                    //decorator f
-                    //object t
                     if (property.QueueEnumerator.Current.IsVisible) {
                         total += property.QueueEnumerator.Current.GetHeight();
                     }
@@ -123,7 +115,7 @@
                 
                 property.QueueEnumerator.Reset();
             }
-            
+
             return total;
         }
 

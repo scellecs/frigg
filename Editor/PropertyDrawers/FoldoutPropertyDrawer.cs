@@ -27,7 +27,7 @@
             var style = EditorStyles.foldoutHeader;
 
             var toggleRect = rect;
-            var indent = EditorGUI.indentLevel * GuiUtilities.SPACE;
+            var indent = EditorGUI.indentLevel * 15;
             toggleRect.width         -= indent;
             toggleRect.x             += indent;
             this.property.IsExpanded =  GUI.Toggle(toggleRect, this.property.IsExpanded, this.property.Label, style);
@@ -42,7 +42,7 @@
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
                 p.Draw(rect);
                 var h = FriggProperty.GetPropertyHeight(p);
-                rect.y      += h + GuiUtilities.SPACE / 2f;
+                rect.y      += h + GuiUtilities.SPACE / 2;
                 rect.height =  EditorGUIUtility.singleLineHeight;
             }
             EditorGUI.indentLevel--;

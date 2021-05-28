@@ -13,8 +13,9 @@
         public override void Draw(Rect rect) {
             var       temp   = rect;
             const int height = BaseDecoratorAttribute.DEFAULT_HEIGHT;
-            temp.height = height;
-            
+            temp.height =  height;
+            temp.width  -= EditorGUI.indentLevel * 15; //to const
+            temp.x      += EditorGUI.indentLevel * 15;
             EditorGUI.HelpBox(temp, $"{this.property.NiceName} is required!", MessageType.Error);
             rect.y += height;
             this.property.CallNextDrawer(rect);
@@ -31,7 +32,7 @@
             }
         }
         
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight * 2;
+        public override float GetHeight() => BaseDecoratorAttribute.DEFAULT_HEIGHT;
         /*public override bool IsVisible(SerializedProperty prop) {
            //If objectReferenceValue is null - we need to draw Required InfoBox, otherwise - return.
             if (prop.propertyType == SerializedPropertyType.ObjectReference) {
