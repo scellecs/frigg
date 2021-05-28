@@ -6,45 +6,38 @@
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
-    using Utils;
     using Object = UnityEngine.Object;
 
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Object), true)]
     public class FriggInspector : Editor {
-        public static List<List<Member>> allMembers = new List<List<Member>>();
-        
-        //Unity's Serialized properties (including fields)
-        private List<SerializedProperty> serializedProperties = new List<SerializedProperty>();
-        private List<Member> members              = new List<Member>();
+        private PropertyTree             propertyTree;
+        //private List<SerializedProperty> properties = new List<SerializedProperty>();
+
+        public PropertyTree PropertyTree => this.propertyTree;
 
         private bool anySerialized;
         private bool hasArrays;
 
         private ILookup<int, object> mixedData;
         private void OnEnable() {
-            this.target.TryGetMembers(this.members);
-
-            this.serializedProperties = this.GetSerializedProperties();
             
-            this.anySerialized = this.serializedProperties.Count > 0;
-            
-            this.hasArrays = this.serializedProperties.Any(p => p.isArray);
-            
-            this.mixedData = SortAll(this.serializedProperties, this.members);
-
-            ReorderableListDrawer.ClearData();
+            //Init tree with 'this' script.
+            //this.properties   = this.GetSerializedProperties();
+            this.propertyTree = PropertyTree.InitTree(this.serializedObject);
         }
 
-        private void OnDisable() {
-            allMembers = new List<List<Member>>();
-        }
-        
         public override void OnInspectorGUI() {
-            this.serializedObject.Update();
+            GuiUtilities.DrawTree(this.propertyTree);
+            //this.serializedObject.UpdateIfRequiredOrScript();
+            /*foreach (var prop in this.properties) {
+                Debug.Log(prop.name);
+                GuiUtilities.PropertyField(prop, true);
+            }*/
+            //GuiUtilities.DrawTree(this.propertyTree);
 
             //means there's no arrays and props with attributes at all.
-            if (!this.anySerialized && !this.hasArrays) {
+            /*if (!this.anySerialized && !this.hasArrays) {
                 this.DrawDefaultInspector();
             }
 
@@ -93,7 +86,7 @@
 
                     this.DrawSerializedProperty((SerializedProperty) element);
                 }
-            }
+            }*/
         }
 
         private List<SerializedProperty> GetSerializedProperties() {
@@ -117,12 +110,10 @@
 
         private void DrawSerializedProperty(SerializedProperty prop) {
             this.serializedObject.Update();
-            
-            GuiUtilities.HandleDecorators(prop);
             GuiUtilities.PropertyField(prop, true);
         }
         
-        private void DrawButton(Member member) {
+        /*private void DrawButton(Member member) {
             var info = (MethodInfo) member.memberInfo;
 
             GuiUtilities.HandleDecorators(info);
@@ -220,6 +211,6 @@
             var kvPairs = pairs.OrderBy(s => s.Key);
             return kvPairs.ToLookup(pair =>
                 pair.Key, pair => pair.Value);
-        }
+        }*/
     }
 } 
