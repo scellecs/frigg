@@ -12,7 +12,7 @@
     using Utils;
     using Random = UnityEngine.Random;
 
-    public class ReorderableListDrawer : CustomPropertyDrawer {
+    public class ReorderableListDrawer : FriggPropertyDrawer {
         public static    ReorderableListDrawer                              instance = new ReorderableListDrawer();
         private readonly Dictionary<SerializedProperty, BaseGroupAttribute> groups   = new Dictionary<SerializedProperty, BaseGroupAttribute>();
 
@@ -22,7 +22,7 @@
             instance = new ReorderableListDrawer();
         }
 
-        private string GetPropertyKey(SerializedProperty property) => 
+        /*private string GetPropertyKey(SerializedProperty property) => 
             property.serializedObject.targetObject.GetInstanceID() + "." + property.name;
 
         internal object CreateAndDrawInternal(MemberInfo memberInfo, object target, GUIContent label, Rect rect = default) {
@@ -142,8 +142,8 @@
                 else {
                     EditorGUI.indentLevel++;
                     tempRect.y += Math.Abs(rect.y - tempRect.y);
-                    reorderableList.list[index] = GuiUtilities.MultiField(tempRect, declaredType, element,
-                        label);
+                    /*reorderableList.list[index] = GuiUtilities.MultiField(tempRect, declaredType, element,
+                        label);#1#
                     EditorGUI.indentLevel--;
                 }
             };
@@ -179,7 +179,7 @@
         }
 
         private static int GetNestedCount(object element, int count) {
-            var objects     = new List<Member>();
+            /*var objects     = new List<Member>();
             element.TryGetMembers(objects);
 
             if(CoreUtilities.IsPrimitiveUnityType(element.GetType()))
@@ -200,7 +200,8 @@
                    count += GetNestedCount(value, count);
             }
 
-            return count + 1;
+            return count + 1;#1#
+            return 1;
         }
 
         protected override void CreateAndDrawLayout(SerializedProperty property, GUIContent label) {
@@ -216,7 +217,7 @@
  
             ReorderableList reorderableList;
 
-            if (!instance.reorderableLists.ContainsKey(p.name)) {
+            /*if (!instance.reorderableLists.ContainsKey(p.name)) {
                 var attr = CoreUtilities.TryGetAttribute<ListDrawerSettingsAttribute>(property);
                 
                 if (attr != null) {
@@ -235,7 +236,7 @@
             
             //if is null
             reorderableList = instance.reorderableLists[p.name];
-            reorderableList.DoLayoutList();
+            reorderableList.DoLayoutList();#1#
         }
 
         private void SetCallbacks(SerializedProperty property, ReorderableList reorderableList, bool hideHeader = false) {
@@ -263,7 +264,7 @@
                 //var num         = indentLevel - copy.depth;
 
                 /*var count = target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Where(x => x.IsUnitySerialized());*/
+                    .Where(x => x.IsUnitySerialized());#1#
                 
                 //copy = element.Copy();
 
@@ -289,9 +290,9 @@
                         //var amount = GuiUtilities.AmountOfDecorators(copy);
                         GuiUtilities.HandleDecorators(copy, tempRect, true);
                         tempRect.y += decoratorsHeight + GuiUtilities.SPACE; //* amount;
-                    }*/
+                    }#1#
 
-                    var group = CoreUtilities.TryGetAttribute<BaseGroupAttribute>(copy);
+                    //var group = CoreUtilities.TryGetAttribute<BaseGroupAttribute>(copy);
 
                     EditorGUI.PropertyField(new Rect(tempRect.x, tempRect.y, 
                         tempRect.width, EditorGUIUtility.singleLineHeight), copy, GUIContent.none, true);
@@ -305,7 +306,7 @@
                 property.arraySize++;
                 var element = property.GetArrayElementAtIndex(property.arraySize - 1);
                 
-                CoreUtilities.SetDefaultValue(property, element);
+                //CoreUtilities.SetDefaultValue(property, element);
             };
 
             reorderableList.onRemoveCallback = delegate {
@@ -335,12 +336,16 @@
                     /*if(currAmount <= 0)
                         continue;
 
-                    amount          += currAmount;*/
+                    amount          += currAmount;#1#
                 } while (element.NextVisible(true) && !SerializedProperty.EqualContents(element, last));
 
                 height -= EditorGUIUtility.singleLineHeight;
                 return height + decoratorHeight + GuiUtilities.SPACE * amount + 8.0f;
             };
+        }*/
+
+        public override void DrawLayout() {
+            throw new NotImplementedException();
         }
     }
 }

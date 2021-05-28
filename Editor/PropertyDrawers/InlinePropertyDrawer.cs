@@ -9,13 +9,15 @@
     using UnityEditor;
     using UnityEngine;
     using Utils;
-    using EditorGUI = UnityEditor.Experimental.Networking.PlayerConnection.EditorGUI;
 
-    public class InlinePropertyDrawer : CustomPropertyDrawer {
+    public class InlinePropertyDrawer : FriggPropertyDrawer {
         public static readonly InlinePropertyDrawer instance = new InlinePropertyDrawer();
         public                 int                  labelWidth;
 
-        protected override void CreateAndDrawLayout(SerializedProperty property, GUIContent label) {
+        public override void DrawLayout() {
+            throw new NotImplementedException();
+        }
+        /*protected override void CreateAndDrawLayout(SerializedProperty property, GUIContent label) {
             throw new NotImplementedException();
         }
 
@@ -44,7 +46,7 @@
                 return null;
             }
 
-            var       objType    = target.GetType();
+            /*var       objType    = target.GetType();
             var       members    = new List<Member>();
             target.TryGetMembers(members);
             var enumerator = members.GetEnumerator();
@@ -101,14 +103,14 @@
                 }
             }
             
-            enumerator.Dispose();
+            enumerator.Dispose();#1#
 
             return target;
         }
 
         //TODO: Refactor
         protected override object CreateAndDraw(Rect rect, MemberInfo memberInfo, object target, GUIContent content) {
-            if (target == null)
+            /*if (target == null)
                 return null;
 
             var objType = target.GetType();
@@ -172,8 +174,8 @@
             }
             
             enumerator.Dispose();
+            #1#
 
-            return target;
-        }
+            return target;*/
     }
 }
