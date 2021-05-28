@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.Reflection;
     using BuiltIn;
+    using Groups;
     using UnityEngine;
     using Utils;
     using Object = System.Object;
@@ -21,10 +22,20 @@
             if (meta.GetCustomAttribute<ReadonlyAttribute>() != null) {
                 return new ReadonlyPropertyDrawer(property);
             }
+
+            if (meta.GetCustomAttribute<HorizontalGroupAttribute>() != null) {
+                return new HorizontalGroupDrawer(property);
+            }
+            
+            if (meta.GetCustomAttribute<VerticalGroupAttribute>() != null) {
+                return new VerticalGroupDrawer(property);
+            }
             
             if (meta.GetCustomAttribute<InlinePropertyAttribute>() != null 
                 || property.MetaInfo.isArray
-                || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))) {
+                || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))
+                || property.TryGetFixedAttribute<BaseGroupAttribute>() != null
+                || property.HasGroupsInChildren()){
                 return new InlinePropertyDrawer(property);
             }
 
@@ -36,7 +47,7 @@
                 return new EnumFlagsDrawer(property);
             }
             
-            if (!CoreUtilities.IsBuiltIn(property.MetaInfo.MemberType)) {
+            if (!CoreUtilities.IsBuiltIn(property.MetaInfo.MemberType) || meta.GetCustomAttribute<SerializableAttribute>() != null) {
                 return new FoldoutPropertyDrawer(property);
             }
 

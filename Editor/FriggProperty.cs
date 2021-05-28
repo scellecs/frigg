@@ -124,8 +124,19 @@
         }
         
         public T TryGetFixedAttribute<T>() where T : Attribute {
-            var attr = this.fixedAttributes.FirstOrDefault(x => x.GetType().IsAssignableFrom(typeof(T)));
+            var attr = this.fixedAttributes.FirstOrDefault(x => x is T);
             return (T) attr;
+        }
+        
+        public bool HasGroupsInChildren() {
+            var children = this.ChildrenProperties;
+            foreach (var child in children.RecurseChildren()) {
+                if (child.TryGetFixedAttribute<BaseGroupAttribute>() != null) {
+                    return true;
+                }
+            }
+
+            return false;
         }
         
         internal static FriggProperty DoProperty(PropertyTree tree, FriggProperty parent, object parentTarget, PropertyMeta metaInfo) {
@@ -180,7 +191,7 @@
             property.fixedAttributes = !property.IsRootProperty 
                 ? property.MetaInfo.MemberInfo.GetCustomAttributes().ToList() 
                 : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
-            
+
             property.ChildrenProperties = new PropertyCollection(property);
 
             var drawers = FriggDrawer.Resolve(property).ToList();
