@@ -1,5 +1,5 @@
 ﻿namespace Frigg {
-    public class DisableIfAttribute : ValidatorAttribute {
+    public class DisableIfAttribute : ConditionAttribute {
         public DisableIfAttribute(string name) : base(name) {
         }
 

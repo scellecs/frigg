@@ -1,7 +1,8 @@
 ﻿namespace Frigg {
+    using System;
     using UnityEngine;
 
-    public class BaseAttribute : PropertyAttribute, IAttribute {
+    public class BaseAttribute : Attribute, IAttribute {
         
     }
 }
