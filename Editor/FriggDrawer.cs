@@ -2,6 +2,7 @@
     using System;
     using System.Collections.Generic;
     using System.Reflection;
+    using Groups;
     using Unity.Collections;
     using UnityEngine;
     using Utils;
@@ -40,7 +41,7 @@
                     result.Add(decoratorDrawer);
                 }
 
-                if (attr is CustomAttribute || attr is BaseAttribute) {
+                if (attr is CustomAttribute || attr is BaseAttribute || attr is BaseGroupAttribute) {
                     var drawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
                     if (drawer == null) {
                         continue;
@@ -48,7 +49,7 @@
 
                     drawer.property        = property;
                     drawer.linkedAttribute = attr;
-                    if (drawer.GetType() != typeof(ReadonlyPropertyDrawer)) {
+                    if (drawer.GetType() != typeof(ReadonlyPropertyDrawer) && !(drawer is BaseGroupDrawer)) {
                         hasCustomDrawer = true;
                     }
                     result.Add(drawer);
