@@ -11,19 +11,14 @@
 
         public override float GetHeight() {
             //header
-            var total = EditorGUIUtility.singleLineHeight;
-            if (this.list.displayAdd) {
+            var total = 0f;
+            if (this.list.displayAdd || this.list.displayRemove) {
                 //button
                 total += EditorGUIUtility.singleLineHeight;
             }
 
-            if (this.list.displayRemove) {
-                //button
-                total += EditorGUIUtility.singleLineHeight * 2;
-            }
-
             this.property.IsExpanded =  true;
-            total                    += FriggProperty.GetPropertyHeight(this.property);
+            total                    += FriggProperty.GetPropertyHeight(this.property) + 4f * this.list.list.Count; // paddings
             return total;
         }
 
@@ -41,6 +36,10 @@
             var elements = (IList) CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
             list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
             this.SetCallbacks(list, this.property);
+
+            rect.width -= EditorGUI.indentLevel * 15;
+            rect.x     += EditorGUI.indentLevel * 15;
+            
             list.DoList(rect);
         }
         
