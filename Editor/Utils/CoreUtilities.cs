@@ -30,6 +30,50 @@ namespace Frigg.Utils {
             return writable;
         }
 
+        public static void HandleMetaAttributes(this FriggProperty property) {
+            var hideLabelAttribute = property.TryGetFixedAttribute<HideLabelAttribute>();
+            if (hideLabelAttribute != null) {
+                property.Label = GUIContent.none;
+                return;
+            }
+
+            var labelText = property.TryGetFixedAttribute<LabelText>();
+            if (labelText != null) {
+                if (labelText.IsDynamic) {
+                    property.Label.text = (string)GetValueByName(property.ParentValue, labelText.Text);
+                }
+
+                else {
+                    property.Label.text = labelText.Text;
+                }
+            }
+            
+            var toolTip = property.TryGetFixedAttribute<PropertyTooltipAttribute>();
+            if (toolTip != null) {
+                if (toolTip.IsDynamic) {
+                    property.Label.tooltip = (string) GetValueByName(property.ParentValue, toolTip.Text);
+                }
+
+                else {
+                    property.Label.tooltip = toolTip.Text;
+                }
+            }
+        }
+
+        public static object GetValueByName(object target, string name) {
+            var info = target.GetType().GetMembers(FLAGS)[0];
+            
+            if (info is PropertyInfo propertyInfo) {
+                return propertyInfo.GetValue(target);
+            }
+
+            if (info is FieldInfo fieldInfo) {
+                return fieldInfo.GetValue(target);
+            }
+
+            return null;
+        }
+
         public static IEnumerable<MethodInfo> TryGetMethods(this object target, Func<MethodInfo, bool> predicate) {
             if (target != null) {
                 var type = target.GetType();
@@ -100,7 +144,7 @@ namespace Frigg.Utils {
             return null;
         }
 
-        public static void TryGetMembers(this object target, List<Member> info) {
+        public static void TryGetMembers(this object target, List<PropertyValue> info) {
             if (target != null) {
                 //get type of provided target
                 var      type = target.GetType();
@@ -120,22 +164,38 @@ namespace Frigg.Utils {
                             continue;
                         }
                         
-                        var member = new Member {memberInfo = method, target = target};
+                        var orderAttr = method.GetCustomAttribute<OrderAttribute>();
+                        var order     = orderAttr?.Order ?? 0;
+                        
+                        var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                            Name       =  method.Name,
+                            MemberType = method.ReturnType,
+                            MemberInfo = method,
+                            Order = order
+                        }, target = target};
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
                     }
 
                     for (var i = 0; i < fields.Length; ++i) {
-                        if ((!type.IsDefined(typeof(SerializableAttribute))
-                             || !fields[i].IsDefined(typeof(SerializableAttribute)) && !fields[i].IsPublic) 
-                            && !fields[i].IsDefined(typeof(ShowInInspectorAttribute))) {
-                            continue;
-                        }
+                        if (fields[i].IsDefined(typeof(SerializableAttribute))
+                            || fields[i].IsDefined(typeof(SerializeField))
+                            || fields[i].IsDefined(typeof(ShowInInspectorAttribute)) 
+                            || fields[i].IsPublic) {
+                            var orderAttr = fields[i].GetCustomAttribute<OrderAttribute>();
+                            var order     = orderAttr?.Order ?? 0;
 
-                        var member = new Member {memberInfo = fields[i], target = target};
-                        if (!info.Contains(member)) {
-                            info.Add(member);
+                            var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                                Name       =  fields[i].Name,
+                                MemberType =  fields[i].FieldType,
+                                MemberInfo = fields[i],
+                                Order = order
+                            }, target = target};
+                        
+                            if (!info.Contains(member)) {
+                                info.Add(member);
+                            }
                         }
                     }
 
@@ -145,7 +205,16 @@ namespace Frigg.Utils {
                             continue;
                         }
                         
-                        var member = new Member {memberInfo = properties[i], target = target};
+                        var orderAttr = properties[i].GetCustomAttribute<OrderAttribute>();
+                        var order     = orderAttr?.Order ?? 0;
+                        
+                        var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                            Name       =  properties[i].Name,
+                            MemberType = properties[i].PropertyType,
+                            MemberInfo = properties[i],
+                            Order = order
+                        }, target = target};
+                        
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
@@ -196,38 +265,36 @@ namespace Frigg.Utils {
 
         #region properties //TODO: Check for any kind of errors.
     
-        public static Type GetPropertyType(SerializedProperty property)
+        public static Type GetPropertyType(FriggProperty property)
         {
-            var parentType = GetTargetObjectWithProperty(property).GetType();
-            var fieldInfo  = parentType.GetField(property.name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            return fieldInfo?.FieldType;
+            return property.GetType();
         }
 
-        public static bool IsPropertyVisible(SerializedProperty property) {
-            ValidatorAttribute attr = TryGetAttribute<HideIfAttribute>(property);
+        public static bool IsPropertyVisible(FriggProperty property) {
+            ConditionAttribute attr = property.TryGetFixedAttribute<HideIfAttribute>();
 
             if (attr != null) {
                 return GetConditionValue(property, attr, false);
             }
 
-            attr = TryGetAttribute<ShowIfAttribute>(property);
+            attr = property.TryGetFixedAttribute<ShowIfAttribute>();
             return attr == null || GetConditionValue(property, attr, true);
         }
 
-        public static bool IsPropertyEnabled(SerializedProperty property) {
-            ValidatorAttribute attr = TryGetAttribute<DisableIfAttribute>(property);
+        public static bool IsPropertyEnabled(FriggProperty property) {
+            ConditionAttribute attr = property.TryGetFixedAttribute<DisableIfAttribute>();
 
             if (attr != null) {
                 return GetConditionValue(property, attr, false);
             }
 
-            attr = TryGetAttribute<EnableIfAttribute>(property);
+            attr = property.TryGetFixedAttribute<EnableIfAttribute>();
             return attr == null || GetConditionValue(property, attr, true);
         }
 
-        private static bool GetConditionValue(SerializedProperty property, ValidatorAttribute attr, bool invertedScope) {
-            var target = GetTargetObjectWithProperty(property);
+        private static bool GetConditionValue(FriggProperty property, ConditionAttribute attr, bool invertedScope) {
+            var target = property.ParentValue;
             var field  = target.TryGetField(attr.FieldName);
             if (field == null) {
                 return true;
@@ -246,19 +313,6 @@ namespace Frigg.Utils {
             var fieldValueType = fieldValue.GetType();
             var attrValueType  = attr.Value.GetType();
 
-            if (fieldValueType != attrValueType) {
-                var infoBoxParams = new InfoBoxAttribute(
-                    $"'{attr.FieldName}' type is not the same Type as {fieldValueType}.") {
-                    InfoMessageType = InfoMessageType.Error
-                };
-                
-                var infoBox = DecoratorDrawerUtils.GetDecorator(typeof(InfoBoxAttribute));
-                infoBox.OnGUI(EditorGUILayout.GetControlRect(true, 0),
-                    property, infoBoxParams);
-
-                return false;
-            }
-
             var currentEnumValue  = Enum.Parse(fieldValueType, fieldValue.ToString());
             var expectedEnumValue = Enum.Parse(fieldValueType, attr.Value.ToString());
 
@@ -269,24 +323,6 @@ namespace Frigg.Utils {
             return currentEnumValue.Equals(expectedEnumValue);
         }
 
-        public static T[] TryGetAttributes<T>(SerializedProperty property) where T : class {
-            var target = GetTargetObjectWithProperty(property);
-            
-            var fInfo  = target.TryGetField(property.name);
-
-            if (fInfo == null) {
-                return new T[] { };
-            }
-
-            var data = (T[]) fInfo.GetCustomAttributes(typeof(T), true);
-            return data;
-        }
-
-        public static T TryGetAttribute<T>(SerializedProperty property) where T : class {
-            var attr = TryGetAttributes<T>(property);
-            
-            return (attr.Length > 0) ? attr[0] : null;
-        }
 
         /// <summary>
         /// Gets the object the property represents.
@@ -351,94 +387,7 @@ namespace Frigg.Utils {
 
             return obj;
         }
-        
-        public static void SetDefaultValue(SerializedProperty baseProperty, SerializedProperty element) {
 
-            var copy = element.Copy();
-            
-            do {
-                var type = copy.propertyType;
-
-                switch (type) {
-                    case SerializedPropertyType.Boolean:
-                        copy.boolValue = default;
-                        break;
-                    case SerializedPropertyType.Integer:
-                        copy.longValue = default;
-                        copy.intValue  = default;
-                        break;
-                    case SerializedPropertyType.Float:
-                        copy.floatValue  = default;
-                        copy.doubleValue = default;
-                        break;
-                    case SerializedPropertyType.String:
-                        copy.stringValue = default;
-                        break;
-                    case SerializedPropertyType.Vector2:
-                        copy.vector2Value = default;
-                        break;
-                    case SerializedPropertyType.Vector3:
-                        copy.vector3Value = default;
-                        break;
-                    case SerializedPropertyType.Vector4:
-                        copy.vector4Value = default;
-                        break;
-                }
-            } while (copy.NextVisible(true));
-        }
-        
-        public static bool HasDefaultValue(SerializedProperty property, Type type) {
-            if (type == typeof(bool)) {
-                return property.boolValue == default;
-            }
-            if (type == typeof(int))
-            {
-                return property.intValue == default;
-            }
-            if (type == typeof(long))
-            {
-                return property.longValue == default;
-            }
-            if (type == typeof(float))
-            {
-                return property.floatValue == default;
-            }
-            if (type == typeof(double))
-            {
-                return property.doubleValue == default;
-            }
-            if (type == typeof(string))
-            {
-                return property.stringValue == default;
-            }
-            if (type == typeof(Vector2))
-            {
-                return property.vector2Value == default;
-            }
-            if (type == typeof(Vector3))
-            {
-                return property.vector3Value == default;
-            }
-            if (type == typeof(Vector4))
-            {
-                return property.vector4Value == default;
-            }
-            if (type == typeof(Color))
-            {
-                return property.colorValue == default;
-            }
-            if (type == typeof(Bounds))
-            {
-                return property.boundsValue == default;
-            }
-            if (type == typeof(Rect))
-            {
-                return property.rectValue == default;
-            }
-
-            return true;
-        }
-    
         private static object GetValue_Imp(object source, string name)
         {
             if (source == null)
@@ -488,7 +437,7 @@ namespace Frigg.Utils {
         }
         #endregion
 
-        public static void OnDataChanged(SerializedProperty property) {
+        /*public static void OnDataChanged(SerializedProperty property) {
             property.serializedObject.ApplyModifiedProperties();
 
             var attr = TryGetAttributes<OnValueChangedAttribute>(property);
@@ -509,27 +458,9 @@ namespace Frigg.Utils {
                     Debug.LogError($"Can't find any method with name {obj.callbackMethod} and return type 'void'.");
                 }
             }
-        }
+        }*/
 
-
-        public static GUIContent GetGUIContent(MemberInfo property) {
-            var niceName = ObjectNames.NicifyVariableName(property.Name);
-            var label = !property.IsDefined(typeof(HideLabelAttribute)) ? 
-                $"{niceName}" : string.Empty;
-            
-            var content = new GUIContent(label);
-            var isDefined = property.IsDefined(typeof(PropertyTooltipAttribute));
-            if (!isDefined) {
-                return content;
-            }
-
-            var toolTip = property.GetCustomAttribute<PropertyTooltipAttribute>();
-            content.tooltip = toolTip.Text;
-
-            return content;
-        }
-        
-        public static GUIContent GetGUIContent(SerializedProperty property) {
+        /*public static GUIContent GetGUIContent(SerializedProperty property) {
             var label = TryGetAttribute<HideLabelAttribute>(property) == null ? 
                 $"{property.displayName}" : string.Empty;
             
@@ -542,8 +473,8 @@ namespace Frigg.Utils {
                 content.tooltip = tooltip.Text;
             }
 
-            return content;
-        }
+            return null; // content;
+        }*/
         
         public static bool IsUnitySerialized(this FieldInfo fieldInfo) {
             if (fieldInfo.IsDefined(typeof(NonSerializedAttribute)))
@@ -558,12 +489,16 @@ namespace Frigg.Utils {
             return fieldInfo.IsDefined(typeof(SerializableAttribute));
         }
 
-        public static bool IsPrimitiveUnityType(Type objType) {
+        public static bool IsBuiltIn(Type objType) {
             if (objType == null)
                 return false;
             
-            if (objType.IsPrimitive || objType == typeof(string))
+            if (objType.IsPrimitive || objType == typeof(string) || objType == typeof(void))
                 return true;
+
+            if (typeof(MonoBehaviour).IsAssignableFrom(objType)) {
+                return true;
+            }
             
             if (objType == typeof(bool))
             {
@@ -628,5 +563,33 @@ namespace Frigg.Utils {
             return false;
         }
 
+        public static object GetTargetObject(object target, MemberInfo info) {
+            if (info is PropertyInfo propertyInfo) {
+                return propertyInfo.GetValue(target);
+            }
+
+            if (info is FieldInfo fieldInfo) {
+                return fieldInfo.GetValue(target);
+            }
+
+            return null;
+        }
+        
+        public static void SetTargetValue(FriggProperty property, object target, MemberInfo info, object value) {
+            
+            if (info is PropertyInfo propertyInfo) { 
+                if(propertyInfo.CanWrite)
+                   propertyInfo.SetValue(target, value);
+            }
+
+            if (info is FieldInfo fieldInfo) {
+                 fieldInfo.SetValue(target, value);
+            }
+        }
+    }
+
+    public class PropertyValue {
+        public PropertyMeta MetaInfo { get; set; }
+        public object       target   { get; set; }
     }
 }
