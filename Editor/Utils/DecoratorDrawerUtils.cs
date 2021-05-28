@@ -5,7 +5,7 @@
     using Frigg;
 
     public static class DecoratorDrawerUtils {
-        private static readonly Dictionary<Type, BaseDecoratorDrawer> drawers;
+        /*private static readonly Dictionary<Type, BaseDecoratorDrawer> drawers;
 
         static DecoratorDrawerUtils() =>
             drawers = new Dictionary<Type, BaseDecoratorDrawer> {
@@ -16,6 +16,6 @@
             };
 
         public static BaseDecoratorDrawer GetDecorator(Type decoratorType)
-            => drawers.TryGetValue(decoratorType, out var drawer) ? drawer : null;
+            => drawers.TryGetValue(decoratorType, out var drawer) ? drawer : null;*/
     }
 }
