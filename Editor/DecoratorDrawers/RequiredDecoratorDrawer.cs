@@ -4,8 +4,35 @@
     using UnityEngine;
     using Utils;
 
-    public class RequiredDecoratorDrawer : BaseDecoratorDrawer {
-        public override bool IsVisible(SerializedProperty prop) {
+    public class RequiredDecoratorDrawer : FriggDecoratorDrawer {
+        public override void DrawLayout() {
+            EditorGUILayout.HelpBox($"{this.property.NiceName} is required!", MessageType.Error);
+            this.property.CallNextDrawer();
+        }
+
+        public override void Draw(Rect rect) {
+            var       temp   = rect;
+            const int height = BaseDecoratorAttribute.DEFAULT_HEIGHT;
+            temp.height = height;
+            
+            EditorGUI.HelpBox(temp, $"{this.property.NiceName} is required!", MessageType.Error);
+            rect.y += height;
+            this.property.CallNextDrawer(rect);
+        }
+
+        public override bool IsVisible {
+            get {
+                var value = CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
+                if (value == default) {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+        
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight * 2;
+        /*public override bool IsVisible(SerializedProperty prop) {
            //If objectReferenceValue is null - we need to draw Required InfoBox, otherwise - return.
             if (prop.propertyType == SerializedPropertyType.ObjectReference) {
                 return prop.objectReferenceValue == null;
@@ -38,7 +65,7 @@
                 if (string.IsNullOrEmpty(attr.Text)) {
                     attr.Text = $"{serializedProperty.displayName} is required!";
                 }
-            }*/
+            }#1#
             
             var content = EditorGUIUtility.TrTextContentWithIcon(attr.Text, MessageType.Error);
             var style = new GUIStyle(EditorStyles.helpBox) {
@@ -57,6 +84,6 @@
 
             if(!isArray) 
                 EditorGUILayout.Space(this.GetHeight(EditorGUILayout.GetControlRect()));
-        }
+        }*/
     }
 }
