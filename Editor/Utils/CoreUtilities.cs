@@ -264,13 +264,7 @@ namespace Frigg.Utils {
         #endregion
 
         #region properties //TODO: Check for any kind of errors.
-    
-        public static Type GetPropertyType(FriggProperty property)
-        {
-
-            return property.GetType();
-        }
-
+        
         public static bool IsPropertyVisible(FriggProperty property) {
             ConditionAttribute attr = property.TryGetFixedAttribute<HideIfAttribute>();
 
@@ -322,160 +316,30 @@ namespace Frigg.Utils {
 
             return currentEnumValue.Equals(expectedEnumValue);
         }
-
-
-        /// <summary>
-        /// Gets the object the property represents.
-        /// </summary>
-        /// <param name="property"></param>
-        /// <returns></returns>
-        public static object GetTargetObjectOfProperty(SerializedProperty property)
-        {
-            if (property == null)
-            {
-                return null;
-            }
-
-            string   path     = property.propertyPath.Replace(".Array.data[", "[");
-            object   obj      = property.serializedObject.targetObject;
-            string[] elements = path.Split('.');
-
-            foreach (var element in elements)
-            {
-                if (element.Contains("["))
-                {
-                    string elementName = element.Substring(0, element.IndexOf("["));
-                    int index = Convert.ToInt32(element.Substring(element.IndexOf("["))
-                        .Replace("[", "").Replace("]", ""));
-                    obj = GetValue_Imp(obj, elementName, index);
-                }
-                else
-                {
-                    obj = GetValue_Imp(obj, element);
-                }
-            }
-
-            return obj;
-        }
-
-        /// <summary>
-        /// Gets the object that the property is a member of
-        /// </summary>
-        /// <param name="property"></param>
-        /// <returns></returns>
-        public static object GetTargetObjectWithProperty(SerializedProperty property)
-        {
-            var path = property.propertyPath.Replace(".Array.data[", "[");
-
-            object obj      = property.serializedObject.targetObject;
-            var    elements = path.Split('.');
         
-            for (int i = 0; i < elements.Length - 1; i++)
-            {
-                string element = elements[i];
-                if (element.Contains("["))
-                {
-                    var elementName = element.Substring(0, element.IndexOf("["));
-                    var index       = Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
-                    obj = GetValue_Imp(obj, elementName, index);
-                }
-                else
-                {
-                    obj = GetValue_Imp(obj, element);
-                }
-            }
-
-            return obj;
-        }
-
-        private static object GetValue_Imp(object source, string name)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            var type = source.GetType();
-
-            while (type != null)
-            {
-                var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                if (field != null)
-                {
-                    return field.GetValue(source);
-                }
-
-                var property = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-                if (property != null)
-                {
-                    return property.GetValue(source, null);
-                }
-
-                type = type.BaseType;
-            }
-
-            return null;
-        }
-
-        private static object GetValue_Imp(object source, string name, int index)
-        {
-            if (!(GetValue_Imp(source, name) is IEnumerable enumerable))
-            {
-                return null;
-            }
-
-            var enumerator = enumerable.GetEnumerator();
-            for (var i = 0; i <= index; i++)
-            {
-                if (!enumerator.MoveNext())
-                {
-                    return null;
-                }
-            }
-
-            return enumerator.Current;
-        }
         #endregion
 
-        /*public static void OnDataChanged(SerializedProperty property) {
-            property.serializedObject.ApplyModifiedProperties();
+        public static void OnValueChanged(FriggProperty property) {
+            property.PropertyTree.SerializedObject.ApplyModifiedProperties();
 
-            var attr = TryGetAttributes<OnValueChangedAttribute>(property);
+            var attr = property.TryGetFixedAttribute<OnValueChangedAttribute>();
 
-            if (attr.Length == 0)
+            if (attr == null)
                 return;
 
-            var target = GetTargetObjectWithProperty(property);
+            var target = property.ParentValue;
 
-            foreach (var obj in attr) {
-                var method = target.TryGetMethod(obj.callbackMethod);
+            var method = target.TryGetMethod(attr.CallbackMethod);
 
-                if (method != null && method.GetParameters().Length == 0 && method.ReturnType == typeof(void)) {
-                    method.Invoke(target, new object[] { });
-                }
-
-                else {
-                    Debug.LogError($"Can't find any method with name {obj.callbackMethod} and return type 'void'.");
-                }
-            }
-        }*/
-
-        /*public static GUIContent GetGUIContent(SerializedProperty property) {
-            var label = TryGetAttribute<HideLabelAttribute>(property) == null ? 
-                $"{property.displayName}" : string.Empty;
-            
-            if(string.IsNullOrEmpty(label))
-                return GUIContent.none;
-            
-            var content = new GUIContent(label);
-            var tooltip = TryGetAttribute<PropertyTooltipAttribute>(property);
-            if (tooltip != null) {
-                content.tooltip = tooltip.Text;
+            if (method != null && method.GetParameters().Length == 0 && method.ReturnType == typeof(void)) {
+                method.Invoke(target, new object[] { });
             }
 
-            return null; // content;
-        }*/
-        
+            else {
+                Debug.LogError($"Can't find any method with name {attr.CallbackMethod} and return type 'void'.");
+            }
+        }
+
         public static bool IsUnitySerialized(this FieldInfo fieldInfo) {
             if (fieldInfo.IsDefined(typeof(NonSerializedAttribute)))
                 return false;
@@ -490,9 +354,6 @@ namespace Frigg.Utils {
         }
 
         public static bool IsBuiltIn(Type objType) {
-            if (objType == null)
-                return false;
-            
             if (objType.IsPrimitive || objType == typeof(string) || objType == typeof(void))
                 return true;
 
@@ -578,12 +439,13 @@ namespace Frigg.Utils {
         public static void SetTargetValue(FriggProperty property, object target, MemberInfo info, object value) {
             
             if (info is PropertyInfo propertyInfo) { 
+                Debug.Log("prop");
                 if(propertyInfo.CanWrite)
                    propertyInfo.SetValue(target, value);
             }
 
             if (info is FieldInfo fieldInfo) {
-                 fieldInfo.SetValue(target, value);
+                fieldInfo.SetValue(target, value);
             }
         }
     }
