@@ -3,27 +3,42 @@
     using UnityEditor;
     using UnityEngine;
     using Utils;
-
-    [UnityEditor.CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
+    
     public class EnumFlagsDrawer : BaseDrawer {
-        protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
-            EditorGUI.BeginProperty(position, label, property);
+        public EnumFlagsDrawer(FriggProperty prop) : base(prop) {
+        }
+        public override void DrawLayout() {
+            this.DoEnumFlags();
+        }
 
-            var attr   = (EnumFlagsAttribute) this.attribute;
-            var target = (Enum)CoreUtilities.GetTargetObjectOfProperty(property);
+        public override void Draw(Rect rect) {
+            this.DoEnumFlags(rect);
+            rect.y += EditorGUIUtility.singleLineHeight;
+            this.property.CallNextDrawer(rect);
+        }
+
+        private void DoEnumFlags(Rect rect = default) {
+            if (rect == Rect.zero) {
+                rect = EditorGUILayout.GetControlRect(true);
+            }
+            
+            var attr   = (EnumFlagsAttribute) this.linkedAttribute;
+            var target = (Enum) CoreUtilities.GetTargetObject(this.property.ParentValue, this.property.MetaInfo.MemberInfo);
 
             if (target == null) {
                 Debug.LogError("Invalid target.");
                 return;
             }
 
-            var enumValues = EditorGUI.EnumFlagsField(position, label, target);
+            var enumValues = EditorGUI.EnumFlagsField(rect, this.property.Label, target);
 
-            property.intValue = (int)Convert.ChangeType(enumValues, target.GetType());
+            CoreUtilities.SetTargetValue(this.property, this.property.ParentValue, this.property.MetaInfo.MemberInfo, enumValues);
 
-            property.serializedObject.ApplyModifiedProperties(); //TODO: Callback 
-
-            EditorGUI.EndProperty();
+            this.property.PropertyTree.SerializedObject.ApplyModifiedProperties(); //TODO: Callback 
         }
+
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
+
+        public override bool IsVisible => true;
     }
 }
