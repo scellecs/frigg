@@ -105,8 +105,13 @@
                 return new FloatDrawer(prop);
             }
 
-            if (valueType == typeof(double))
+            if (valueType == typeof(double)) {
                 return new SingleDrawer(prop);
+            }
+
+            if (typeof(Enum).IsAssignableFrom(valueType)) {
+                return new EnumDrawer(prop);
+            }
 
             if (typeof(UnityEngine.Object).IsAssignableFrom(valueType)) {
                 return new ObjectDrawer(prop);
