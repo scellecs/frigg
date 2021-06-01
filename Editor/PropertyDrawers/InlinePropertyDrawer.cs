@@ -4,6 +4,7 @@
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
+    using Utils;
 
     public class InlinePropertyDrawer : FriggPropertyDrawer {
         public InlinePropertyDrawer(FriggProperty prop) : base(prop) {
@@ -19,6 +20,8 @@
             this.property.IsExpanded = true;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
                 var attr    = p.TryGetFixedAttribute<BaseGroupAttribute>();
+                
+                EditorGUI.BeginChangeCheck();
                 if (attr != null) {
                     rect.width = attr.ElementWidth;
                     var group   = new GroupInfo(attr.GroupName, p.ParentProperty.Path);
@@ -36,6 +39,10 @@
                     var h = FriggProperty.GetPropertyHeight(p);
                     p.Draw(rect);
                     rect.y     += h + GuiUtilities.SPACE / 2f;
+                }
+                
+                if (EditorGUI.EndChangeCheck()) {
+                    CoreUtilities.OnValueChanged(p);
                 }
             }
             

@@ -3,6 +3,7 @@
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
+    using Utils;
 
     public class FoldoutPropertyDrawer : FriggPropertyDrawer {
         public FoldoutPropertyDrawer(FriggProperty prop) : base(prop) {
@@ -22,14 +23,14 @@
         }
 
         public override void Draw(Rect rect) {
-            
-            //To editor tools
             var style = EditorStyles.foldoutHeader;
 
             var toggleRect = rect;
             var indent = EditorGUI.indentLevel * 15;
+            
             toggleRect.width         -= indent;
             toggleRect.x             += indent;
+            
             this.property.IsExpanded =  GUI.Toggle(toggleRect, this.property.IsExpanded, this.property.Label, style);
             
             if (!this.property.IsExpanded) {
@@ -40,11 +41,17 @@
 
             EditorGUI.indentLevel++;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                EditorGUI.BeginChangeCheck();
                 p.Draw(rect);
+                if (EditorGUI.EndChangeCheck()) {
+                    CoreUtilities.OnValueChanged(p);
+                }
+                
                 var h = FriggProperty.GetPropertyHeight(p);
                 rect.y      += h + GuiUtilities.SPACE / 2;
                 rect.height =  EditorGUIUtility.singleLineHeight;
             }
+            
             EditorGUI.indentLevel--;
         }
 

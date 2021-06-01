@@ -14,7 +14,7 @@
             var total = 0f;
             if (this.list.displayAdd || this.list.displayRemove) {
                 //button
-                total += EditorGUIUtility.singleLineHeight;
+                total += EditorGUIUtility.singleLineHeight * 2;
             }
 
             this.property.IsExpanded =  true;
@@ -28,36 +28,31 @@
         }
 
         public override void Draw(Rect rect) {
-            ReorderableList             list;
-            object                      value = null;
-            ListDrawerSettingsAttribute attr  = null;
-            Type                        type  = null;
-
             var elements = (IList) CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
-            list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
-            this.SetCallbacks(list, this.property);
+            if(this.list == null)
+                this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
+            
+            this.SetCallbacks(this.list, this.property);
 
             rect.width -= EditorGUI.indentLevel * 15;
             rect.x     += EditorGUI.indentLevel * 15;
             
-            list.DoList(rect);
+            this.list.DoList(rect);
         }
         
         public override void DrawLayout() {
-            ReorderableList             list;
-            object                      value = null;
-            ListDrawerSettingsAttribute attr  = null;
-            Type                        type  = null;
-
             var elements = (IList) CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
-            list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
-            this.SetCallbacks(list, this.property);
-            list.DoLayoutList();
+            
+            if(this.list == null)
+               this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
+            
+            this.SetCallbacks(this.list, this.property);
+            this.list.DoLayoutList();
         }
 
         private void SetCallbacks(ReorderableList reorderableList, FriggProperty prop) {
             this.list = reorderableList;
-            
+
             var hideHeader                   = false;
             this.list.draggable = this.list.displayAdd = this.list.displayRemove = true;
             
@@ -81,14 +76,17 @@
 
                 tempRect.y      += GuiUtilities.SPACE / 2f;
                 tempRect.height =  EditorGUIUtility.singleLineHeight;
-                var indent = EditorGUI.indentLevel * GuiUtilities.SPACE;
-                tempRect.x      += 10.0f - indent;
-                tempRect.width  -= 10.0f - indent;
+                tempRect.width  += EditorGUI.indentLevel * 15;
+                tempRect.x      -= EditorGUI.indentLevel * 15;
                 
+                EditorGUI.BeginChangeCheck();
                 pr.Draw(tempRect);
+                if (EditorGUI.EndChangeCheck()) {
+                    CoreUtilities.OnValueChanged(pr);
+                }
             };
 
-            var listType = CoreUtilities.TryGetListElementType(list.list.GetType());
+            var listType = CoreUtilities.TryGetListElementType(this.list.list.GetType());
 
             this.list.onAddCallback = delegate {
                 var copy = this.list.list;
