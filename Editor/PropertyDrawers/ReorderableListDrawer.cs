@@ -36,8 +36,9 @@
 
             rect.width -= EditorGUI.indentLevel * 15;
             rect.x     += EditorGUI.indentLevel * 15;
-            
-            this.list.DoList(rect);
+
+            if(this.property.IsExpanded)
+               this.list.DoList(rect);
         }
         
         public override void DrawLayout() {
@@ -47,31 +48,31 @@
                this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
             
             this.SetCallbacks(this.list, this.property);
-            this.list.DoLayoutList();
+
+            if(this.property.IsExpanded)
+               this.list.DoLayoutList();
         }
 
         private void SetCallbacks(ReorderableList reorderableList, FriggProperty prop) {
             this.list = reorderableList;
 
-            var hideHeader                   = false;
-            this.list.draggable = this.list.displayAdd = this.list.displayRemove = true;
+            this.property.Label.text = $"{this.property.NiceName} - {this.property.MetaInfo.arraySize} elements.";
+            this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property);
+            
+            this.list.draggable      = this.list.displayAdd = this.list.displayRemove = true;
+            this.list.headerHeight   = 1;
             
             var attr                         = prop.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
-                hideHeader      = attr.HideHeader;
-                this.list.draggable  = attr.AllowDrag;
-                this.list.displayAdd = !attr.HideAddButton;
+                this.list.draggable     = attr.AllowDrag;
+                this.list.displayAdd    = !attr.HideAddButton;
                 this.list.displayRemove = !attr.HideRemoveButton;
             }
 
-            if (!hideHeader) {
-                this.list.drawHeaderCallback = tempRect => {
-                    EditorGUI.LabelField(tempRect,
-                        new GUIContent($"{this.property.NiceName} - {this.list.count} elements"));
-                };
-            }
-
             this.list.drawElementCallback = (tempRect, index, active, focused) => {
+                if (!prop.IsExpanded)
+                    return;
+                
                 var pr = prop.GetArrayElementAtIndex(index);
 
                 tempRect.y      += GuiUtilities.SPACE / 2f;
@@ -110,6 +111,9 @@
             };
 
             this.list.elementHeightCallback = index => {
+                if (!prop.IsExpanded)
+                    return EditorGUIUtility.singleLineHeight;
+                
                 var element = this.property.GetArrayElementAtIndex(index);
                 var height  = FriggProperty.GetPropertyHeight(element);
                 return height + GuiUtilities.SPACE;
