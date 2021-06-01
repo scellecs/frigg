@@ -156,6 +156,22 @@
             field.SetValue(target, values[newIndex]);
         }
         
+        public static bool FoldoutToggle(FriggProperty property, Rect rect = default) {
+            var style = EditorStyles.foldoutHeader;
+
+            if (rect == Rect.zero) {
+                rect = EditorGUILayout.GetControlRect(true);
+            }
+
+            var toggleRect = rect;
+            var indent     = EditorGUI.indentLevel * 15;
+            
+            toggleRect.width -= indent;
+            toggleRect.x     += indent;
+            
+            return GUI.Toggle(toggleRect, property.IsExpanded, property.Label, style);
+        }
+        
         #endregion
     }
 }
