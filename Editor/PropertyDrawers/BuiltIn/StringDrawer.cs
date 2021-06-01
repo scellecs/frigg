@@ -5,7 +5,7 @@
     using Utils;
 
     public class StringDrawer : BuiltInDrawer {
-        private readonly bool asString;
+        private readonly bool asString = true;
         public StringDrawer(FriggProperty prop) : base(prop) {
             var attr = prop.TryGetFixedAttribute<DisplayAsString>();
             if (attr != null) {
