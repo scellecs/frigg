@@ -148,7 +148,6 @@ namespace Frigg.Utils {
             if (target != null) {
                 //get type of provided target
                 var      type = target.GetType();
-
                 while (type != null) {
                     //Get all fields in provided type
                     var methods = type.GetMethods(FLAGS);
@@ -167,12 +166,12 @@ namespace Frigg.Utils {
                         var orderAttr = method.GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                        var member = new PropertyValue(null) {MetaInfo = new PropertyMeta {
                             Name       =  method.Name,
                             MemberType = method.ReturnType,
                             MemberInfo = method,
                             Order = order
-                        }, target = target};
+                        }};
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
@@ -186,12 +185,12 @@ namespace Frigg.Utils {
                             var orderAttr = fields[i].GetCustomAttribute<OrderAttribute>();
                             var order     = orderAttr?.Order ?? 0;
 
-                            var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                            var member = new PropertyValue(GetTargetObject(target, fields[i])) {MetaInfo = new PropertyMeta {
                                 Name       =  fields[i].Name,
                                 MemberType =  fields[i].FieldType,
                                 MemberInfo = fields[i],
                                 Order = order
-                            }, target = target};
+                            }};
                         
                             if (!info.Contains(member)) {
                                 info.Add(member);
@@ -208,12 +207,12 @@ namespace Frigg.Utils {
                         var orderAttr = properties[i].GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue {MetaInfo = new PropertyMeta {
+                        var member = new PropertyValue(GetTargetObject(target, properties[i])) {MetaInfo = new PropertyMeta {
                             Name       =  properties[i].Name,
                             MemberType = properties[i].PropertyType,
                             MemberInfo = properties[i],
                             Order = order
-                        }, target = target};
+                        }};
                         
                         if (!info.Contains(member)) {
                             info.Add(member);
@@ -424,6 +423,60 @@ namespace Frigg.Utils {
             return false;
         }
 
+        public static void SetSerializedPropertyValue(SerializedProperty prop, Type objType, object value) {
+            if (objType == typeof(bool))
+            {
+                prop.boolValue = (bool) value;
+            }
+            if (objType == typeof(int))
+            {
+                prop.intValue = (int) value;
+            }
+            if (objType == typeof(long))
+            {
+                prop.longValue = (long) value;
+            }
+            if (objType == typeof(float)) 
+            {
+                prop.floatValue = (float) value;
+            }
+            if (objType == typeof(double))
+            {
+                prop.doubleValue = (double) value;
+            }
+            if (objType == typeof(string))
+            {
+                prop.stringValue = (string) value;
+            }
+            if (objType == typeof(Vector2))
+            {
+                prop.vector2Value = (Vector2) value;
+            }
+            if (objType == typeof(Vector3))
+            {
+                prop.vector3Value = (Vector3) value;
+            }
+            if (objType == typeof(Vector4))
+            {
+                prop.vector4Value= (Vector4) value;
+            }
+            if (objType == typeof(Color))
+            {
+                prop.colorValue = (Color) value;
+            }
+            if (objType == typeof(Bounds))
+            {
+                prop.boundsValue = (Bounds) value;
+            }
+            if (objType == typeof(Rect)) {
+                prop.rectValue = (Rect) value;
+            }
+            if (typeof(Object).IsAssignableFrom(objType))
+            {
+                prop.objectReferenceValue = (Object) value;
+            }
+        }
+
         public static object GetTargetObject(object target, MemberInfo info) {
             if (info is PropertyInfo propertyInfo) {
                 return propertyInfo.GetValue(target);
@@ -436,22 +489,17 @@ namespace Frigg.Utils {
             return null;
         }
         
-        public static void SetTargetValue(FriggProperty property, object target, MemberInfo info, object value) {
-            
-            if (info is PropertyInfo propertyInfo) { 
-                Debug.Log("prop");
+        public static void SetTargetValue(FriggProperty property, in object target, MemberInfo info, object value) {
+            //target = value;
+            /*if (info is PropertyInfo propertyInfo) {
                 if(propertyInfo.CanWrite)
                    propertyInfo.SetValue(target, value);
             }
 
             if (info is FieldInfo fieldInfo) {
                 fieldInfo.SetValue(target, value);
-            }
+                //EditorUtility.SetDirty(property.PropertyTree.SerializedObject.targetObject);
+            }*/
         }
-    }
-
-    public class PropertyValue {
-        public PropertyMeta MetaInfo { get; set; }
-        public object       target   { get; set; }
     }
 }
