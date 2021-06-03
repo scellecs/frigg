@@ -6,16 +6,18 @@
     using Groups;
     using UnityEditor;
     using UnityEditor.Graphs;
+    using UnityEditor.SceneManagement;
     using UnityEngine;
+    using UnityEngine.SceneManagement;
     using Utils;
-    using EditorGUILayout = UnityEditor.Experimental.Networking.PlayerConnection.EditorGUILayout;
 
     public class FriggProperty {
         public  GUIContent               Label           { get; set; }
         
         public IEnumerator<FriggDrawer> QueueEnumerator { get; set; }
 
-        public string Path { get; private set; }
+        public string Path      { get; private set; }
+        public string UnityPath { get; private set; }
 
         private int  drawersCount;
         
@@ -33,6 +35,8 @@
         public FriggProperty ParentProperty { get; set; }
 
         public PropertyTree PropertyTree { get; set; }
+
+        public PropertyValue PropertyValue { get; set; }
 
         //properties inside this friggProperty.
         public PropertyCollection ChildrenProperties { get; set; }
@@ -82,6 +86,10 @@
                 return EditorGUIUtility.singleLineHeight;
             }
 
+            if (prop.HasGroupsInChildren()) {
+                return EditorGUIUtility.singleLineHeight;
+            }
+
             if (prop.ChildrenProperties.AmountOfChildren == 0) {
                 do {
                     if (prop.QueueEnumerator.Current == null) {
@@ -119,8 +127,16 @@
             return total;
         }
 
-        public void Update() {
-            this.PropertyTree.SerializedObject.Update();
+        public void Update(object newValue) {
+            this.PropertyValue.Value = newValue;
+            
+            var data = CoreUtilities.GetTargetObject(this.ParentProperty.PropertyValue.Value, this.MetaInfo.MemberInfo);
+            this.PropertyValue.Value         = data;
+            this.ChildrenProperties.property = this;
+        }
+
+        public void Refresh() {
+            this.PropertyValue.Value = this.PropertyTree.SerializedObject.targetObject;
         }
         
         public T TryGetFixedAttribute<T>() where T : Attribute {
@@ -155,6 +171,74 @@
             property.NiceName = ObjectNames.NicifyVariableName(metaInfo.Name);
             property.Label    = new GUIContent(property.NiceName);
 
+            //If this property can't have any children properties (is not struct or built-in unity type)
+            property.fixedAttributes = !property.IsRootProperty 
+                ? property.MetaInfo.MemberInfo.GetCustomAttributes().ToList() 
+                : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
+
+            if (property.IsRootProperty) {
+                property.PropertyValue = new PropertyValue(parentTarget);   
+            }
+
+            else {
+                property.PropertyValue = new PropertyValue(CoreUtilities.GetTargetObject(property.ParentValue, property.MetaInfo.MemberInfo));
+            }
+
+            property.Path = GetFriggPath(property);
+
+            property.UnityPath = property.GetUnityPath();
+            
+            property.ChildrenProperties = new PropertyCollection(property);  
+
+            var drawers = FriggDrawer.Resolve(property).ToList();
+            property.drawersCount = drawers.Count;
+
+            property.QueueEnumerator = drawers.GetEnumerator();
+            property.HandleMetaAttributes();
+
+            property.IsExpanded = EditorData.GetBoolValue(property.Path);
+            return property;
+        }
+
+        private string GetUnityPath() {
+            var prop = this.PropertyTree.SerializedObject.GetIterator();
+            prop.Next(true);
+            
+            var path = string.Empty;
+            var initPath = this.Path;
+            while (prop.Next(true)) {
+                if (!prop.isArray || prop.name == "Array") {
+                    continue;
+                }
+
+                var splitData = initPath.Split(new[] { prop.name }, StringSplitOptions.None);
+                if (splitData.Length <= 1) {
+                    continue;
+                }
+
+                if (splitData[1].Length <= 1) {
+                    continue;
+                }
+
+                var cleanValue = splitData[1].Remove(0, 1);
+                var p          = prop.FindPropertyRelative(cleanValue);
+                
+                path = p.propertyPath;
+            }
+            
+            if (string.IsNullOrEmpty(path)) {
+                prop.Reset();
+                while (prop.Next(true)) {
+                    var p = prop.FindPropertyRelative(this.Name);
+                    if (p != null) {
+                        path = p.propertyPath;
+                    }
+                }
+            }
+            return path;
+        }
+
+        private static string GetFriggPath(FriggProperty property) {
             var parentObjects = new List<string>();
             var prop          = property;
             while (prop != null) {
@@ -164,16 +248,18 @@
                     currPath += prop.PropertyTree.SerializedObject.targetObject.name + ".";
                 }
                 
-                var index    = prop.MetaInfo.arrayIndex;
+                var index = prop.MetaInfo.arrayIndex;
                 if (index == -1) {
                     currPath += prop.Name;
+                    currPath += ".";
                 }
 
                 if (index != -1) {
-                    currPath += $"[{index}]";
+                    currPath += $"[{index}].";
                 }
                 
-                currPath += ".";
+                if(prop.MetaInfo.isArray)
+                    currPath += "Array.data";
 
                 parentObjects.Add(currPath);
                 prop = prop.ParentProperty;
@@ -185,22 +271,7 @@
                 property.Path += obj;
             }
 
-            property.Path = property.Path.Substring(0, property.Path.Length-1);
-
-            //If this property can't have any children properties (is not struct or built-in unity type)
-            property.fixedAttributes = !property.IsRootProperty 
-                ? property.MetaInfo.MemberInfo.GetCustomAttributes().ToList() 
-                : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
-
-            property.ChildrenProperties = new PropertyCollection(property);
-
-            var drawers = FriggDrawer.Resolve(property).ToList();
-            property.drawersCount = drawers.Count;
-
-            property.QueueEnumerator = drawers.GetEnumerator();
-            property.HandleMetaAttributes();
-
-            return property;
-        }   
+            return property.Path.Substring(0, property.Path.Length-1);
+        }
     }
 }
