@@ -3,10 +3,10 @@
 
     public class OnValueChangedAttribute : Attribute, IAttribute {
 
-        public string callbackMethod { get; private set; }
+        public string CallbackMethod { get; private set; }
 
         public OnValueChangedAttribute(string callback) {
-            this.callbackMethod = callback;
+            this.CallbackMethod = callback;
         }
     }
 }

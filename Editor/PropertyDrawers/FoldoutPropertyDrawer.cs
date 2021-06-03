@@ -23,15 +23,7 @@
         }
 
         public override void Draw(Rect rect) {
-            var style = EditorStyles.foldoutHeader;
-
-            var toggleRect = rect;
-            var indent = EditorGUI.indentLevel * 15;
-            
-            toggleRect.width         -= indent;
-            toggleRect.x             += indent;
-            
-            this.property.IsExpanded =  GUI.Toggle(toggleRect, this.property.IsExpanded, this.property.Label, style);
+            this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
             if (!this.property.IsExpanded) {
                 return;
@@ -48,7 +40,7 @@
                 }
                 
                 var h = FriggProperty.GetPropertyHeight(p);
-                rect.y      += h + GuiUtilities.SPACE / 2;
+                rect.y      += h + GuiUtilities.SPACE;
                 rect.height =  EditorGUIUtility.singleLineHeight;
             }
             

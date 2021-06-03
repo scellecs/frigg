@@ -23,7 +23,7 @@
 
         public override bool IsVisible {
             get {
-                var value = CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
+                var value = this.property.PropertyValue.Value;
                 if (value == default) {
                     return true;
                 }

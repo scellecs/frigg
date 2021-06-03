@@ -3,8 +3,9 @@
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct)]
     public class BaseGroupAttribute : Attribute, IAttribute, IGroupAttribute {
-        public string GroupName  { get; set; }
-        public int    ElementWidth { get; set; }
+        public string GroupName     { get; set; }
+        public int    ElementWidth  { get; set; }
+        public int    ElementHeight { get; set; }
 
         public BaseGroupAttribute() {
             

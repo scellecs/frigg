@@ -19,8 +19,6 @@
         //Check before draw an element
         public abstract bool      IsVisible { get;}
 
-        public PropertyMeta PropertyMeta => this.property.MetaInfo;
-        
         public static IEnumerable<FriggDrawer> Resolve(FriggProperty property) {
             //Get attribute drawers
             var attrs = new List<Attribute>();

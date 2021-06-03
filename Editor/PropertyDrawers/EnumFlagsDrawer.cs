@@ -23,7 +23,7 @@
             }
             
             var attr   = (EnumFlagsAttribute) this.linkedAttribute;
-            var target = (Enum) CoreUtilities.GetTargetObject(this.property.ParentValue, this.property.MetaInfo.MemberInfo);
+            var target = (Enum) this.property.PropertyValue.Value;
 
             if (target == null) {
                 Debug.LogError("Invalid target.");

@@ -2,6 +2,7 @@
     using System;
     using UnityEditor;
     using UnityEngine;
+    using Utils;
 
     public class InfoBoxDecoratorDrawer : FriggDecoratorDrawer {
         public override void DrawLayout() {
@@ -26,7 +27,19 @@
                     break;
             }
 
-            EditorGUILayout.HelpBox(attr.Text, messageType);
+            if (CoreUtilities.IsPropertyVisible(this.property)) {
+                if (!string.IsNullOrEmpty(attr.Member)) {
+                    var value = (bool) CoreUtilities.GetTargetObject(this.property.ParentProperty.PropertyValue.Value,
+                        this.property.ParentProperty.PropertyValue.Value.GetType().GetMember(attr.Member, CoreUtilities.FLAGS)[0]);
+                    if (value) {
+                        EditorGUILayout.HelpBox(attr.Text, messageType);
+                    }
+                }
+                else {
+                    EditorGUILayout.HelpBox(attr.Text, messageType);
+                }
+            }
+
             this.property.CallNextDrawer();
         }
 

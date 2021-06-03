@@ -2,6 +2,11 @@
     using UnityEditor;
 
     public class EditorData {
+
+        public static void Erase() {
+            EditorPrefs.DeleteAll();
+        }
+        
         public static void SetBoolValue(string path, bool value) {
             EditorPrefs.SetBool(path, value);
         }

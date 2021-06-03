@@ -11,7 +11,9 @@
                 fontStyle = FontStyle.Bold, fontSize = 14, 
                 normal    = {textColor = new Color(225, 225, 225)}
             };
+            
             EditorGUILayout.LabelField(attr.header, style);
+            
             this.property.CallNextDrawer();
         }
 

@@ -26,7 +26,7 @@
             var attr          = (DropdownAttribute) this.linkedAttribute;
             var target        = this.property.ParentValue;
             var values        = this.GetDropdownValues(this.property, attr.Name);
-            var selectedValue = CoreUtilities.GetTargetObject(target, this.property.MetaInfo.MemberInfo);
+            var selectedValue = this.property.PropertyValue.Value;
 
             if (position == Rect.zero) {
                 position = EditorGUILayout.GetControlRect(true);
@@ -34,7 +34,7 @@
 
             switch (values) {
                 case IList list: {
-                    var currValue = CoreUtilities.GetTargetObject(target, this.property.MetaInfo.MemberInfo);
+                    var currValue = this.property.PropertyValue.Value;
 
                     var size = list.Count;
                 

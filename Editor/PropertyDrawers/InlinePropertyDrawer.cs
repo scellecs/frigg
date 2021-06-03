@@ -37,7 +37,7 @@
 
                 else {
                     var h = FriggProperty.GetPropertyHeight(p);
-                    p.Draw(rect);
+                    p.Draw(rect); 
                     rect.y     += h + GuiUtilities.SPACE / 2f;
                 }
                 

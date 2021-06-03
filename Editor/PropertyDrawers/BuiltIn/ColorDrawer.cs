@@ -18,7 +18,7 @@
             this.UpdateAndCallNext(result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
 
         public override bool IsVisible => true;
     }
