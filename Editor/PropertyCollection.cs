@@ -11,40 +11,27 @@
         private Dictionary<int, PropertyMeta>      metaByIndex    = new Dictionary<int, PropertyMeta>();
         private Dictionary<int, FriggProperty> propByIndex = new Dictionary<int, FriggProperty>();
 
-        private FriggProperty property;
+        public FriggProperty property;
 
         //represents last updated index for this property
         private int index = -1;
 
+        //Represent children components of this property
         public PropertyCollection(FriggProperty prop) {
             if (prop == null)
                 return;
-
+            
             var meta  = prop.MetaInfo;
 
             if (!CoreUtilities.IsBuiltIn(meta.MemberType) || prop.IsRootProperty) {
                 this.property = prop;
 
                 var    membersArray = new List<PropertyValue>();
-                object newTarget;
+                object target;
 
-                if (prop.IsRootProperty) {
-                    newTarget = prop.ParentValue;
-                }
-                
-                else {
-                    if (prop.ParentValue is IEnumerable) {
-                        var list = (IList) prop.ParentValue;
-                        newTarget = list[prop.MetaInfo.arrayIndex];
-                    }
-                    else {
-                        newTarget = CoreUtilities.GetTargetObject(prop.ParentValue, meta.MemberInfo);
-                    }
-                }
-                
-                if(typeof(IEnumerable).IsAssignableFrom(meta.MemberType)) {
+                if(typeof(IList).IsAssignableFrom(meta.MemberType)) {
                     this.property.MetaInfo.isArray = true;
-                    var list = (IList) CoreUtilities.GetTargetObject(prop.ParentValue, meta.MemberInfo);
+                    var list = (IList) prop.PropertyValue.Value;
 
                     this.property.MetaInfo.arraySize = list.Count;
                     for (var i = 0; i < list.Count; i++) {
@@ -58,35 +45,52 @@
                     
                     return;
                 }
-
-                if (newTarget == null) {
-                    
+                
+                if (prop.IsRootProperty) {
+                    target = prop.ParentValue;
                 }
-                this.SetMembers(this.property, newTarget, membersArray);
+                
+                else {
+                    if (prop.ParentValue is IList list) {
+                        target = list[prop.MetaInfo.arrayIndex];
+                    }
+                    else {
+                        target = prop.PropertyValue.Value;
+                    }
+                }
+
+                if (target == null)
+                    return;
+
+                target.TryGetMembers(membersArray);
+                this.SetMembers(this.property, target, membersArray);
             }
         }
 
-        public void SetMembers(FriggProperty prop, object target, List<PropertyValue> members) {
-            target.TryGetMembers(members);
+        public void Update() {
+            if (this.property.PropertyValue.Value is IList list) {
+                for (var i = 0; i < list.Count; i++) {
+                    if (!this.propByIndex.ContainsKey(i)) {
+                        this.propByIndex[i] = FriggProperty.DoProperty(this.property.PropertyTree, 
+                            this.property, this.property.PropertyValue.Value, new PropertyMeta {
+                                Name       = list[i].GetType().Name,
+                                MemberType = list[i].GetType(),
+                                MemberInfo = list[i].GetType(),
+                                arrayIndex = i
+                            });
 
-            if (members.Count == 0) {
-                return;
+                        this.property.MetaInfo.arraySize++;
+                    }
+                    
+                    this.propByIndex[i].PropertyValue.Value = list[i];
+                    this.propByIndex[i].ChildrenProperties.Update();
+                }
             }
 
-            var ordered = members.OrderBy(x => x.MetaInfo.Order);
-            members = ordered.ToList();
-            
-            foreach (var member in members) {
-                if (member.MetaInfo.MemberInfo.GetCustomAttribute<HideInInspector>() != null) {
-                    continue;
+            else {
+                foreach (var child in this.RecurseChildren()) {
+                    child.PropertyValue.Value = CoreUtilities.GetTargetObject(this.property.PropertyValue.Value, child.MetaInfo.MemberInfo);
                 }
-                
-                this.index++;
-                this.propByIndex[this.index] = FriggProperty.DoProperty(prop.PropertyTree, prop, target, new PropertyMeta {
-                    Name       = member.MetaInfo.Name,
-                    MemberType = member.MetaInfo.MemberType,
-                    MemberInfo = member.MetaInfo.MemberInfo
-                });
             }
         }
 
@@ -96,7 +100,6 @@
 
         public FriggProperty GetByIndex(int indexer) {
             if (this.propByIndex.TryGetValue(indexer, out var prop)) {
-                //Debug.Log($"returned {indexer} - {prop.Path}");
                 return prop;
             }
             
@@ -107,8 +110,24 @@
             
             //Allows us to fill it in runtime
             if (this.property.MetaInfo.isArray) {
-                var newTarget = CoreUtilities.GetTargetObject(target, this.property.MetaInfo.MemberInfo);
-                var arrayElement = ((IList) newTarget)[indexer];
+                var list         = (IList) this.property.PropertyValue.Value;
+
+                if (list.Count < this.property.MetaInfo.arraySize) {
+                    var copy = list;
+                    
+                    list = Array.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()), copy.Count + 1);
+                    for (var i = 0; i < copy.Count; i++) {
+                        list[i] = copy[i];
+                    }
+
+                    this.property.PropertyValue.Value = list;
+                }
+
+                var arrayElement = list[indexer];
+                if (arrayElement == null) {
+                    arrayElement = Activator.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()));
+                }
+                
                 prop = FriggProperty.DoProperty(this.property.PropertyTree, parentProp, target, new PropertyMeta {
                     Name       = arrayElement.GetType().Name,
                     MemberType = arrayElement.GetType(),
@@ -152,6 +171,25 @@
                     foreach (var nextChild in child.ChildrenProperties.RecurseChildren(true)) {
                         yield return nextChild; 
                     }
+            }
+        }
+        
+        private void SetMembers(FriggProperty prop, object target, List<PropertyValue> members) {
+            var ordered = members.OrderBy(x => x.MetaInfo.Order);
+            members = ordered.ToList();
+            
+            foreach (var member in members) {
+                if (member.MetaInfo.MemberInfo.GetCustomAttribute<HideInInspector>() != null) {
+                    continue;
+                }
+                
+                this.index++;
+                //Do own property for each MemberInfo inside a target object
+                this.propByIndex[this.index] = FriggProperty.DoProperty(prop.PropertyTree, prop, target, new PropertyMeta {
+                    Name       = member.MetaInfo.Name,
+                    MemberType = member.MetaInfo.MemberType,
+                    MemberInfo = member.MetaInfo.MemberInfo
+                });
             }
         }
     }
