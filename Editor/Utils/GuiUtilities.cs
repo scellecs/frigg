@@ -169,7 +169,15 @@
             toggleRect.width -= indent;
             toggleRect.x     += indent;
             
-            return GUI.Toggle(toggleRect, property.IsExpanded, property.Label, style);
+            var color = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.8f,0.8f,0.8f);
+            
+            var value = GUI.Toggle(toggleRect, property.IsExpanded, property.Label, style);
+            EditorData.SetBoolValue(property.Path, value);
+            property.IsExpanded = value;
+            
+            GUI.backgroundColor = color;
+            return value;
         }
         
         #endregion
