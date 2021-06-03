@@ -6,36 +6,33 @@
     using Utils;
 
     public abstract class BuiltInDrawer : BaseDrawer {
+        private Type drawerType;
         protected BuiltInDrawer(FriggProperty prop) : base(prop) {
         }
 
         protected T GetTargetValue<T>() {
-            object target;
-            
-            //Optimize: Assign target as a property value.
-            target = this.property.ParentProperty.MetaInfo.isArray
-                ? ((IList) this.property.ParentValue)[this.property.MetaInfo.arrayIndex] 
-                : CoreUtilities.GetTargetObject(this.property.ParentValue, this.PropertyMeta.MemberInfo);
-            
-            return (T) target;
+            this.drawerType = typeof(T);
+            EditorGUI.BeginChangeCheck();
+            return (T) this.property.PropertyValue.Value;
         }
 
         protected void UpdateAndCallNext(object value, Rect rect = default) {
-            this.Update(value);
+            if (EditorGUI.EndChangeCheck()) {
+                CoreUtilities.OnValueChanged(this.property);
+
+                this.property.Update(value);
+                
+                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
+                    var prop = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
+                    CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
+                    EditorUtility.SetDirty(this.property.PropertyTree.SerializedObject.targetObject);
+                }
+            }
             this.CallNext(rect);
         }
 
         protected void CallNext(Rect rect = default) {
             this.property.CallNextDrawer(rect);
-        }
-
-        protected void Update(object value) {
-            CoreUtilities.SetTargetValue(this.property, this.property.ParentValue,
-                this.PropertyMeta.MemberInfo, value);
-            
-            this.property.PropertyTree.SerializedObject.UpdateIfRequiredOrScript();
-            
-            this.property.PropertyTree.SerializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }
