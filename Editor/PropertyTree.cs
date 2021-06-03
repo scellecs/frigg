@@ -8,13 +8,15 @@
     using Utils;
 
     public abstract class PropertyTree {
-        public abstract SerializedObject SerializedObject { get; }
+        public abstract SerializedObject            SerializedObject { get; }
 
         public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
 
         public abstract Type             TargetType       { get; }
 
-        public abstract FriggProperty RootProperty { get; }
+        public abstract FriggProperty RootProperty { get; set; }
+
+        public abstract void UpdateTree();
 
         public static PropertyTree InitTree(object target) {
             if (target == null)
@@ -145,7 +147,7 @@
 
         private T[] memberTargets;
 
-        public override FriggProperty RootProperty { get; }
+        public sealed override FriggProperty RootProperty { get; set; }
 
         public List<T> Targets => this.memberTargets.ToList();
         
@@ -165,17 +167,43 @@
             this.serializedObject = serializedObject;
             this.memberTargets    = targetObjects;
 
-            this.RootProperty = FriggProperty.DoProperty(this, null, targetObjects[0], new PropertyMeta {
-                    Name       = targetObjects[0].GetType().Name,
+            this.RootProperty = FriggProperty.DoProperty(this, null, this.memberTargets[0], new PropertyMeta {
+                    Name       = this.memberTargets[0].GetType().Name,
                     MemberType = this.TargetType
                 }
             );
         }
 
         public override void Draw() {
+            this.BeginDrawTree();
+            this.DrawTree();
+            this.EndDrawTree();
+        }
+        
+        //Update changed values for all properties
+        public override void UpdateTree() {
+            foreach (var prop in this.EnumerateTree(false)) {
+                var data = CoreUtilities.GetTargetObject(prop.ParentProperty.PropertyValue.Value, prop.MetaInfo.MemberInfo);
+                prop.PropertyValue.Value         = data;
+                prop.ChildrenProperties.property = prop;
+                prop.ChildrenProperties.Update();
+            }
+        }
+        
+        private void BeginDrawTree() {
+            this.SerializedObject.Update();
+            //this.RootProperty.Refresh();
+            this.UpdateTree();
+        }
+
+        private void DrawTree() {
             foreach (var prop in this.EnumerateTree(false)) {
                 prop.Draw();
             }
+        }
+
+        private void EndDrawTree() {
+            this.SerializedObject.ApplyModifiedProperties();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
