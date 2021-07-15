@@ -1,5 +1,5 @@
 ﻿namespace Frigg {
-    public class ShowIfAttribute : ValidatorAttribute {
+    public class ShowIfAttribute : ConditionAttribute {
         public ShowIfAttribute(string name) : base(name) {
         }
 

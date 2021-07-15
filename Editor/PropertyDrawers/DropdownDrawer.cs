@@ -2,23 +2,39 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Reflection;
     using UnityEditor;
     using UnityEngine;
     using Utils;
-
-    [UnityEditor.CustomPropertyDrawer(typeof(DropdownAttribute))]
+    
     public class DropdownDrawer : BaseDrawer {
-        protected override void OnDrawerGUI(Rect position, SerializedProperty property, GUIContent label) {
-            EditorGUI.BeginProperty(position, label, property);
+        public DropdownDrawer(FriggProperty prop) : base(prop) {
+        }
+
+        public override void DrawLayout() {
+            this.DoDropdown();
+        }
+
+        public override void Draw(Rect rect) {
+            this.DoDropdown(rect);
             
-            var attr          = (DropdownAttribute) this.attribute;
-            var target        = property.serializedObject.targetObject;
-            var values        = this.GetDropdownValues(property, attr.Name);
-            var selectedValue = this.fieldInfo.GetValue(target);
+            rect.y += EditorGUIUtility.singleLineHeight;
+            this.property.CallNextDrawer(rect);
+        }
+
+        private void DoDropdown(Rect position = default) {
+            var attr          = (DropdownAttribute) this.linkedAttribute;
+            var target        = this.property.ParentValue;
+            var values        = this.GetDropdownValues(this.property, attr.Name);
+            var selectedValue = this.property.PropertyValue.Value;
+
+            if (position == Rect.zero) {
+                position = EditorGUILayout.GetControlRect(true);
+            }
 
             switch (values) {
                 case IList list: {
-                    var currValue = this.fieldInfo.GetValue(target);
+                    var currValue = this.property.PropertyValue.Value;
 
                     var size = list.Count;
                 
@@ -32,8 +48,8 @@
 
                     var currIndex = Array.IndexOf(valuesArr, currValue);
             
-                    GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                        this.fieldInfo, label, currIndex, options, valuesArr);
+                    GuiUtilities.Dropdown(position, property.PropertyTree.SerializedObject, target, 
+                        (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, currIndex, options, valuesArr);
                     break;
                 }
                 
@@ -59,19 +75,21 @@
                             currIndex++;
                         }
 
-                        GuiUtilities.Dropdown(position, property.serializedObject, target, 
-                            this.fieldInfo, label, selected, options.ToArray(), val.ToArray());
+                        GuiUtilities.Dropdown(position, this.property.PropertyTree.SerializedObject, target, 
+                            (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, selected, options.ToArray(), val.ToArray());
                     }
 
                     break;
                 }
             }
-            
-            EditorGUI.EndProperty();
         }
 
-        private object GetDropdownValues(SerializedProperty prop, string name) {
-            var target = prop.serializedObject.targetObject;
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
+
+        public override bool IsVisible => true;
+
+        private object GetDropdownValues(FriggProperty prop, string name) {
+            var target = prop.ParentValue;
 
             var fInfo = target.TryGetField(name);
             if (fInfo != null) {

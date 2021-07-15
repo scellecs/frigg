@@ -1,5 +1,5 @@
 ﻿namespace Frigg {
-    public class HideIfAttribute : ValidatorAttribute {
+    public class HideIfAttribute : ConditionAttribute {
         public HideIfAttribute(string name) : base(name) {
         }
 

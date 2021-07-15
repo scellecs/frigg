@@ -2,17 +2,20 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class PropertySpaceDecoratorDrawer : BaseDecoratorDrawer {
-        protected override float GetHeight(Rect rect) {
-            var attr = (PropertySpaceAttribute) this.attribute;
-            
-            return attr.SpaceBefore;
+    public class PropertySpaceDecoratorDrawer : FriggDecoratorDrawer {
+        public override void DrawLayout() {
+            var attr = (PropertySpaceAttribute) this.linkedAttribute;
+            EditorGUILayout.Space(attr.SpaceBefore);
+            this.property.CallNextDrawer();
         }
 
-        protected override void DrawDecorator(Rect rect, object target, bool isArray) {
-            var attr = (PropertySpaceAttribute) this.attribute;
-            
-            EditorGUILayout.Space(this.GetHeight(rect));
+        public override void Draw(Rect rect) {
+            var attr = (PropertySpaceAttribute) this.linkedAttribute;
+            rect.y += attr.SpaceBefore;
+            this.property.CallNextDrawer(rect);
         }
+
+        public override bool  IsVisible   => true;
+        public override float GetHeight() => ((PropertySpaceAttribute) this.linkedAttribute).SpaceBefore;
     }
 }
