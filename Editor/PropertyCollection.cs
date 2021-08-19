@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Packages.Frigg.Editor.Utils;
     using UnityEngine;
     using Utils;
     
@@ -89,7 +90,8 @@
 
             else {
                 foreach (var child in this.RecurseChildren()) {
-                    child.PropertyValue.Value = CoreUtilities.GetTargetObject(this.property.PropertyValue.Value, child.MetaInfo.MemberInfo);
+                    child.PropertyValue.Value = this.property.GetValue();
+                    //child.PropertyValue.Value = CoreUtilities.GetTargetValue(this.property.PropertyValue.Value, child.MetaInfo.MemberInfo);
                 }
             }
         }

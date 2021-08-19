@@ -185,7 +185,7 @@ namespace Frigg.Utils {
                             var orderAttr = fields[i].GetCustomAttribute<OrderAttribute>();
                             var order     = orderAttr?.Order ?? 0;
 
-                            var member = new PropertyValue(GetTargetObject(target, fields[i])) {MetaInfo = new PropertyMeta {
+                            var member = new PropertyValue(GetTargetValue(target, fields[i])) {MetaInfo = new PropertyMeta {
                                 Name       =  fields[i].Name,
                                 MemberType =  fields[i].FieldType,
                                 MemberInfo = fields[i],
@@ -207,7 +207,7 @@ namespace Frigg.Utils {
                         var orderAttr = properties[i].GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue(GetTargetObject(target, properties[i])) {MetaInfo = new PropertyMeta {
+                        var member = new PropertyValue(GetTargetValue(target, properties[i])) {MetaInfo = new PropertyMeta {
                             Name       =  properties[i].Name,
                             MemberType = properties[i].PropertyType,
                             MemberInfo = properties[i],
@@ -477,7 +477,7 @@ namespace Frigg.Utils {
             }
         }
 
-        public static object GetTargetObject(object target, MemberInfo info) {
+        public static object GetTargetValue(object target, MemberInfo info) {
             if (info is PropertyInfo propertyInfo) {
                 return propertyInfo.GetValue(target);
             }
@@ -490,16 +490,24 @@ namespace Frigg.Utils {
         }
         
         public static void SetTargetValue(FriggProperty property, in object target, MemberInfo info, object value) {
-            //target = value;
-            /*if (info is PropertyInfo propertyInfo) {
-                if(propertyInfo.CanWrite)
-                   propertyInfo.SetValue(target, value);
+            var prevVal = GetTargetValue(target, info);
+            if (value.GetHashCode() == prevVal.GetHashCode()) {
+                return;
             }
 
-            if (info is FieldInfo fieldInfo) {
-                fieldInfo.SetValue(target, value);
-                //EditorUtility.SetDirty(property.PropertyTree.SerializedObject.targetObject);
-            }*/
+            property.PropertyValue.Value = value;
+            switch (info) {
+                case PropertyInfo propertyInfo: {
+                    if(propertyInfo.CanWrite)
+                        propertyInfo.SetValue(target, value);
+                    break;
+                }
+                case FieldInfo fieldInfo:
+                    fieldInfo.SetValue(target, value);
+                    break;
+            }
+            
+            Debug.Log($"Value of {value} was updated. Previous one - {prevVal}");
         }
     }
 }

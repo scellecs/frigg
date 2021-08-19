@@ -47,7 +47,7 @@
                     }
 
                     var currIndex = Array.IndexOf(valuesArr, currValue);
-            
+                    
                     GuiUtilities.Dropdown(position, property.PropertyTree.SerializedObject, target, 
                         (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, currIndex, options, valuesArr);
                     break;
@@ -74,7 +74,6 @@
                         
                             currIndex++;
                         }
-
                         GuiUtilities.Dropdown(position, this.property.PropertyTree.SerializedObject, target, 
                             (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, selected, options.ToArray(), val.ToArray());
                     }

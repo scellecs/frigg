@@ -24,8 +24,10 @@
                 rect = EditorGUILayout.GetControlRect(true);
             }
             
-            var target = (Enum) this.property.PropertyValue.Value;
+            //var target = (Enum) this.property.PropertyValue.Value;
 
+            var target = (Enum) CoreUtilities.GetTargetValue(this.property.ParentValue, this.property.MetaInfo.MemberInfo);
+                
             if (target == null) {
                 Debug.LogError("Invalid target.");
                 return;

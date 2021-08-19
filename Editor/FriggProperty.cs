@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Reflection;
     using Groups;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEditor.Graphs;
     using UnityEditor.SceneManagement;
@@ -134,10 +135,7 @@
             var parent = this.ParentValue; 
             
             //Secondly, we need to set a new Value.
-            /*Debug.Log(parent.GetType());
-            Debug.Log(this.MetaInfo.MemberInfo);
-            Debug.Log(newValue);*/
-            CoreUtilities.SetTargetValue(this, parent, this.MetaInfo.MemberInfo, newValue);
+            this.SetValue(newValue);
             this.ChildrenProperties.property = this;
         }
 

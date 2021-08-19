@@ -21,13 +21,17 @@
         private void OnEnable() {
             //EditorData.Erase();
             this.propertyTree = PropertyTree.InitTree(this.serializedObject);
-            //Init tree with 'this' script.
         }
 
         public override void OnInspectorGUI() {
+            //Update SO representation.
             this.serializedObject.Update();
+            
+            //Here we are drawing our inspector.
             GuiUtilities.DrawTree(this.PropertyTree);
-            PropertyTree.UpdateTree();
+            
+            //We need to call this each time we update our inspector to update entire tree and get newest values.
+            this.PropertyTree.UpdateTree();
         }
     }
 } 

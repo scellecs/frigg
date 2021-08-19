@@ -1,6 +1,7 @@
 ﻿namespace Frigg.Editor.BuiltIn {
     using System;
     using System.Collections;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -13,7 +14,7 @@
         protected T GetTargetValue<T>() {
             this.drawerType = typeof(T);
             EditorGUI.BeginChangeCheck();
-            return (T) this.property.PropertyValue.Value;
+            return (T) this.property.GetValue();
         }
 
         protected void UpdateAndCallNext(object value, Rect rect = default) {
