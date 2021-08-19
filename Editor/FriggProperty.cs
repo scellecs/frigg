@@ -23,9 +23,9 @@
         
         public PropertyMeta MetaInfo { get; set; }
         
-        public object ParentValue    { get; set; }
-        public object ActualValue    { get; set; }
-        
+        public object ParentValue   { get; set; }
+        public object ActualValue   { get; set; }
+
         public bool   IsRootProperty { get; set; }
         public bool   IsExpanded     { get; set; }
 
@@ -127,18 +127,20 @@
             return total;
         }
 
+        //Update property value.
         public void Update(object newValue) {
-            this.PropertyValue.Value = newValue;
+            //To update it's representation - we need to get it's parent and set a new Value by MemberInfo.
+            //Firstly, we need to get property's parent object.
+            var parent = this.ParentValue; 
             
-            var data = CoreUtilities.GetTargetObject(this.ParentProperty.PropertyValue.Value, this.MetaInfo.MemberInfo);
-            this.PropertyValue.Value         = data;
+            //Secondly, we need to set a new Value.
+            /*Debug.Log(parent.GetType());
+            Debug.Log(this.MetaInfo.MemberInfo);
+            Debug.Log(newValue);*/
+            CoreUtilities.SetTargetValue(this, parent, this.MetaInfo.MemberInfo, newValue);
             this.ChildrenProperties.property = this;
         }
 
-        public void Refresh() {
-            this.PropertyValue.Value = this.PropertyTree.SerializedObject.targetObject;
-        }
-        
         public T TryGetFixedAttribute<T>() where T : Attribute {
             var attr = this.fixedAttributes.FirstOrDefault(x => x is T);
             return (T) attr;
@@ -181,7 +183,7 @@
             }
 
             else {
-                property.PropertyValue = new PropertyValue(CoreUtilities.GetTargetObject(property.ParentValue, property.MetaInfo.MemberInfo));
+                property.PropertyValue = new PropertyValue(CoreUtilities.GetTargetValue(property.ParentValue, property.MetaInfo.MemberInfo));
             }
 
             property.Path = GetFriggPath(property);
