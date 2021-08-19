@@ -174,26 +174,30 @@
             );
         }
 
+        //Draw section. 
         public override void Draw() {
             this.BeginDrawTree();
             this.DrawTree();
             this.EndDrawTree();
         }
         
-        //Update changed values for all properties
+        //We need to call this method only when we are updating our properties (trying to get new values).
+        //Cycle should look like:
+        //Get all properties -> Draw them -> Get incoming changes
+        //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
             foreach (var prop in this.EnumerateTree(false)) {
-                var data = CoreUtilities.GetTargetObject(prop.ParentProperty.PropertyValue.Value, prop.MetaInfo.MemberInfo);
+                var data = CoreUtilities.GetTargetValue(prop.ParentProperty.PropertyValue.Value, prop.MetaInfo.MemberInfo);
                 prop.PropertyValue.Value         = data;
                 prop.ChildrenProperties.property = prop;
                 prop.ChildrenProperties.Update();
             }
+            
+            this.SerializedObject.ApplyModifiedProperties(); 
         }
         
         private void BeginDrawTree() {
             this.SerializedObject.Update();
-            //this.RootProperty.Refresh();
-            this.UpdateTree();
         }
 
         private void DrawTree() {
@@ -204,6 +208,7 @@
 
         private void EndDrawTree() {
             this.SerializedObject.ApplyModifiedProperties();
+            //this.UpdateTree();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
