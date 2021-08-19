@@ -24,19 +24,17 @@
                 rect = EditorGUILayout.GetControlRect(true);
             }
             
-            var attr   = (EnumFlagsAttribute) this.linkedAttribute;
             var target = (Enum) this.property.PropertyValue.Value;
 
             if (target == null) {
                 Debug.LogError("Invalid target.");
                 return;
             }
-
-            var enumValue = EditorGUI.EnumPopup(rect, this.property.Label, target);
-
-            CoreUtilities.SetTargetValue(this.property, this.property.ParentValue, this.property.MetaInfo.MemberInfo, enumValue);
             
+            var enumValue = EditorGUI.EnumPopup(rect, this.property.Label, target);
             this.property.PropertyTree.SerializedObject.ApplyModifiedProperties();
+            
+            this.property.Update(enumValue);
         }
 
         public override float GetHeight() => EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
