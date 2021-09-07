@@ -7,7 +7,7 @@
         public string Text      { get; set; }
         public bool   IsDynamic { get; set; }
 
-        public PropertyTooltipAttribute(string text, bool isDynamic) {
+        public PropertyTooltipAttribute(string text, bool isDynamic = false) {
             this.Text      = text;
             this.IsDynamic = isDynamic;
         }

@@ -1,6 +1,8 @@
 ﻿namespace Frigg {
     using System;
+#if UNITY_EDITOR
     using UnityEditor;
+#endif
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct, 
         AllowMultiple = true)]
@@ -19,7 +21,9 @@
 
         public TitleAttribute(string title) {
             this.Text   = title;
+#if UNITY_EDITOR
             this.Height = this.lineHeight + EditorGUIUtility.singleLineHeight;
+#endif
         }
     }
 
