@@ -15,17 +15,25 @@
             return group.currentRect;
         }
 
-        public static void ResetGroups() {
+        public static void ResetRects() {
             foreach (var group in activeGroups) {
                 group.currentRect = Rect.zero;
             }
         }
 
-        public static float GetGroupHeight(GroupInfo info) {
-            var group = TryGetInfo(info);
+        public static void ResetGroups() {
+            activeGroups = new List<GroupInfo>();
+        }
 
-            var totalHeight = group.GroupHeight;
-            return totalHeight;
+        public static float GetGroupsHeight(FriggProperty prop) {
+            var   groups = activeGroups.FindAll(x => x.Path == prop.Path);
+            float height = 0;
+
+            foreach (var group in groups) {
+                height += group.GroupHeight;
+            }
+
+            return height;
         }
 
         public static void Init(GroupInfo group, Rect rect) {
@@ -39,7 +47,7 @@
         public static void UpdateGroupInfo(GroupInfo info, Rect rect) {
             var data  = TryGetInfo(info);
             var index = activeGroups.IndexOf(data);
-            rect.x                          += GuiUtilities.SPACE * 2;
+            rect.x    += GuiUtilities.SPACE * 2;
             activeGroups[index].currentRect =  rect;
         }
 
