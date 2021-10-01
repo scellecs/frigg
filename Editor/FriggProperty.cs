@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using Groups;
+    using Layouts;
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEditor.Graphs;
@@ -12,42 +13,88 @@
     using Utils;
 
     public class FriggProperty {
+        //All applied attributes on target property.
         private List<Attribute> fixedAttributes = new List<Attribute>();
         public  GUIContent      Label { get; set; }
 
-        public IEnumerator<FriggDrawer> QueueEnumerator { get; set; }
+        //All drawers that were detected on target property.
+        public IEnumerator<FriggDrawer> Drawers { get; set; }
 
+        /// <summary>
+        /// Path, declared on target property by Frigg inspector.
+        /// </summary>
         public string Path      { get; private set; }
+        
+        /// <summary>
+        /// Path appropriate to Unity's Serialized Property. Empty if property is missing.
+        /// </summary>
         public string UnityPath { get; private set; }
 
+        /// <summary>
+        /// Property's meta info.
+        /// </summary>
         public PropertyMeta MetaInfo { get; set; }
 
+        /// <summary>
+        /// Property's actual value.
+        /// </summary>
         public PropertyValue Value { get; set; }
 
+        /// <summary>
+        /// Indicates whether property is root(e.g base property).
+        /// </summary>
         public bool IsRootProperty { get; set; }
+        
+        /// <summary>
+        /// Indicates whether property is Expanded in Unity Editor.
+        /// </summary>
         public bool IsExpanded     { get; set; }
+        
+        //Don't need to use this? Check for an attribute and then remove from list?
+        public bool IsLayoutMember  { get; set; }
 
+        /// <summary>
+        /// Property's reflected name.
+        /// </summary>
         public string Name     { get; set; }
+        
+        /// <summary>
+        /// Property's displayable name.
+        /// </summary>
         public string NiceName { get; set; }
 
+        /// <summary>
+        /// Parent property of target property.
+        /// </summary>
         public FriggProperty ParentProperty { get; set; }
+        /// <summary>
+        /// Main property tree for target property.
+        /// </summary>
         public PropertyTree  PropertyTree   { get; set; }
 
-        //properties inside this friggProperty.
+        /// <summary>
+        /// Children properties of target property.
+        /// </summary>
         public PropertyCollection     ChildrenProperties { get; private set; }
+        
+        /// <summary>
+        /// Applied attributes on target property.
+        /// </summary>
         public IEnumerable<Attribute> FixedAttributes    => this.fixedAttributes;
 
-        public FriggProperty(PropertyValue value) {
-            this.Value = value;
-        }
-        
+        public FriggProperty(PropertyValue value) => this.Value = value;
+
+        /// <summary>
+        /// Draw property.
+        /// </summary>
+        /// <param name="rect">Rect that represents draw info</param>
         public void Draw(Rect rect = default) {
-            var current = this.QueueEnumerator.Current;
+            var current = this.Drawers.Current;
             if (current != null && current.IsVisible) {
                 if (rect == default)
-                    this.QueueEnumerator.Current?.DrawLayout();
+                    this.Drawers.Current?.DrawLayout();
                 else {
-                    this.QueueEnumerator.Current?.Draw(rect);
+                    this.Drawers.Current?.Draw(rect);
                 }
             }
 
@@ -56,27 +103,42 @@
             }
         }
 
+        /// <summary>
+        /// Move to the next drawer in target property.
+        /// </summary>
+        /// <param name="rect"></param>
         public void CallNextDrawer(Rect rect = default) {
-            if (this.QueueEnumerator.MoveNext()) {
+            if (this.Drawers.MoveNext()) {
                 this.Draw(rect);
             }
             else {
-                this.QueueEnumerator.Reset();
+                this.Drawers.Reset();
             }
         }
 
+        /// <summary>
+        /// Access property on required index.
+        /// </summary>
+        /// <param name="index">Required index.</param>
+        /// <returns>Property on required index.</returns>
+        /// <exception cref="Exception">Property is not an array.</exception>
         public FriggProperty GetArrayElementAtIndex(int index) {
-            if (this.MetaInfo.isArray) {
-                var fProperty = this.ChildrenProperties.GetByIndex(index);
-                var sProperty = this.PropertyTree.SerializedObject.FindProperty(fProperty.UnityPath);
-                //Debug.Log();
-                //fProperty.Value.ActualValue = sProperty.;
-                return fProperty;
+            if (!this.MetaInfo.isArray) {
+                throw new Exception("Specified property is not an array!");
             }
 
-            throw new Exception("Specified property is not an array!");
+            var fProperty = this.ChildrenProperties.GetByIndex(index);
+            var sProperty = this.PropertyTree.SerializedObject.FindProperty(fProperty.UnityPath);
+            return fProperty;
+
         }
 
+        /// <summary>
+        /// Calculates property's required height.
+        /// </summary>
+        /// <param name="property">Target property</param>
+        /// <param name="includeChildren">Calculate children elements height?</param>
+        /// <returns>Total property's height.</returns>
         public static float GetPropertyHeight(FriggProperty property, bool includeChildren = true) => CalculateDrawersHeight(property, includeChildren);
 
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
@@ -88,16 +150,16 @@
 
             if (prop.ChildrenProperties.AmountOfChildren == 0) {
                 do {
-                    if (prop.QueueEnumerator.Current == null) {
+                    if (prop.Drawers.Current == null) {
                         continue;
                     }
 
-                    if (prop.QueueEnumerator.Current.IsVisible) {
-                        total += prop.QueueEnumerator.Current.GetHeight();
+                    if (prop.Drawers.Current.IsVisible) {
+                        total += prop.Drawers.Current.GetHeight();
                     }
-                } while (prop.QueueEnumerator.MoveNext());
+                } while (prop.Drawers.MoveNext());
 
-                prop.QueueEnumerator.Reset();
+                prop.Drawers.Reset();
 
                 return total;
             }
@@ -107,49 +169,57 @@
             var properties = includeChildren ? prop.ChildrenProperties : prop.ChildrenProperties.RecurseChildren(true);
             foreach (var property in properties) {
                 do {
-                    if (property.QueueEnumerator.Current == null) {
+                    if (property.Drawers.Current == null) {
                         continue;
                     }
 
-                    if (property.QueueEnumerator.Current.IsVisible) {
-                        total += property.QueueEnumerator.Current.GetHeight();
+                    if (property.Drawers.Current.IsVisible) {
+                        total += property.Drawers.Current.GetHeight();
                     }
-                } while (property.QueueEnumerator.MoveNext());
+                } while (property.Drawers.MoveNext());
 
-                property.QueueEnumerator.Reset();
+                property.Drawers.Reset();
             }
 
             return total;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void RefreshChildren() {
             Debug.Log(this.MetaInfo.arraySize);
             this.ChildrenProperties = new PropertyCollection(this);
         }
 
-        //Update property value.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newValue"></param>
         public void Update(object newValue) {
             //Secondly, we need to set a new Value.
             this.SetValue(newValue);
             this.ChildrenProperties.property = this;
         }
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public T TryGetFixedAttribute<T>() where T : Attribute {
             var attr = this.fixedAttributes.FirstOrDefault(x => x is T);
             return (T) attr;
         }
 
-        public bool HasGroupsInChildren() {
-            var children = this.ChildrenProperties;
-            foreach (var child in children.RecurseChildren()) {
-                if (child.TryGetFixedAttribute<BaseGroupAttribute>() != null) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
+        /// <summary>
+        /// Creates a new Frigg property.
+        /// </summary>
+        /// <param name="tree"></param>
+        /// <param name="parent"></param>
+        /// <param name="metaInfo"></param>
+        /// <param name="isRoot"></param>
+        /// <returns></returns>
         internal static FriggProperty DoProperty(PropertyTree tree, FriggProperty parent, PropertyMeta metaInfo, 
             bool isRoot = false) {
             var property = new FriggProperty(new PropertyValue()) {
@@ -199,10 +269,37 @@
             var drawers = FriggDrawer.Resolve(property).ToList();
             property.MetaInfo.drawersCount = drawers.Count;
 
-            property.QueueEnumerator = drawers.GetEnumerator();
+            property.Drawers = drawers.GetEnumerator();
             property.HandleMetaAttributes();
 
             property.IsExpanded = EditorData.GetBoolValue(property.Path);
+
+            var attr = property.TryGetFixedAttribute<BaseGroupAttribute>();
+
+            if (attr == null) {
+                return property;
+            }
+            
+            property.IsLayoutMember = true;
+
+            var layout = property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == property.ParentProperty.Path);
+            
+            if (layout != null) {
+                layout.Add(property);
+                return property;
+            }
+
+            if (attr is HorizontalGroupAttribute) {
+                layout = new HorizontalLayout();
+            }
+            else {
+                layout = new VerticalLayout();
+            }
+
+            layout.Add(property);
+
+            property.PropertyTree.Layouts.Add(layout);
+
             return property;
         }
 
