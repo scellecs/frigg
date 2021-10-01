@@ -1,6 +1,8 @@
 ﻿namespace Frigg.Editor {
     using System;
     using System.Collections;
+    using System.Linq;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEditorInternal;
     using UnityEngine;
@@ -18,6 +20,13 @@
                    total += EditorGUIUtility.singleLineHeight * 1.5f;
             }
             
+            var layout = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == this.property.Path);
+            
+            if (layout != null) {
+                total += layout.totalHeight;
+                return total;
+            }
+            
             total += FriggProperty.GetPropertyHeight(this.property) + 4f * this.list.list.Count; // paddings
             
             if(this.property.IsExpanded)
@@ -29,14 +38,14 @@
         public override bool  IsVisible => true;
 
         public ReorderableListDrawer(FriggProperty prop) : base(prop) {
-            var elements = (IList) prop.PropertyValue.Value;
+            var elements = (IList) prop.GetValue();
             if (this.list == null)
                 this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
         }
 
         public override void Draw(Rect rect) {
             rect.y += GuiUtilities.SPACE;
-            this.SetCallbacks(this.list, this.property, rect);
+            this.SetCallbacks(this.list, rect);
             rect.y += EditorGUIUtility.singleLineHeight;
 
             rect.width -= EditorGUI.indentLevel * 15;
@@ -47,18 +56,18 @@
         }
         
         public override void DrawLayout() {
-            var elements = (IList) this.property.PropertyValue.Value;
+            var elements = (IList) this.property.GetValue(); 
             
             if(this.list == null)
                this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
             
-            this.SetCallbacks(this.list, this.property);
+            this.SetCallbacks(this.list);
 
             if(this.property.IsExpanded)
                this.list.DoLayoutList();
         }
 
-        private void SetCallbacks(ReorderableList reorderableList, FriggProperty prop, Rect rect = default) {
+        private void SetCallbacks(ReorderableList reorderableList, Rect rect = default) {
             this.list = reorderableList;
 
             this.property.Label.text = $"{this.property.NiceName} - {this.property.MetaInfo.arraySize} elements.";
@@ -67,7 +76,7 @@
             this.list.draggable      = this.list.displayAdd = this.list.displayRemove = true;
             this.list.headerHeight   = 1;
             
-            var attr                         = prop.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
+            var attr                         = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
                 this.list.draggable     = attr.AllowDrag;
                 this.list.displayAdd    = !attr.HideAddButton;
@@ -75,26 +84,22 @@
             }
 
             this.list.drawElementCallback = (tempRect, index, active, focused) => {
-                if (!prop.IsExpanded)
+                if (!this.property.IsExpanded)
                     return;
                 
-                var pr = prop.GetArrayElementAtIndex(index);
+                var pr = this.property.GetArrayElementAtIndex(index);
 
                 tempRect.y      += GuiUtilities.SPACE / 2f;
                 tempRect.height =  EditorGUIUtility.singleLineHeight;
                 tempRect.width  += EditorGUI.indentLevel * 15;
                 tempRect.x      -= EditorGUI.indentLevel * 15;
                 
-                EditorGUI.BeginChangeCheck();
                 pr.Draw(tempRect);
-                if (EditorGUI.EndChangeCheck()) {
-                    CoreUtilities.OnValueChanged(pr);
-                }
             };
 
             var listType = CoreUtilities.TryGetListElementType(this.list.list.GetType());
 
-            this.list.onAddCallback = delegate {
+            this.list.onAddCallback = _ => {
                 var copy = this.list.list;
 
                 this.list.list = Array.CreateInstance(listType, copy.Count + 1);
@@ -102,15 +107,15 @@
                     this.list.list[i] = copy[i];
                 }
 
-                if (!string.IsNullOrEmpty(prop.UnityPath)) {
-                    var sp = prop.PropertyTree.SerializedObject.FindProperty(prop.UnityPath);
+                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
+                    var sp = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
                     sp.arraySize++;
                 }
-
+                
                 this.property.MetaInfo.arraySize++;
             };
 
-            this.list.onRemoveCallback = delegate {
+            this.list.onRemoveCallback = _ => {
                 var copy      = this.list.list;
                 var newLength = copy.Count - 1;
 
@@ -121,20 +126,28 @@
                 for (var i = this.list.index; i < newLength; i++)
                     this.list.list[i] = copy[i + 1];
                 
-                if (!string.IsNullOrEmpty(prop.GetArrayElementAtIndex(this.list.index).UnityPath)) {
-                    var sp = prop.PropertyTree.SerializedObject.FindProperty(prop.Name);
-                    sp.DeleteArrayElementAtIndex(this.list.index);
+                Debug.Log(this.property.Name + " " + this.property.Path);
+
+                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
+                    var sp = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
+                    Debug.Log(this.property.UnityPath);
                     sp.arraySize--;
                 }
-                
+
                 this.property.MetaInfo.arraySize--;
             };
 
             this.list.elementHeightCallback = index => {
-                if (!prop.IsExpanded)
+                var element = this.property.GetArrayElementAtIndex(index);
+                var layout  = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == element.Path);
+            
+                if (layout != null) {
+                    return layout.totalHeight + GuiUtilities.SPACE;
+                }
+                
+                if (!this.property.IsExpanded)
                     return EditorGUIUtility.singleLineHeight;
                 
-                var element = this.property.GetArrayElementAtIndex(index);
                 var height  = FriggProperty.GetPropertyHeight(element);
                 return height + GuiUtilities.SPACE;
             };
