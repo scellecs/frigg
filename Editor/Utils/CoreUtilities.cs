@@ -40,7 +40,7 @@ namespace Frigg.Utils {
             var labelText = property.TryGetFixedAttribute<LabelText>();
             if (labelText != null) {
                 if (labelText.IsDynamic) {
-                    property.Label.text = (string)GetValueByName(property.ParentValue, labelText.Text);
+                    property.Label.text = (string)GetValueByName(property.Value.Parent, labelText.Text);
                 }
 
                 else {
@@ -51,7 +51,7 @@ namespace Frigg.Utils {
             var toolTip = property.TryGetFixedAttribute<PropertyTooltipAttribute>();
             if (toolTip != null) {
                 if (toolTip.IsDynamic) {
-                    property.Label.tooltip = (string) GetValueByName(property.ParentValue, toolTip.Text);
+                    property.Label.tooltip = (string) GetValueByName(property.Value.Parent, toolTip.Text);
                 }
 
                 else {
@@ -147,7 +147,7 @@ namespace Frigg.Utils {
         public static void TryGetMembers(this object target, List<PropertyValue> info) {
             if (target != null) {
                 //get type of provided target
-                var      type = target.GetType();
+                var    type = target.GetType();
                 while (type != null) {
                     //Get all fields in provided type
                     var methods = type.GetMethods(FLAGS);
@@ -166,12 +166,15 @@ namespace Frigg.Utils {
                         var orderAttr = method.GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue(null) {MetaInfo = new PropertyMeta {
-                            Name       =  method.Name,
-                            MemberType = method.ReturnType,
-                            MemberInfo = method,
-                            Order = order
-                        }};
+                        var member = new PropertyValue { 
+                            MetaInfo = new PropertyMeta {
+                                Name       =  method.Name,
+                                MemberType = method.ReturnType,
+                                MemberInfo = method,
+                                Order      = order
+                            }
+                        };
+                        
                         if (!info.Contains(member)) {
                             info.Add(member);
                         }
@@ -185,7 +188,7 @@ namespace Frigg.Utils {
                             var orderAttr = fields[i].GetCustomAttribute<OrderAttribute>();
                             var order     = orderAttr?.Order ?? 0;
 
-                            var member = new PropertyValue(GetTargetValue(target, fields[i])) {MetaInfo = new PropertyMeta {
+                            var member = new PropertyValue(target, GetTargetValue(target, fields[i])) {MetaInfo = new PropertyMeta {
                                 Name       =  fields[i].Name,
                                 MemberType =  fields[i].FieldType,
                                 MemberInfo = fields[i],
@@ -259,7 +262,7 @@ namespace Frigg.Utils {
     
         public static Type TryGetListElementType(Type listType) 
             => listType.IsGenericType ? listType.GetGenericArguments()[0] : listType.GetElementType();
-
+        
         #endregion
 
         #region properties //TODO: Check for any kind of errors.
@@ -287,7 +290,7 @@ namespace Frigg.Utils {
         }
 
         private static bool GetConditionValue(FriggProperty property, ConditionAttribute attr, bool invertedScope) {
-            var target = property.ParentValue;
+            var target = property.Value.ActualValue;
             var field  = target.TryGetField(attr.FieldName);
             if (field == null) {
                 return true;
@@ -326,7 +329,7 @@ namespace Frigg.Utils {
             if (attr == null)
                 return;
 
-            var target = property.ParentValue;
+            var target = property.Value.Parent;
 
             var method = target.TryGetMethod(attr.CallbackMethod);
 
@@ -478,6 +481,7 @@ namespace Frigg.Utils {
         }
 
         public static object GetTargetValue(object target, MemberInfo info) {
+            //Debug.Log($"member name {info.Name} inside {target.GetType().Name}");
             if (info is PropertyInfo propertyInfo) {
                 return propertyInfo.GetValue(target);
             }
@@ -491,11 +495,14 @@ namespace Frigg.Utils {
         
         public static void SetTargetValue(FriggProperty property, in object target, MemberInfo info, object value) {
             var prevVal = GetTargetValue(target, info);
-            if (value.GetHashCode() == prevVal.GetHashCode()) {
-                return;
-            }
 
-            property.PropertyValue.Value = value;
+            /*var path = property.UnityPath;
+            var sp   = property.PropertyTree.SerializedObject.FindProperty(path);
+            sp.objectReferenceValue = (Object) value;
+            sp.serializedObject.Update();
+            sp.serializedObject.ApplyModifiedProperties();*/
+
+            property.Value.ActualValue = value;
             switch (info) {
                 case PropertyInfo propertyInfo: {
                     if(propertyInfo.CanWrite)
@@ -506,8 +513,6 @@ namespace Frigg.Utils {
                     fieldInfo.SetValue(target, value);
                     break;
             }
-            
-            Debug.Log($"Value of {value} was updated. Previous one - {prevVal}");
         }
     }
 }
