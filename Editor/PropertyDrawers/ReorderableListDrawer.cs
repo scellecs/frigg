@@ -9,7 +9,8 @@
     using Utils;
 
     public class ReorderableListDrawer : FriggPropertyDrawer {
-        private         ReorderableList list;
+        public const byte LIST_INTERFACE_WIDTH = 50;
+        private ReorderableList list;
 
         public override float GetHeight() {
             //header
@@ -23,7 +24,7 @@
             var layout = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == this.property.Path);
             
             if (layout != null) {
-                total += layout.totalHeight;
+                total += layout.TotalHeight;
                 return total;
             }
             
@@ -41,6 +42,10 @@
             var elements = (IList) prop.GetValue();
             if (this.list == null)
                 this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
+            
+            if(!string.IsNullOrEmpty(this.property.UnityPath)) 
+                this.list.serializedProperty = 
+                    this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
         }
 
         public override void Draw(Rect rect) {
@@ -117,6 +122,7 @@
 
             this.list.onRemoveCallback = _ => {
                 var copy      = this.list.list;
+                var element   = this.property.GetArrayElementAtIndex(this.list.index);
                 var newLength = copy.Count - 1;
 
                 this.list.list = Array.CreateInstance(listType, newLength);
@@ -125,16 +131,18 @@
 
                 for (var i = this.list.index; i < newLength; i++)
                     this.list.list[i] = copy[i + 1];
-                
-                Debug.Log(this.property.Name + " " + this.property.Path);
 
-                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                    var sp = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
-                    Debug.Log(this.property.UnityPath);
-                    sp.arraySize--;
+                var childPath  = element.UnityPath;
+                var propertyPath = this.property.UnityPath;
+
+                if (string.IsNullOrEmpty(childPath)) {
+                    return;
                 }
 
+                var parentProperty = this.property.PropertyTree.SerializedObject.FindProperty(propertyPath);
+
                 this.property.MetaInfo.arraySize--;
+                parentProperty.arraySize--;
             };
 
             this.list.elementHeightCallback = index => {
@@ -142,7 +150,7 @@
                 var layout  = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == element.Path);
             
                 if (layout != null) {
-                    return layout.totalHeight + GuiUtilities.SPACE;
+                    return layout.TotalHeight;
                 }
                 
                 if (!this.property.IsExpanded)
