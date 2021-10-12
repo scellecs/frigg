@@ -3,6 +3,9 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using Groups;
+    using Layouts;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -11,6 +14,8 @@
         public abstract SerializedObject            SerializedObject { get; }
 
         public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
+
+        public List<Layout> Layouts = new List<Layout>();
 
         public abstract Type             TargetType       { get; }
 
@@ -167,10 +172,13 @@
             this.serializedObject = serializedObject;
             this.memberTargets    = targetObjects;
 
-            this.RootProperty = FriggProperty.DoProperty(this, null, this.memberTargets[0], new PropertyMeta {
+            this.RootProperty = FriggProperty.DoProperty(this, new FriggProperty(new PropertyValue {
+                    ActualValue = this.memberTargets[0]}),
+                new PropertyMeta {
                     Name       = this.memberTargets[0].GetType().Name,
-                    MemberType = this.TargetType
-                }
+                    MemberType = this.TargetType,
+                    MemberInfo = this.memberTargets[0].GetType()
+                }, true
             );
         }
 
@@ -187,8 +195,8 @@
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
             foreach (var prop in this.EnumerateTree(false)) {
-                var data = CoreUtilities.GetTargetValue(prop.ParentProperty.PropertyValue.Value, prop.MetaInfo.MemberInfo);
-                prop.PropertyValue.Value         = data;
+                var data = prop.GetValue();
+                prop.Value.ActualValue           = data;
                 prop.ChildrenProperties.property = prop;
                 prop.ChildrenProperties.Update();
             }
@@ -202,29 +210,30 @@
 
         private void DrawTree() {
             foreach (var prop in this.EnumerateTree(false)) {
-                prop.Draw();
+                if(!prop.IsLayoutMember)
+                   prop.Draw();
             }
         }
 
         private void EndDrawTree() {
             this.SerializedObject.ApplyModifiedProperties();
-            //this.UpdateTree();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
         {
             for (var i = 0; i < this.RootProperty.ChildrenProperties.AmountOfChildren; i++)
             {
-                var root = this.RootProperty.ChildrenProperties[i];
+                var prop = this.RootProperty.ChildrenProperties[i];
 
-                yield return root;
+                yield return prop;
 
-                if (includeChildren)
+                if (!includeChildren) {
+                    continue;
+                }
+
+                foreach (var child in prop.ChildrenProperties.RecurseChildren())
                 {
-                    foreach (var child in root.ChildrenProperties.RecurseChildren())
-                    {
-                        yield return child;
-                    }
+                    yield return child;
                 }
             }
         }
