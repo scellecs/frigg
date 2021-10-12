@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
@@ -23,6 +24,13 @@
         }
 
         public override void Draw(Rect rect) {
+            var layout = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == this.property.Path);
+            
+            if (layout != null) {
+                layout.Draw(rect);
+                return;
+            }
+
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
             if (!this.property.IsExpanded) {
