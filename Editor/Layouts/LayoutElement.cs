@@ -4,12 +4,12 @@
     using UnityEngine;
 
     public class LayoutElement {
-        public FriggProperty      property;
-        public BaseGroupAttribute attribute;
+        public readonly FriggProperty      property;
+        public readonly BaseGroupAttribute attribute;
 
-        public float xOffset;
-        public float yOffset;
-
+        public float height;
+        public float width;
+        
         public LayoutElement(FriggProperty property, BaseGroupAttribute attribute) {
             this.property  = property;
             this.attribute = attribute;
