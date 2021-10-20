@@ -9,10 +9,7 @@
     using Object = System.Object;
 
     public abstract class FriggPropertyDrawer : FriggDrawer {
-        
-        public FriggPropertyDrawer(FriggProperty prop) {
-            this.property       = prop;
-        }
+        protected FriggPropertyDrawer(FriggProperty prop) => this.property = prop;
     }
 
     public static class FriggPropertyDrawerUtils {
@@ -22,20 +19,10 @@
             if (meta.GetCustomAttribute<ReadonlyAttribute>() != null) {
                 return new ReadonlyPropertyDrawer(property);
             }
-
-            if (meta.GetCustomAttribute<HorizontalGroupAttribute>() != null) {
-                return new HorizontalGroupDrawer(property);
-            }
-            
-            if (meta.GetCustomAttribute<VerticalGroupAttribute>() != null) {
-                return new VerticalGroupDrawer(property);
-            }
             
             if (meta.GetCustomAttribute<InlinePropertyAttribute>() != null 
                 || property.MetaInfo.isArray
-                || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))
-                || property.TryGetFixedAttribute<BaseGroupAttribute>() != null
-                || property.HasGroupsInChildren()){
+                || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))){
                 return new InlinePropertyDrawer(property);
             }
 
