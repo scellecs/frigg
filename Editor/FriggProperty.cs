@@ -5,18 +5,22 @@
     using System.Linq;
     using System.Reflection;
     using Groups;
+    using JetBrains.Annotations;
     using Layouts;
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEditor.Graphs;
     using UnityEngine;
     using Utils;
+    using Object = UnityEngine.Object;
 
     public class FriggProperty {
-        //All applied attributes on target property.
-        private List<Attribute> fixedAttributes = new List<Attribute>();
-        public  GUIContent      Label { get; set; }
+        public SerializedProperty NativeProperty { get; set; }
+        
+        public GUIContent         Label              { get; set; }
 
+        public int ObjectInstanceID { get; set; } = -1;
+        
         //All drawers that were detected on target property.
         public IEnumerator<FriggDrawer> Drawers { get; set; }
 
@@ -33,12 +37,12 @@
         /// <summary>
         /// Property's meta info.
         /// </summary>
-        public PropertyMeta MetaInfo { get; set; }
+        public PropertyMeta MetaInfo => ReflectedValue.MetaInfo;
 
         /// <summary>
         /// Property's actual value.
         /// </summary>
-        public PropertyValue Value { get; set; }
+        public PropertyValue<object> ReflectedValue { get; set; }
 
         /// <summary>
         /// Indicates whether property is root(e.g base property).
@@ -82,7 +86,10 @@
         /// </summary>
         public IEnumerable<Attribute> FixedAttributes    => this.fixedAttributes;
 
-        public FriggProperty(PropertyValue value) => this.Value = value;
+        public FriggProperty(PropertyValue<object> value) => this.ReflectedValue = value;
+        
+        //All applied attributes on target property.
+        private List<Attribute> fixedAttributes = new List<Attribute>();
 
         /// <summary>
         /// Draw property.
@@ -126,9 +133,8 @@
             if (!this.MetaInfo.isArray) {
                 throw new Exception("Specified property is not an array!");
             }
-
+            
             var fProperty = this.ChildrenProperties.GetByIndex(index);
-            var sProperty = this.PropertyTree.SerializedObject.FindProperty(fProperty.UnityPath);
             return fProperty;
 
         }
@@ -144,7 +150,7 @@
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
             var total = 0f;
 
-            if (!prop.IsExpanded) {
+            if (!prop.IsExpanded && !prop.IsLayoutMember) {
                 return EditorGUIUtility.singleLineHeight;
             }
 
@@ -220,13 +226,12 @@
         /// <param name="metaInfo"></param>
         /// <param name="isRoot"></param>
         /// <returns></returns>
-        internal static FriggProperty DoProperty(PropertyTree tree, FriggProperty parent, PropertyMeta metaInfo, 
+        internal static FriggProperty DoProperty(PropertyTree tree, FriggProperty parent, [NotNull] PropertyMeta metaInfo, 
             bool isRoot = false) {
-            var property = new FriggProperty(new PropertyValue()) {
-                PropertyTree = tree, 
-                MetaInfo = metaInfo,
+            var property = new FriggProperty(new PropertyValue<object>(null ,null, metaInfo)) {
+                PropertyTree = tree
             };
-            
+
             if (isRoot) {
                 property.IsRootProperty = true;
             }
@@ -236,7 +241,7 @@
                 property.ParentProperty = parent;
                 
                 //Set value's parent object as parent reference value
-                property.Value.Parent = parent.Value.ActualValue;
+                property.ReflectedValue.parent.Value = parent.ReflectedValue.actual.Value;
             }
 
             property.Name     = metaInfo.Name;
@@ -249,20 +254,24 @@
                 : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
 
             if (property.IsRootProperty) {
-                property.Value.ActualValue = parent.Value.ActualValue;
+                property.ReflectedValue.actual.Value = parent.ReflectedValue.actual.Value;
             }
 
             else if(property.ParentProperty != null && property.ParentProperty.MetaInfo.isArray) {
-                property.Value.ActualValue = ((IList) property.ParentProperty.Value.ActualValue)[property.MetaInfo.arrayIndex];
+                property.ReflectedValue.actual.Value = ((IList) property.ParentProperty.ReflectedValue.actual.Value)[property.MetaInfo.arrayIndex];
             }
 
             else {
-                property.Value.ActualValue = CoreUtilities.GetTargetValue(property.Value.Parent, property.MetaInfo.MemberInfo);
+                property.ReflectedValue.actual.Value = CoreUtilities.GetTargetValue(property.ReflectedValue.parent.Value, property.MetaInfo.MemberInfo);
             }
 
+            if (property.GetValue() is Object obj) {
+                property.ObjectInstanceID = obj.GetInstanceID();
+            }
+            
             property.Path = GetFriggPath(property);
 
-            property.UnityPath = property.GetUnityPath();
+            property.SetNativeProperty();
 
             property.ChildrenProperties = new PropertyCollection(property);
 
@@ -283,14 +292,16 @@
             property.IsLayoutMember = true;
 
             var layout = property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == property.ParentProperty.Path);
-            
+
             if (layout != null) {
                 layout.Add(property);
                 return property;
             }
 
             if (attr is HorizontalGroupAttribute) {
-                layout = new HorizontalLayout();
+                layout = new HorizontalLayout {
+                    IsListMember = property.ParentProperty.MetaInfo.arrayIndex != -1
+                };
             }
             else {
                 layout = new VerticalLayout();
@@ -303,45 +314,60 @@
             return property;
         }
 
-        private string GetUnityPath() {
-            var prop = this.PropertyTree.SerializedObject.GetIterator();
-            prop.Next(true);
+        private void SetNativeProperty() {
+            var prop = this.ParentProperty?.NativeProperty?.FindPropertyRelative(this.Name);
+            if (prop != null) {
+                this.UnityPath      = prop.propertyPath;
+                this.NativeProperty = prop;
 
-            var path     = string.Empty;
-            var initPath = this.Path;
-            while (prop.Next(true)) {
-                if (!prop.isArray || prop.name == "Array") {
-                    continue;
-                }
+                return;
+            }
+            
+            //Initial property type for this tree.
+            var root     = this;
+            while (!root.IsRootProperty) {
+                root = root.ParentProperty;
+            }
+            
+            var rootType = this.PropertyTree.TargetType;
 
-                var splitData = initPath.Split(new[] {prop.name}, StringSplitOptions.None);
-                if (splitData.Length <= 1) {
-                    continue;
-                }
-
-                if (splitData[1].Length <= 1) {
-                    continue;
-                }
-
-                var cleanValue = splitData[1].Remove(0, 1);
-                var p          = prop.FindPropertyRelative(cleanValue);
-
-                if (p != null)
-                    path = p.propertyPath;
+            //Catch all scripts on scene with specified type (root).
+            if (!typeof(Object).IsAssignableFrom(rootType)) {
+                return;
             }
 
-            if (string.IsNullOrEmpty(path)) {
-                prop.Reset();
-                while (prop.Next(true)) {
-                    var p = prop.FindPropertyRelative(this.Name);
-                    if (p != null) {
-                        path = p.propertyPath;
+            //Find correct object using Unique Id comparison.
+            var obj = Object.FindObjectsOfType(rootType)
+                ?.FirstOrDefault(x => x.GetInstanceID() == root.ObjectInstanceID);
+
+            if (obj == null) {
+                return;
+            }
+
+            var so       = new SerializedObject(obj);
+            var iterator = so.GetIterator();
+
+            while (iterator.Next(true)) {
+                var relative = iterator.FindPropertyRelative(this.Name);
+                if (relative == null) {
+                    if (iterator.isArray && iterator.arraySize > 0
+                                         && this.MetaInfo.arrayIndex != -1
+                                         && this.ParentProperty?.Name == iterator.name) {
+                        //Debug.Log(iterator.arraySize);
+                        var arrayElement = iterator.GetArrayElementAtIndex
+                            (this.MetaInfo.arrayIndex);
+                        
+                        this.UnityPath      = arrayElement.propertyPath;
+                        this.NativeProperty = arrayElement;
+
+                        return;
                     }
+                    continue;
                 }
+                        
+                this.UnityPath      = relative.propertyPath;
+                this.NativeProperty = relative;
             }
-
-            prop.Reset();
-            return path;
         }
 
         private static string GetFriggPath(FriggProperty property) {
