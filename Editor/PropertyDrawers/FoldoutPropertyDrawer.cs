@@ -2,6 +2,8 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using BuiltIn;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -37,18 +39,32 @@
                 return;
             }
 
-            rect.y      += EditorGUIUtility.singleLineHeight;
+            rect.y += EditorGUIUtility.singleLineHeight;
 
             EditorGUI.indentLevel++;
+
+            var prevProp = this.property;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                //rect.y += GuiUtilities.SPACE;
                 EditorGUI.BeginChangeCheck();
+                
+                if (p.TryGetFixedAttribute<DisplayAsString>() != null) {
+                    rect.y   += GuiUtilities.SPACE;
+                    prevProp =  p;
+                    continue;
+                }
+                
+                if (prevProp.TryGetFixedAttribute<DisplayAsString>() != null) {
+                    p.Label.text = (string) prevProp.GetValue();
+                }
+
                 p.Draw(rect);
                 if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnValueChanged(p);
                 }
                 
                 var h = FriggProperty.GetPropertyHeight(p);
-                rect.y      += h + GuiUtilities.SPACE;
+                rect.y      += h;
                 rect.height =  EditorGUIUtility.singleLineHeight;
             }
             
