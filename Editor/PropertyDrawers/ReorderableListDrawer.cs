@@ -30,26 +30,28 @@
             
             total += FriggProperty.GetPropertyHeight(this.property) + 4f * this.list.list.Count; // paddings
             
-            if(this.property.IsExpanded)
-                return total;
-            
-            return EditorGUIUtility.singleLineHeight;
+            return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight;
         }
 
         public override bool  IsVisible => true;
 
         public ReorderableListDrawer(FriggProperty prop) : base(prop) {
             var elements = (IList) prop.GetValue();
+            if (!string.IsNullOrEmpty(this.property.UnityPath)) {
+                var serializedProperty = this.property.PropertyTree
+                    .SerializedObject.FindProperty(this.property.UnityPath);
+
+                this.list = new ReorderableList(serializedProperty.serializedObject, serializedProperty);
+            }
+
             if (this.list == null)
                 this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
             
-            if(!string.IsNullOrEmpty(this.property.UnityPath)) 
-                this.list.serializedProperty = 
-                    this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
         }
 
         public override void Draw(Rect rect) {
-            rect.y += GuiUtilities.SPACE;
+            //todo: check this behaviour later
+            //rect.y += GuiUtilities.SPACE;
             this.SetCallbacks(this.list, rect);
             rect.y += EditorGUIUtility.singleLineHeight;
 
@@ -81,7 +83,7 @@
             this.list.draggable      = this.list.displayAdd = this.list.displayRemove = true;
             this.list.headerHeight   = 1;
             
-            var attr                         = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
+            var attr                 = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
                 this.list.draggable     = attr.AllowDrag;
                 this.list.displayAdd    = !attr.HideAddButton;
@@ -102,50 +104,52 @@
                 pr.Draw(tempRect);
             };
 
-            var listType = CoreUtilities.TryGetListElementType(this.list.list.GetType());
-
             this.list.onAddCallback = _ => {
+                if (this.list.serializedProperty != null) {
+                    this.list.serializedProperty.arraySize++;
+                    this.property.MetaInfo.arraySize++;
+                    return;
+                }
+                
                 var copy = this.list.list;
 
-                this.list.list = Array.CreateInstance(listType, copy.Count + 1);
+                this.list.list = Array.CreateInstance
+                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), copy.Count + 1);
+                
                 for (var i = 0; i < copy.Count; i++) {
                     this.list.list[i] = copy[i];
                 }
 
-                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                    var sp = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
-                    sp.arraySize++;
-                }
-                
                 this.property.MetaInfo.arraySize++;
             };
 
             this.list.onRemoveCallback = _ => {
+                if (this.list.serializedProperty != null) {
+                    this.list.serializedProperty.DeleteArrayElementAtIndex(this.list.index);
+                    this.property.MetaInfo.arraySize--;
+                    return;
+                }
+                
                 var copy      = this.list.list;
-                var element   = this.property.GetArrayElementAtIndex(this.list.index);
+                //var element   = this.property.GetArrayElementAtIndex(this.list.index);
                 var newLength = copy.Count - 1;
 
-                this.list.list = Array.CreateInstance(listType, newLength);
+                this.list.list = Array.CreateInstance
+                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), newLength);
+                
                 for (var i = 0; i < this.list.index; i++)
                     this.list.list[i] = copy[i];
 
                 for (var i = this.list.index; i < newLength; i++)
                     this.list.list[i] = copy[i + 1];
 
-                var childPath  = element.UnityPath;
-                var propertyPath = this.property.UnityPath;
-
-                if (string.IsNullOrEmpty(childPath)) {
-                    return;
-                }
-
-                var parentProperty = this.property.PropertyTree.SerializedObject.FindProperty(propertyPath);
-
                 this.property.MetaInfo.arraySize--;
-                parentProperty.arraySize--;
             };
 
             this.list.elementHeightCallback = index => {
+                if (index >= this.property.MetaInfo.arraySize)
+                    return 0f;
+                
                 var element = this.property.GetArrayElementAtIndex(index);
                 var layout  = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == element.Path);
             
