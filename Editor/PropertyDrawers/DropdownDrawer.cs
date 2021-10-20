@@ -3,6 +3,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -24,9 +25,9 @@
 
         private void DoDropdown(Rect position = default) {
             var attr          = (DropdownAttribute) this.linkedAttribute;
-            var target        = this.property.ParentValue;
+            var target        = this.property.ReflectedValue.parent.Value;
             var values        = this.GetDropdownValues(this.property, attr.Name);
-            var selectedValue = this.property.PropertyValue.Value;
+            var selectedValue = this.property.GetValue();
 
             if (position == Rect.zero) {
                 position = EditorGUILayout.GetControlRect(true);
@@ -34,7 +35,7 @@
 
             switch (values) {
                 case IList list: {
-                    var currValue = this.property.PropertyValue.Value;
+                    var currValue = this.property.GetValue();
 
                     var size = list.Count;
                 
@@ -88,7 +89,7 @@
         public override bool IsVisible => true;
 
         private object GetDropdownValues(FriggProperty prop, string name) {
-            var target = prop.ParentValue;
+            var target = prop.ReflectedValue.parent.Value;
 
             var fInfo = target.TryGetField(name);
             if (fInfo != null) {

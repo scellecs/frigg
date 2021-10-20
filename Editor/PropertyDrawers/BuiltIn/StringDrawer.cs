@@ -5,7 +5,7 @@
     using Utils;
 
     public class StringDrawer : BuiltInDrawer {
-        private readonly bool asString = true;
+        public readonly bool asString = true;
         public StringDrawer(FriggProperty prop) : base(prop) {
             var attr = prop.TryGetFixedAttribute<DisplayAsString>();
             if (attr != null) {
@@ -40,7 +40,12 @@
             this.UpdateAndCallNext(result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
+        public override float GetHeight() {
+            if (!this.asString) {
+                return GuiUtilities.SPACE;
+            } 
+            return EditorGUIUtility.singleLineHeight;
+        }
 
         public override bool IsVisible => true;
 

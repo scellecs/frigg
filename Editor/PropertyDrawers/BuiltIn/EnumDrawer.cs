@@ -24,9 +24,7 @@
                 rect = EditorGUILayout.GetControlRect(true);
             }
             
-            //var target = (Enum) this.property.PropertyValue.Value;
-
-            var target = (Enum) CoreUtilities.GetTargetValue(this.property.ParentValue, this.property.MetaInfo.MemberInfo);
+            var target = (Enum) CoreUtilities.GetTargetValue(this.property.ReflectedValue.parent.Value, this.property.MetaInfo.MemberInfo);
                 
             if (target == null) {
                 Debug.LogError("Invalid target.");
@@ -36,10 +34,11 @@
             var enumValue = EditorGUI.EnumPopup(rect, this.property.Label, target);
             this.property.PropertyTree.SerializedObject.ApplyModifiedProperties();
             
+            
             this.property.Update(enumValue);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
 
         public override bool IsVisible => true;
     }

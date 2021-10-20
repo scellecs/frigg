@@ -21,12 +21,17 @@
             if (EditorGUI.EndChangeCheck()) {
                 CoreUtilities.OnValueChanged(this.property);
 
+                //Update "object" value
                 this.property.Update(value);
-                
+
                 if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                    var prop = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
+                    var serializedObject = this.property.PropertyTree.SerializedObject;
+                    var prop             = serializedObject.FindProperty(this.property.UnityPath);
+
+                    //Save changes inside target SerializedObject.
                     CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
-                    EditorUtility.SetDirty(this.property.PropertyTree.SerializedObject.targetObject);
+                    EditorUtility.SetDirty(serializedObject.targetObject);
+                    serializedObject.ApplyModifiedProperties();
                 }
             }
             this.CallNext(rect);

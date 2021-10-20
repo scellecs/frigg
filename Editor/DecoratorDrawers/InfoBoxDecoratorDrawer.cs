@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -29,11 +30,11 @@
 
             if (CoreUtilities.IsPropertyVisible(this.property)) {
                 if (!string.IsNullOrEmpty(attr.Member)) {
-                    var value = (bool) CoreUtilities.GetTargetValue(this.property.ParentProperty.PropertyValue.Value,
-                        this.property.ParentProperty.PropertyValue.Value.GetType().GetMember(attr.Member, CoreUtilities.FLAGS)[0]);
+                    //todo: get "member" name & call directly.
+                    /*var value = (bool) (this.property.GetValue()); //this.property.GetValue().GetType().GetMember(attr.Member, CoreUtilities.FLAGS)[0]);
                     if (value) {
                         EditorGUILayout.HelpBox(attr.Text, messageType);
-                    }
+                    }*/
                 }
                 else {
                     EditorGUILayout.HelpBox(attr.Text, messageType);
