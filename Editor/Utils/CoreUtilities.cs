@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Frigg.Utils {
     using Editor;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditorInternal;
     using Object = UnityEngine.Object;
 
@@ -41,7 +42,7 @@ namespace Frigg.Utils {
             var labelText = property.TryGetFixedAttribute<LabelText>();
             if (labelText != null) {
                 if (labelText.IsDynamic) {
-                    property.Label.text = (string)GetValueByName(property.ReflectedValue.parent.Value, labelText.Text);
+                    property.Label.text = (string)GetValueByName(property.ParentProperty.GetValue(), labelText.Text);
                 }
 
                 else {
@@ -52,7 +53,7 @@ namespace Frigg.Utils {
             var toolTip = property.TryGetFixedAttribute<PropertyTooltipAttribute>();
             if (toolTip != null) {
                 if (toolTip.IsDynamic) {
-                    property.Label.tooltip = (string) GetValueByName(property.ReflectedValue.parent.Value, toolTip.Text);
+                    property.Label.tooltip = (string) GetValueByName(property.ParentProperty.GetType(), toolTip.Text);
                 }
 
                 else {
@@ -292,7 +293,7 @@ namespace Frigg.Utils {
         }
 
         private static bool GetConditionValue(FriggProperty property, ConditionAttribute attr, bool invertedScope) {
-            var target = property.ReflectedValue.actual.Value;
+            var target = property.GetValue();
             var field  = target.TryGetField(attr.FieldName);
             if (field == null) {
                 return true;
@@ -329,7 +330,7 @@ namespace Frigg.Utils {
             if (attr == null)
                 return;
 
-            var target = property.ReflectedValue.parent.Value;
+            var target = property.ParentProperty.GetValue();
 
             var method = target.TryGetMethod(attr.CallbackMethod);
 
@@ -492,43 +493,41 @@ namespace Frigg.Utils {
             return null;
         }
         
-        public static void SetTargetValue(FriggProperty property, object target, MemberInfo info, object value) {
-            if (target == null || value == null) {
-                return;
+        public static void SetTargetValue(FriggProperty property, PropertyMeta metaInfo, object value) {
+            var target = property.GetValue();
+
+            if (property.MetaInfo.isArray) {
+                if (target is IList list) {
+                    list.RemoveAt(metaInfo.arrayIndex);
+                    list.Insert(metaInfo.arrayIndex, value);
+                    value = list;
+                }
             }
 
-            if (target.GetType().GetField(info.Name) == null && target.GetType().GetProperty(info.Name) == null)
-                return;
+            else {
+                switch (metaInfo.MemberInfo) {
+                    case PropertyInfo propertyInfo: {
+                        if (propertyInfo.CanWrite) {
+                            //Update property on target
+                            propertyInfo.SetValue(target, value);
+                            //update it on frigg property using GetValue of this target
+                            value = target;
+                        }
 
-            object newValue = null;
-            switch (info) {
-                case PropertyInfo propertyInfo: {
-                    if (propertyInfo.CanWrite) {
-                        Debug.Log(target.GetType().Name);
-                        propertyInfo.SetValue(target, value);
-                        newValue = target;
+                        break;
                     }
-
-                    break;
-                }
-                case FieldInfo fieldInfo: {
-                    fieldInfo.SetValue(target, value);
-                    newValue = fieldInfo.GetValue(target);
-                    break;
+                    case FieldInfo fieldInfo: {
+                        //Update field on target
+                        fieldInfo.SetValue(target, value);
+                        //update it on frigg property using GetValue of this target
+                        value = target;
+                        break;
+                    }
                 }
             }
-            
-            property.ReflectedValue.actual.Value = newValue;
 
-            while (property != null) {
-                info     = property.MetaInfo.MemberInfo;
-                property = property.ParentProperty;
-
-                if (property == null)
-                    return;
-
-                SetTargetValue(property, property.ReflectedValue.actual.Value, info, newValue);
-            }
+            //assign new target object to this property
+            property.NativeValue.Set(value);
         }
     }
 }
