@@ -172,14 +172,17 @@
             this.serializedObject = serializedObject;
             this.memberTargets    = targetObjects;
 
-            this.RootProperty = FriggProperty.DoProperty(this, new FriggProperty(new PropertyValue {
-                    ActualValue = this.memberTargets[0]}),
-                new PropertyMeta {
-                    Name       = this.memberTargets[0].GetType().Name,
-                    MemberType = this.TargetType,
-                    MemberInfo = this.memberTargets[0].GetType()
-                }, true
-            );
+            var metaInfo = new PropertyMeta {
+                Name       = this.memberTargets[0].GetType().Name,
+                MemberType = this.TargetType,
+                MemberInfo = this.memberTargets[0].GetType()
+            };
+
+            this.RootProperty = FriggProperty.DoProperty(
+                this,
+                new FriggProperty(new PropertyValue<object>(this.memberTargets[0], 
+                    this.memberTargets[0], metaInfo)), metaInfo, true);
+
         }
 
         //Draw section. 
@@ -194,11 +197,8 @@
         //Get all properties -> Draw them -> Get incoming changes
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
-            foreach (var prop in this.EnumerateTree(false)) {
-                var data = prop.GetValue();
-                prop.Value.ActualValue           = data;
-                prop.ChildrenProperties.property = prop;
-                prop.ChildrenProperties.Update();
+            foreach (var prop in this.EnumerateTree(true)) {
+                prop.Refresh();
             }
             
             this.SerializedObject.ApplyModifiedProperties(); 
