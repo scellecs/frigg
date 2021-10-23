@@ -5,10 +5,22 @@
 
     public static class PropertyExtensions {
         public static object GetValue(this FriggProperty property) 
-            => CoreUtilities.GetTargetValue(property.ParentValue, property.MetaInfo.MemberInfo);
+            => property.NativeValue.Get();
 
         public static void SetValue(this FriggProperty property, object value) {
-            CoreUtilities.SetTargetValue(property, property.ParentValue, property.MetaInfo.MemberInfo, value);
+            /*if (property.IsRootProperty) {
+                property.NativeValue.Set(value);
+                return;
+            }*/
+            
+            property.NativeValue.Set(value);
+            
+            while (!property.IsRootProperty) {
+                var prevProperty = property;
+                property = prevProperty.ParentProperty;
+
+                CoreUtilities.SetTargetValue(property, prevProperty.MetaInfo, prevProperty.GetValue());
+            }
         }
     }
 }
