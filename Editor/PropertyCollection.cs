@@ -19,7 +19,7 @@
 
         //Represent children components of this property
         public PropertyCollection(FriggProperty prop) {
-            if (prop == null)
+            if (prop?.GetValue() == null)
                 return;
             
             var meta  = prop.MetaInfo;
@@ -30,18 +30,18 @@
 
             this.property = prop;
 
-            var    membersArray = new List<PropertyValue>();
+            var    membersArray = new List<PropertyValue<object>>();
             object target;
 
             if(typeof(IList).IsAssignableFrom(meta.MemberType)) {
                 this.property.MetaInfo.isArray = true;
                 var list = (IList) prop.GetValue();
 
-                this.property.Value.ActualValue = list;
+                this.property.NativeValue.Set(list);
 
                 this.property.MetaInfo.arraySize = list.Count;
                 for (var i = 0; i < list.Count; i++) {
-                    this.propByIndex[i] = FriggProperty.DoProperty(this.property.PropertyTree, this.property, new PropertyMeta {
+                    this.propByIndex[i] = FriggProperty.DoProperty(this.property, new PropertyMeta {
                         Name       = list[i].GetType().Name,
                         MemberType = list[i].GetType(),
                         MemberInfo = list[i].GetType(),
@@ -53,11 +53,11 @@
             }
                 
             if (prop.IsRootProperty) {
-                target = prop.Value.ActualValue;
+                target = prop.GetValue();
             }
                 
             else {
-                if (prop.Value.Parent is IList list) {
+                if (prop.ParentProperty.GetValue() is IList list) {
                     target = list[prop.MetaInfo.arrayIndex];
                 }
                 else {
@@ -66,19 +66,24 @@
             }
 
             if (target == null) {
-                Debug.Log($"Target is null with {this.property.Name}");
+                //Debug.Log($"Target is null with {this.property.Name}");
                 return;
             }
             
             target.TryGetMembers(membersArray);
+
+            /*if (membersArray.Count == 0) {
+                return;
+            }*/
+            
             this.SetMembers(this.property, membersArray);
         }
 
         public void Update() {
-            if (this.property.Value.ActualValue is IList list) {
+            if (this.property.GetValue() is IList list) {
                 for (var i = 0; i < list.Count; i++) {
                     if (!this.propByIndex.ContainsKey(i)) {
-                        this.propByIndex[i] = FriggProperty.DoProperty(this.property.PropertyTree, 
+                        this.propByIndex[i] = FriggProperty.DoProperty(
                             this.property, new PropertyMeta {
                                 Name       = list[i].GetType().Name,
                                 MemberType = list[i].GetType(),
@@ -89,15 +94,15 @@
                         this.property.MetaInfo.arraySize++;
                     }
                     
-                    this.propByIndex[i].Value.ActualValue = list[i];
+                    this.propByIndex[i].SetValue(list[i]);
                     this.propByIndex[i].ChildrenProperties.Update();
                 }
             }
 
             else {
                 foreach (var child in this.RecurseChildren()) {
-                    child.Value.ActualValue = this.property.GetValue();
-                    child.Value.ActualValue = CoreUtilities.GetTargetValue(this.property.Value.ActualValue, child.MetaInfo.MemberInfo);
+                    //child.Value may be changed somewhere else and all the time we need to refresh it's value
+                    child.SetValue(child.GetValue());
                 }
             }
         }
@@ -114,12 +119,12 @@
             //In case if property by index is not initialized
             var parentProp = this.property == this.property.PropertyTree.RootProperty ? null : this.property;
 
-            var target = this.property.Value.Parent;
+            var target = this.property.ParentProperty.GetValue();
             
             //Allows us to fill it in runtime
             if (this.property.MetaInfo.isArray) {
                 var list = (IList) this.property.GetValue();
-                
+
                 if (list.Count < this.property.MetaInfo.arraySize) {
                     var copy = list;
                     
@@ -128,7 +133,7 @@
                         list[i] = copy[i];
                     }
 
-                    this.property.Value.ActualValue = list;
+                    this.property.SetValue(list);
                 }
                 
                 var arrayElement = list[idx];
@@ -140,16 +145,18 @@
                     this.property.SetValue(list);
                 }
                 
-                prop = FriggProperty.DoProperty(this.property.PropertyTree, this.property, new PropertyMeta {
+                prop = FriggProperty.DoProperty(this.property, new PropertyMeta {
                     Name       = arrayElement.GetType().Name,
                     MemberType = arrayElement.GetType(),
                     MemberInfo = arrayElement.GetType(),
                     arrayIndex = idx
                 });
+
+                this.property.MetaInfo.arraySize++;
             }
 
             else {
-                prop = FriggProperty.DoProperty(this.property.PropertyTree, parentProp, new PropertyMeta {
+                prop = FriggProperty.DoProperty(parentProp, new PropertyMeta {
                     Name       = this.property.MetaInfo.Name, 
                     MemberType = target.GetType()
                 }); 
@@ -179,19 +186,25 @@
             for (var i = 0; i < amountOfChildren; i++) {
                 var child = this[i];
                 yield return child;
+                
+                if (!includeArray) 
+                    continue;
 
-                if(includeArray)
-                    foreach (var nextChild in child.ChildrenProperties.RecurseChildren(true)) {
-                        yield return nextChild; 
-                    }
+                foreach (var nextChild in child.ChildrenProperties.RecurseChildren(true)) {
+                    yield return nextChild;
+                }
             }
         }
         
-        private void SetMembers(FriggProperty prop, List<PropertyValue> members) {
+        private void SetMembers(FriggProperty prop, List<PropertyValue<object>> members) {
             var ordered = members.OrderBy(x => x.MetaInfo.Order);
             members = ordered.ToList();
 
             foreach (var member in members) {
+                if (member.Get() == null) {
+                    return;
+                }
+                
                 if (member.MetaInfo.MemberInfo.GetCustomAttribute<HideInInspector>() != null) {
                     continue;
                 }
@@ -199,7 +212,7 @@
                 this.index++;
 
                 //Do own property for each MemberInfo inside a target object
-                this.propByIndex[this.index] = FriggProperty.DoProperty(prop.PropertyTree, prop, new PropertyMeta {
+                this.propByIndex[this.index] = FriggProperty.DoProperty(prop, new PropertyMeta {
                     Name       = member.MetaInfo.Name,
                     MemberType = member.MetaInfo.MemberType,
                     MemberInfo = member.MetaInfo.MemberInfo
