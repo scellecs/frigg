@@ -178,10 +178,9 @@
                 MemberInfo = this.memberTargets[0].GetType()
             };
 
-            this.RootProperty = FriggProperty.DoProperty(
-                this,
-                new FriggProperty(new PropertyValue<object>(this.memberTargets[0], 
-                    this.memberTargets[0], metaInfo)), metaInfo, true);
+            this.RootProperty = new FriggProperty(this, new PropertyValue<object>(
+                this.memberTargets[0], metaInfo), true);
+            this.RootProperty.ChildrenProperties = new PropertyCollection(this.RootProperty);
 
         }
 
@@ -190,6 +189,9 @@
             this.BeginDrawTree();
             this.DrawTree();
             this.EndDrawTree();
+            
+            //We need to call this each time we update our inspector to update entire tree and get newest values.
+            this.UpdateTree();
         }
         
         //We need to call this method only when we are updating our properties (trying to get new values).
@@ -197,11 +199,16 @@
         //Get all properties -> Draw them -> Get incoming changes
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
-            foreach (var prop in this.EnumerateTree(true)) {
-                prop.Refresh();
-            }
+            this.memberTargets = this.serializedObject.targetObjects.Cast<T>().ToArray();
             
-            this.SerializedObject.ApplyModifiedProperties(); 
+            var targetObject = this.memberTargets[0];
+            //this.RootProperty.NativeValue.Set(targetObject);
+
+            foreach (var prop in this.EnumerateTree(true)) {
+                if (prop.ParentProperty != null) {
+                    prop.Refresh();
+                }
+            }
         }
         
         private void BeginDrawTree() {
@@ -216,7 +223,8 @@
         }
 
         private void EndDrawTree() {
-            this.SerializedObject.ApplyModifiedProperties();
+            if(this.SerializedObject.hasModifiedProperties)
+               this.SerializedObject.ApplyModifiedProperties();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
