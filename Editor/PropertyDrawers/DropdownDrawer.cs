@@ -25,7 +25,7 @@
 
         private void DoDropdown(Rect position = default) {
             var attr          = (DropdownAttribute) this.linkedAttribute;
-            var target        = this.property.ReflectedValue.parent.Value;
+            var target        = this.property.ParentProperty.GetValue();
             var values        = this.GetDropdownValues(this.property, attr.Name);
             var selectedValue = this.property.GetValue();
 
@@ -89,7 +89,7 @@
         public override bool IsVisible => true;
 
         private object GetDropdownValues(FriggProperty prop, string name) {
-            var target = prop.ReflectedValue.parent.Value;
+            var target = prop.GetValue();
 
             var fInfo = target.TryGetField(name);
             if (fInfo != null) {

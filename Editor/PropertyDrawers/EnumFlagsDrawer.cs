@@ -32,8 +32,7 @@
             }
 
             var enumValues = EditorGUI.EnumFlagsField(rect, this.property.Label, target);
-            CoreUtilities.SetTargetValue(this.property, this.property.ReflectedValue.parent.Value,
-                this.property.MetaInfo.MemberInfo, enumValues);
+            this.property.SetValue(enumValues);
         }
 
         public override float GetHeight() => EditorGUIUtility.singleLineHeight;

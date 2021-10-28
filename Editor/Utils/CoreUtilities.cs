@@ -168,7 +168,7 @@ namespace Frigg.Utils {
                         var orderAttr = method.GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue<object>(null, 
+                        var member = new PropertyValue<object>( 
                             null, new PropertyMeta {
                             Name       = method.Name,
                             MemberType = method.ReturnType,
@@ -189,7 +189,7 @@ namespace Frigg.Utils {
                             var orderAttr = fields[i].GetCustomAttribute<OrderAttribute>();
                             var order     = orderAttr?.Order ?? 0;
 
-                            var member = new PropertyValue<object>(target, 
+                            var member = new PropertyValue<object>(
                                 GetTargetValue(target, fields[i]), new PropertyMeta {
                                 Name       =  fields[i].Name,
                                 MemberType =  fields[i].FieldType,
@@ -212,7 +212,7 @@ namespace Frigg.Utils {
                         var orderAttr = properties[i].GetCustomAttribute<OrderAttribute>();
                         var order     = orderAttr?.Order ?? 0;
                         
-                        var member = new PropertyValue<object>(target,
+                        var member = new PropertyValue<object>(
                             GetTargetValue(target, properties[i]), new PropertyMeta {
                             Name       =  properties[i].Name,
                             MemberType = properties[i].PropertyType,
@@ -498,8 +498,7 @@ namespace Frigg.Utils {
 
             if (property.MetaInfo.isArray) {
                 if (target is IList list) {
-                    list.RemoveAt(metaInfo.arrayIndex);
-                    list.Insert(metaInfo.arrayIndex, value);
+                    list[metaInfo.arrayIndex] = value;
                     value = list;
                 }
             }

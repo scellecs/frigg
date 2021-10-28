@@ -27,7 +27,7 @@
 
         private readonly GetterSetter<T> actual;
 
-        public PropertyValue(object parent, object value, PropertyMeta metaInfo) {
+        public PropertyValue(object value, PropertyMeta metaInfo) {
             this.actual = new GetterSetter<T>(() => (T) value, x => value = x);
 
             this.MetaInfo = metaInfo;

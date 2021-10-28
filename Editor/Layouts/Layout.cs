@@ -52,7 +52,7 @@
                     height = last;
                 }
             }
-            return height;
+            return height + GuiUtilities.SPACE;
         }
 
         /// <summary>
@@ -65,7 +65,7 @@
             foreach (var element in this.layoutElements) {
                 rect.width =  element.width;
                 element.property.Draw(rect);
-                rect.y += element.yOffset;
+                //rect.y += element.yOffset;
                 rect.x += element.width + HORIZONTAL_SPACING;
             }
         }

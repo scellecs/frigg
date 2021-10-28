@@ -29,7 +29,6 @@
             }
             
             total += FriggProperty.GetPropertyHeight(this.property) + 4f * this.list.list.Count; // paddings
-            
             return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight;
         }
 
@@ -107,7 +106,7 @@
             this.list.onAddCallback = _ => {
                 if (this.list.serializedProperty != null) {
                     this.list.serializedProperty.arraySize++;
-                    this.property.MetaInfo.arraySize++;
+                    //this.property.MetaInfo.arraySize++;
                     return;
                 }
                 
@@ -120,7 +119,7 @@
                     this.list.list[i] = copy[i];
                 }
 
-                this.property.MetaInfo.arraySize++;
+                //this.property.MetaInfo.arraySize++;
             };
 
             this.list.onRemoveCallback = _ => {
@@ -131,7 +130,6 @@
                 }
                 
                 var copy      = this.list.list;
-                //var element   = this.property.GetArrayElementAtIndex(this.list.index);
                 var newLength = copy.Count - 1;
 
                 this.list.list = Array.CreateInstance

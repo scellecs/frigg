@@ -26,7 +26,8 @@
         }
 
         public override void Draw(Rect rect) {
-            var layout = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == this.property.Path);
+            var layout = this.property.PropertyTree.Layouts.
+                FirstOrDefault(x => x.layoutPath == this.property.Path);
             
             if (layout != null) {
                 layout.Draw(rect);
@@ -45,7 +46,6 @@
 
             var prevProp = this.property;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                //rect.y += GuiUtilities.SPACE;
                 EditorGUI.BeginChangeCheck();
                 
                 if (p.TryGetFixedAttribute<DisplayAsString>() != null) {
@@ -71,9 +71,8 @@
             EditorGUI.indentLevel--;
         }
 
-        public override float GetHeight() {
-            return FriggProperty.GetPropertyHeight(this.property);
-        }
+        //if property has FoldoutDrawer - then add 18F if !expanded or calculate all other drawers if expanded
+        public override float GetHeight() => 0f;
 
         public override bool IsVisible => true;
     }
