@@ -24,14 +24,18 @@
                 //Update "object" value
                 this.property.Update(value);
 
-                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                    var serializedObject = this.property.PropertyTree.SerializedObject;
-                    var prop             = serializedObject.FindProperty(this.property.UnityPath);
-
-                    //Save changes inside target SerializedObject.
-                    CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
-                    EditorUtility.SetDirty(serializedObject.targetObject);
-                    serializedObject.ApplyModifiedProperties();
+                if (!Application.isPlaying) {
+                    if (this.property.NativeProperty != null) {
+                        var prop             = this.property.NativeProperty;
+                        var serializedObject = prop.serializedObject;
+                        CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
+                        
+                        Undo.RegisterCompleteObjectUndo(serializedObject.targetObject,
+                            $"'update {prop.name} value to {value}'");
+                        Undo.FlushUndoRecordObjects();
+                        
+                        serializedObject.ApplyModifiedProperties();
+                    }
                 }
             }
             this.CallNext(rect);
