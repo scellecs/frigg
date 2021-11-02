@@ -235,40 +235,45 @@
         public static float GetPropertyHeight(FriggProperty property, bool includeChildren = true) => CalculateDrawersHeight(property, includeChildren);
 
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
-            var  total      = 0f;
-            var hasFoldout = false;
+            var total = 0f;
 
-            if (prop.IsLayoutMember) {
+            if (!prop.IsExpanded && !prop.IsLayoutMember) {
                 return EditorGUIUtility.singleLineHeight;
             }
 
-            var drawers = prop.Drawers;
-            
-            var list = new List<FriggDrawer>();
-            var prev = drawers.Current;
-            
-            while(drawers.MoveNext())
-                list.Add(drawers.Current);
-            
-            drawers.Reset();
+            if (prop.ChildrenProperties.AmountOfChildren == 0) {
+                while (prop.Drawers.MoveNext()) {
+                    if (prop.Drawers.Current == null) {
+                        continue;
+                    }
 
-            while (drawers.Current != prev) {
-                drawers.MoveNext();
+                    if (!prop.Drawers.Current.IsVisible) {
+                        continue;
+                    }
+
+                    total += prop.Drawers.Current.GetHeight();
+                };
+
+                prop.Drawers.Reset();
+
+                return total;
             }
 
-            if (list.Any(x => x.GetType() == typeof(FoldoutPropertyDrawer))) {
-                total      += EditorGUIUtility.singleLineHeight;
-                hasFoldout =  true;
-            }
+            total += EditorGUIUtility.singleLineHeight;
 
             var properties = includeChildren ? prop.ChildrenProperties : prop.ChildrenProperties.RecurseChildren(true);
             foreach (var property in properties) {
                 while (property.Drawers.MoveNext()) {
-                    if (property.Drawers.Current != null && property.Drawers.Current.IsVisible) {
-                        total += property.Drawers.Current.GetHeight() + GuiUtilities.SPACE;
+                    if (property.Drawers.Current == null) {
+                        continue;
                     }
-                }
 
+                    if (!property.Drawers.Current.IsVisible) {
+                        continue;
+                    }
+
+                    total += property.Drawers.Current.GetHeight();
+                }
                 property.Drawers.Reset();
             }
 
@@ -276,7 +281,7 @@
         }
 
         /// <summary>
-        /// Refresh properties (Fetch values)
+        /// 
         /// </summary>
         public void Refresh() {
             if (this.ParentProperty.GetValue() != null) {
@@ -289,7 +294,7 @@
         /// </summary>
         /// <param name="newValue"></param>
         public void Update(object newValue) {
-            //Secondly, we need to set a new Value.
+            //We need to set a new Value.
             this.SetValue(newValue);
         }
         
@@ -318,7 +323,14 @@
                 this.NativeProperty = prop;
                 return;
             }
-            
+
+            prop = this.PropertyTree.SerializedObject.FindProperty(this.Name);
+            if (prop != null) {
+                this.UnityPath      = prop.propertyPath;
+                this.NativeProperty = prop;
+                return; 
+            }
+
             //Initial property type for this tree, because our property wasn't created
             var root     = this;
             while (!root.IsRootProperty) {

@@ -19,14 +19,14 @@
         public override void Draw(Rect rect) {
             this.property.IsExpanded =  true;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                EditorGUI.BeginChangeCheck();
+                //EditorGUI.BeginChangeCheck();
                 var h = FriggProperty.GetPropertyHeight(p);
                     p.Draw(rect); 
                     rect.y     += h + GuiUtilities.SPACE;
                     
-                if (EditorGUI.EndChangeCheck()) {
+                /*if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnValueChanged(p);
-                }
+                }*/
             }
         }
 

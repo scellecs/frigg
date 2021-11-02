@@ -46,7 +46,7 @@
 
             var prevProp = this.property;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                EditorGUI.BeginChangeCheck();
+                //EditorGUI.BeginChangeCheck();
                 
                 if (p.TryGetFixedAttribute<DisplayAsString>() != null) {
                     rect.y   += GuiUtilities.SPACE;
@@ -59,9 +59,9 @@
                 }
 
                 p.Draw(rect);
-                if (EditorGUI.EndChangeCheck()) {
+                /*if (EditorGUI.EndChangeCheck()) {
                     CoreUtilities.OnValueChanged(p);
-                }
+                }*/
                 
                 var h = FriggProperty.GetPropertyHeight(p);
                 rect.y      += h;
@@ -72,7 +72,36 @@
         }
 
         //if property has FoldoutDrawer - then add 18F if !expanded or calculate all other drawers if expanded
-        public override float GetHeight() => 0f;
+        public override float GetHeight() {
+            var height     = 0f;
+            
+            var properties = this.property.ChildrenProperties.RecurseChildren(true);
+            
+            foreach (var prop in properties) {
+                height += FriggProperty.GetPropertyHeight(prop);
+            }
+
+            return height;
+
+            /*if (!this.property.IsExpanded)
+                return height;
+            
+            var drawers = this.property.Drawers;
+            
+            var list = new List<FriggDrawer>();
+            var prev = drawers.Current;
+            
+            while(drawers.MoveNext())
+                list.Add(drawers.Current);
+            
+            drawers.Reset();
+
+            while (drawers.Current != prev) {
+                drawers.MoveNext();
+            }
+
+            return height;*/
+        }
 
         public override bool IsVisible => true;
     }

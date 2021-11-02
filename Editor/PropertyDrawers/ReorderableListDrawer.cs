@@ -99,7 +99,7 @@
                 tempRect.height =  EditorGUIUtility.singleLineHeight;
                 tempRect.width  += EditorGUI.indentLevel * 15;
                 tempRect.x      -= EditorGUI.indentLevel * 15;
-                
+
                 pr.Draw(tempRect);
             };
 

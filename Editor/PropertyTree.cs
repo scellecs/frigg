@@ -186,11 +186,10 @@
 
         //Draw section. 
         public override void Draw() {
-            this.BeginDrawTree();
             this.DrawTree();
-            this.EndDrawTree();
-            
-            //We need to call this each time we update our inspector to update entire tree and get newest values.
+
+            //We need to call this each time we update our inspector
+            //to update entire tree and get newest values.
             this.UpdateTree();
         }
         
@@ -199,20 +198,11 @@
         //Get all properties -> Draw them -> Get incoming changes
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
-            this.memberTargets = this.serializedObject.targetObjects.Cast<T>().ToArray();
-            
-            var targetObject = this.memberTargets[0];
-            //this.RootProperty.NativeValue.Set(targetObject);
-
             foreach (var prop in this.EnumerateTree(true)) {
                 if (prop.ParentProperty != null) {
                     prop.Refresh();
                 }
             }
-        }
-        
-        private void BeginDrawTree() {
-            this.SerializedObject.Update();
         }
 
         private void DrawTree() {
@@ -220,11 +210,6 @@
                 if(!prop.IsLayoutMember)
                    prop.Draw();
             }
-        }
-
-        private void EndDrawTree() {
-            if(this.SerializedObject.hasModifiedProperties)
-               this.SerializedObject.ApplyModifiedProperties();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)

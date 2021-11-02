@@ -17,6 +17,7 @@
         }
 
         public override void OnInspectorGUI() {
+            this.serializedObject.Update();
             //Here we are drawing our inspector.
             GuiUtilities.DrawTree(this.PropertyTree);
         }
