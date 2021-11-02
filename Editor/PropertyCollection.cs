@@ -9,7 +9,7 @@
     using Utils;
     
     public class PropertyCollection : IEnumerable<FriggProperty> {
-        private Dictionary<int, PropertyMeta>      metaByIndex    = new Dictionary<int, PropertyMeta>();
+        private Dictionary<int, PropertyMeta> metaByIndex  = new Dictionary<int, PropertyMeta>();
         private Dictionary<int, FriggProperty> propByIndex = new Dictionary<int, FriggProperty>();
 
         public FriggProperty property;

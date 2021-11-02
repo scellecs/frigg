@@ -20,8 +20,7 @@
         protected void UpdateAndCallNext(object value, Rect rect = default) {
             if (EditorGUI.EndChangeCheck()) {
                 CoreUtilities.OnValueChanged(this.property);
-
-                //Update "object" value
+                
                 this.property.Update(value);
 
                 if (!Application.isPlaying) {
