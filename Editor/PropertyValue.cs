@@ -1,33 +1,39 @@
 ﻿namespace Frigg.Editor {
+    using System;
     using System.ComponentModel;
     using JetBrains.Annotations;
     using UnityEngine;
 
-    public class PropertyValue : INotifyPropertyChanged {
-
-        public  PropertyMeta MetaInfo { get; set; }
-        private object       value;
-
-        public object Value {
-            get => this.value;
+    public sealed class GetterSetter<T> 
+    {
+        private Func<T>   getter;
+        private Action<T> setter;
+        public GetterSetter(Func<T> getter, Action<T> setter)
+        {
+            this.getter = getter;
+            this.setter = setter;
+        }
+        public T Value
+        {
+            get => getter();
             set {
-                this.value = value;
-                this.OnPropertyChanged(nameof(this.Value));
+                this.setter(value);
             }
         }
+    }
+    
+    public class PropertyValue<T> {
+        public  PropertyMeta MetaInfo { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private readonly GetterSetter<T> actual;
 
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged(string propertyName) {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public PropertyValue(object value, PropertyMeta metaInfo) {
+            this.actual = new GetterSetter<T>(() => (T) value, x => value = x);
+
+            this.MetaInfo = metaInfo;
         }
 
-        public PropertyValue(object value) {
-            this.value           =  value;
-            /*this.PropertyChanged += ((sender, args) => {
-                args.
-            });*/
-        }
+        public T Get()        => this.actual.Value;
+        public void   Set(T value) => this.actual.Value = value;
     }
 }

@@ -1,6 +1,7 @@
 ﻿namespace Frigg.Editor.BuiltIn {
     using System;
     using System.Collections;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -13,19 +14,28 @@
         protected T GetTargetValue<T>() {
             this.drawerType = typeof(T);
             EditorGUI.BeginChangeCheck();
-            return (T) this.property.PropertyValue.Value;
+            return (T) this.property.GetValue();
         }
 
         protected void UpdateAndCallNext(object value, Rect rect = default) {
             if (EditorGUI.EndChangeCheck()) {
                 CoreUtilities.OnValueChanged(this.property);
 
+                //Update "object" value
                 this.property.Update(value);
-                
-                if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                    var prop = this.property.PropertyTree.SerializedObject.FindProperty(this.property.UnityPath);
-                    CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
-                    EditorUtility.SetDirty(this.property.PropertyTree.SerializedObject.targetObject);
+
+                if (!Application.isPlaying) {
+                    if (this.property.NativeProperty != null) {
+                        var prop             = this.property.NativeProperty;
+                        var serializedObject = prop.serializedObject;
+                        CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
+                        
+                        Undo.RegisterCompleteObjectUndo(serializedObject.targetObject,
+                            $"'update {prop.name} value to {value}'");
+                        Undo.FlushUndoRecordObjects();
+                        
+                        serializedObject.ApplyModifiedProperties();
+                    }
                 }
             }
             this.CallNext(rect);

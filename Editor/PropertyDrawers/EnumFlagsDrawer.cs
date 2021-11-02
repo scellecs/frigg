@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -23,7 +24,7 @@
             }
             
             var attr   = (EnumFlagsAttribute) this.linkedAttribute;
-            var target = (Enum) this.property.PropertyValue.Value;
+            var target = (Enum) this.property.GetValue();
 
             if (target == null) {
                 Debug.LogError("Invalid target.");
@@ -31,10 +32,7 @@
             }
 
             var enumValues = EditorGUI.EnumFlagsField(rect, this.property.Label, target);
-
-            CoreUtilities.SetTargetValue(this.property, this.property.ParentValue, this.property.MetaInfo.MemberInfo, enumValues);
-
-            this.property.PropertyTree.SerializedObject.ApplyModifiedProperties(); //TODO: Callback 
+            this.property.SetValue(enumValues);
         }
 
         public override float GetHeight() => EditorGUIUtility.singleLineHeight;

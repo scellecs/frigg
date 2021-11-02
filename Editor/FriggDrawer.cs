@@ -15,6 +15,7 @@
         public abstract void      Draw(Rect rect);
         
         public abstract float GetHeight();
+
         
         //Check before draw an element
         public abstract bool      IsVisible { get;}
@@ -39,7 +40,7 @@
                     result.Add(decoratorDrawer);
                 }
 
-                if (attr is CustomAttribute || attr is BaseAttribute || attr is BaseGroupAttribute) {
+                if (attr is CustomAttribute || attr is BaseAttribute) {
                     var drawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
                     if (drawer == null) {
                         continue;

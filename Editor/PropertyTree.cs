@@ -3,6 +3,9 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using Groups;
+    using Layouts;
+    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
     using Utils;
@@ -11,6 +14,8 @@
         public abstract SerializedObject            SerializedObject { get; }
 
         public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
+
+        public List<Layout> Layouts = new List<Layout>();
 
         public abstract Type             TargetType       { get; }
 
@@ -167,59 +172,61 @@
             this.serializedObject = serializedObject;
             this.memberTargets    = targetObjects;
 
-            this.RootProperty = FriggProperty.DoProperty(this, null, this.memberTargets[0], new PropertyMeta {
-                    Name       = this.memberTargets[0].GetType().Name,
-                    MemberType = this.TargetType
-                }
-            );
+            var metaInfo = new PropertyMeta {
+                Name       = this.memberTargets[0].GetType().Name,
+                MemberType = this.TargetType,
+                MemberInfo = this.memberTargets[0].GetType()
+            };
+
+            this.RootProperty = new FriggProperty(this, new PropertyValue<object>(
+                this.memberTargets[0], metaInfo), true);
+            this.RootProperty.ChildrenProperties = new PropertyCollection(this.RootProperty);
+
         }
 
+        //Draw section. 
         public override void Draw() {
-            this.BeginDrawTree();
             this.DrawTree();
-            this.EndDrawTree();
-        }
-        
-        //Update changed values for all properties
-        public override void UpdateTree() {
-            foreach (var prop in this.EnumerateTree(false)) {
-                var data = CoreUtilities.GetTargetObject(prop.ParentProperty.PropertyValue.Value, prop.MetaInfo.MemberInfo);
-                prop.PropertyValue.Value         = data;
-                prop.ChildrenProperties.property = prop;
-                prop.ChildrenProperties.Update();
-            }
-        }
-        
-        private void BeginDrawTree() {
-            this.SerializedObject.Update();
-            //this.RootProperty.Refresh();
+
+            //We need to call this each time we update our inspector
+            //to update entire tree and get newest values.
             this.UpdateTree();
+        }
+        
+        //We need to call this method only when we are updating our properties (trying to get new values).
+        //Cycle should look like:
+        //Get all properties -> Draw them -> Get incoming changes
+        //-> Call Update method which should refresh root property and register objects manually.
+        public override void UpdateTree() {
+            foreach (var prop in this.EnumerateTree(true)) {
+                if (prop.ParentProperty != null) {
+                    prop.Refresh();
+                }
+            }
         }
 
         private void DrawTree() {
             foreach (var prop in this.EnumerateTree(false)) {
-                prop.Draw();
+                if(!prop.IsLayoutMember)
+                   prop.Draw();
             }
-        }
-
-        private void EndDrawTree() {
-            this.SerializedObject.ApplyModifiedProperties();
         }
 
         public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
         {
             for (var i = 0; i < this.RootProperty.ChildrenProperties.AmountOfChildren; i++)
             {
-                var root = this.RootProperty.ChildrenProperties[i];
+                var prop = this.RootProperty.ChildrenProperties[i];
 
-                yield return root;
+                yield return prop;
 
-                if (includeChildren)
+                if (!includeChildren) {
+                    continue;
+                }
+
+                foreach (var child in prop.ChildrenProperties.RecurseChildren())
                 {
-                    foreach (var child in root.ChildrenProperties.RecurseChildren())
-                    {
-                        yield return child;
-                    }
+                    yield return child;
                 }
             }
         }

@@ -18,7 +18,7 @@
             this.UpdateAndCallNext(result, rect);
         }
 
-        public override float GetHeight() => throw new System.NotImplementedException();
+        public override float GetHeight() => 0;
 
         public override bool IsVisible => true;
     }

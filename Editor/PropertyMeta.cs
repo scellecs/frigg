@@ -14,5 +14,7 @@
         public bool isArray;
         public int  arraySize  = 0;
         public int  arrayIndex = -1;
+        
+        public int drawersCount;
     }
 }
