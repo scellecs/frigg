@@ -116,7 +116,7 @@
                         (parent.NativeValue.Get(), metaInfo.MemberInfo));
                 }
             }
-            
+
             var property = new FriggProperty(parent?.PropertyTree, nativeValue) {
                 Name = metaInfo.Name, 
                 NiceName = ObjectNames.NicifyVariableName(metaInfo.Name),
@@ -259,8 +259,16 @@
         /// 
         /// </summary>
         public void Refresh() {
-            if (this.ParentProperty.GetValue() != null) {
-                this.NativeValue.Set(CoreUtilities.GetTargetValue(this.ParentProperty.GetValue(), this.MetaInfo.MemberInfo));
+            var parent = this.ParentProperty;
+            if(parent != null && parent.MetaInfo.isArray) {
+                this.NativeValue.Set(((IList) parent.NativeValue.Get())[this.MetaInfo.arrayIndex]);
+            }
+
+            else {
+                if (parent != null) {
+                    this.NativeValue.Set(CoreUtilities.GetTargetValue
+                        (parent.NativeValue.Get(), this.MetaInfo.MemberInfo));
+                }
             }
         }
 
@@ -268,7 +276,7 @@
         /// 
         /// </summary>
         /// <param name="newValue"></param>
-        public void Update(object newValue) {
+        public void UpdateValue(object newValue) {
             //We need to set a new Value.
             this.SetValue(newValue);
         }
