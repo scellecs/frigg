@@ -19,18 +19,20 @@
         public override void Draw(Rect rect) {
             this.property.IsExpanded =  true;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                //EditorGUI.BeginChangeCheck();
-                var h = FriggProperty.GetPropertyHeight(p);
+                var h = EditorGUIUtility.singleLineHeight;
                     p.Draw(rect); 
-                    rect.y     += h + GuiUtilities.SPACE;
-                    
-                /*if (EditorGUI.EndChangeCheck()) {
-                    CoreUtilities.OnValueChanged(p);
-                }*/
+                    rect.y += h + GuiUtilities.SPACE;
             }
         }
 
-        public override float GetHeight() => FriggProperty.GetPropertyHeight(this.property);
+        public override float GetHeight() {
+            var height = 0f;
+            foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                height += FriggProperty.GetPropertyHeight(p);
+            }
+
+            return height;
+        }
 
         public override bool IsVisible => true;
         

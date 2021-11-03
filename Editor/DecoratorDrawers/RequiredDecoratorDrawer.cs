@@ -32,7 +32,13 @@
                 return false;
             }
         }
-        
-        public override float GetHeight() => BaseDecoratorAttribute.DEFAULT_HEIGHT;
+
+        public override float GetHeight() {
+            if (this.IsVisible) {
+                return BaseDecoratorAttribute.DEFAULT_HEIGHT;
+            }
+
+            return 0f;
+        }
     }
 }

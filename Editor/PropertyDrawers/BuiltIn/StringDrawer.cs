@@ -15,6 +15,7 @@
         
         public override void DrawLayout() {
             var value  = this.GetTargetValue<string>();
+            
             if (!this.asString) {
                 EditorGUILayout.LabelField(value);
                 this.CallNext();
@@ -28,11 +29,11 @@
 
         public override void Draw(Rect rect) {
             var value = this.GetTargetValue<string>();
+            
             if (!this.asString) {
                 EditorGUI.LabelField(rect, value);
                 this.CallNext(rect);
                 return;
-
             }
             
             var result = EditorGUI.TextField(rect, this.property.Label, value);
@@ -44,6 +45,5 @@
             !this.asString ? GuiUtilities.SPACE : EditorGUIUtility.singleLineHeight;
 
         public override bool IsVisible => true;
-
     }
 }

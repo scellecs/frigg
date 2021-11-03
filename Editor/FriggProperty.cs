@@ -21,8 +21,11 @@
 
         public int ObjectInstanceID { get; set; } = -1;
         
-        //All drawers that were detected on target property.
-        public IEnumerator<FriggDrawer> Drawers { get; set; }
+        //Represents a queue of Frigg drawers.
+        public IEnumerator<FriggDrawer> DrawersQueue { get; set; }
+
+        //Represents all drawers of target property.
+        public IEnumerable<FriggDrawer> Drawers { get; set; }
 
         /// <summary>
         /// Path, declared on target property by Frigg inspector.
@@ -139,7 +142,8 @@
             var drawers = FriggDrawer.Resolve(property).ToList();
             property.MetaInfo.drawersCount = drawers.Count;
 
-            property.Drawers = drawers.GetEnumerator();
+            property.Drawers      = drawers;
+            property.DrawersQueue = drawers.GetEnumerator();
             property.HandleMetaAttributes();
 
             property.IsExpanded = EditorData.GetBoolValue(property.Path);
@@ -183,12 +187,12 @@
         /// </summary>
         /// <param name="rect">Rect that represents draw info</param>
         public void Draw(Rect rect = default) {
-            var current = this.Drawers.Current;
+            var current = this.DrawersQueue.Current;
             if (current != null && current.IsVisible) {
                 if (rect == default)
-                    this.Drawers.Current?.DrawLayout();
+                    this.DrawersQueue.Current?.DrawLayout();
                 else {
-                    this.Drawers.Current?.Draw(rect);
+                    this.DrawersQueue.Current?.Draw(rect);
                 }
             }
 
@@ -202,11 +206,11 @@
         /// </summary>
         /// <param name="rect"></param>
         public void CallNextDrawer(Rect rect = default) {
-            if (this.Drawers.MoveNext()) {
+            if (this.DrawersQueue.MoveNext()) {
                 this.Draw(rect);
             }
             else {
-                this.Drawers.Reset();
+                this.DrawersQueue.Reset();
             }
         }
 
@@ -237,44 +241,15 @@
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
             var total = 0f;
 
-            if (!prop.IsExpanded && !prop.IsLayoutMember) {
+            if (prop.IsLayoutMember) {
                 return EditorGUIUtility.singleLineHeight;
             }
-
-            if (prop.ChildrenProperties.AmountOfChildren == 0) {
-                while (prop.Drawers.MoveNext()) {
-                    if (prop.Drawers.Current == null) {
-                        continue;
-                    }
-
-                    if (!prop.Drawers.Current.IsVisible) {
-                        continue;
-                    }
-
-                    total += prop.Drawers.Current.GetHeight();
-                };
-
-                prop.Drawers.Reset();
-
-                return total;
-            }
-
-            total += EditorGUIUtility.singleLineHeight;
-
-            var properties = includeChildren ? prop.ChildrenProperties : prop.ChildrenProperties.RecurseChildren(true);
-            foreach (var property in properties) {
-                while (property.Drawers.MoveNext()) {
-                    if (property.Drawers.Current == null) {
-                        continue;
-                    }
-
-                    if (!property.Drawers.Current.IsVisible) {
-                        continue;
-                    }
-
-                    total += property.Drawers.Current.GetHeight();
+            
+            foreach (var drawer in prop.Drawers) {
+                var height = drawer.GetHeight();
+                if (height > 0) {
+                    total += height + GuiUtilities.SPACE;   
                 }
-                property.Drawers.Reset();
             }
 
             return total;

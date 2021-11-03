@@ -14,7 +14,7 @@
 
         public override float GetHeight() {
             //header
-            var total = 0f;
+            var total = EditorGUIUtility.singleLineHeight;
             if (this.list.displayAdd || this.list.displayRemove) {
                 //button
                 if(this.property.IsExpanded)
@@ -27,8 +27,14 @@
                 total += layout.TotalHeight;
                 return total;
             }
+
+            var elementsHeight = 0f;
+            foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
+                var height = FriggProperty.GetPropertyHeight(child);
+                elementsHeight += height;
+            }
             
-            total += FriggProperty.GetPropertyHeight(this.property) + 4f * this.list.list.Count; // paddings
+            total += elementsHeight;
             return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight;
         }
 
@@ -158,8 +164,8 @@
                 if (!this.property.IsExpanded)
                     return EditorGUIUtility.singleLineHeight;
                 
-                var height  = FriggProperty.GetPropertyHeight(element);
-                return height + GuiUtilities.SPACE;
+                var height = FriggProperty.GetPropertyHeight(element);
+                return height;
             };
         }
     }

@@ -49,6 +49,6 @@
 
         public override bool IsVisible => true;
         
-        public override float GetHeight() =>  ((TitleAttribute)this.linkedAttribute).Height = ((TitleAttribute)this.linkedAttribute).lineHeight;
+        public override float GetHeight() =>  ((TitleAttribute)this.linkedAttribute).Height + ((TitleAttribute)this.linkedAttribute).lineHeight;
     }
 }

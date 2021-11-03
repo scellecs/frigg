@@ -1,4 +1,5 @@
 ﻿namespace Frigg.Editor {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -40,14 +41,12 @@
                 return;
             }
 
-            rect.y += EditorGUIUtility.singleLineHeight;
+            rect.y += EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
 
             EditorGUI.indentLevel++;
 
             var prevProp = this.property;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                //EditorGUI.BeginChangeCheck();
-                
                 if (p.TryGetFixedAttribute<DisplayAsString>() != null) {
                     rect.y   += GuiUtilities.SPACE;
                     prevProp =  p;
@@ -59,10 +58,7 @@
                 }
 
                 p.Draw(rect);
-                /*if (EditorGUI.EndChangeCheck()) {
-                    CoreUtilities.OnValueChanged(p);
-                }*/
-                
+
                 var h = FriggProperty.GetPropertyHeight(p);
                 rect.y      += h;
                 rect.height =  EditorGUIUtility.singleLineHeight;
@@ -73,34 +69,20 @@
 
         //if property has FoldoutDrawer - then add 18F if !expanded or calculate all other drawers if expanded
         public override float GetHeight() {
-            var height     = 0f;
+            var height     = EditorGUIUtility.singleLineHeight;
+
+            if (!this.property.IsExpanded) {
+                return height;
+            }
             
-            var properties = this.property.ChildrenProperties.RecurseChildren(true);
-            
+            //Get all properties that were stored in our foldout
+            var properties = this.property.ChildrenProperties.RecurseChildren();
+
             foreach (var prop in properties) {
                 height += FriggProperty.GetPropertyHeight(prop);
             }
 
             return height;
-
-            /*if (!this.property.IsExpanded)
-                return height;
-            
-            var drawers = this.property.Drawers;
-            
-            var list = new List<FriggDrawer>();
-            var prev = drawers.Current;
-            
-            while(drawers.MoveNext())
-                list.Add(drawers.Current);
-            
-            drawers.Reset();
-
-            while (drawers.Current != prev) {
-                drawers.MoveNext();
-            }
-
-            return height;*/
         }
 
         public override bool IsVisible => true;
