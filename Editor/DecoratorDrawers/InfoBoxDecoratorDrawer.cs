@@ -31,10 +31,6 @@
             if (CoreUtilities.IsPropertyVisible(this.property)) {
                 if (!string.IsNullOrEmpty(attr.Member)) {
                     //todo: get "member" name & call directly.
-                    /*var value = (bool) (this.property.GetValue()); //this.property.GetValue().GetType().GetMember(attr.Member, CoreUtilities.FLAGS)[0]);
-                    if (value) {
-                        EditorGUILayout.HelpBox(attr.Text, messageType);
-                    }*/
                 }
                 else {
                     EditorGUILayout.HelpBox(attr.Text, messageType);

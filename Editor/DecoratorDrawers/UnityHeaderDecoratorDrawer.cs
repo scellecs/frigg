@@ -3,7 +3,9 @@
     using UnityEngine;
     using Utils;
 
-    public class UnityHeaderDecoratorDrawer : FriggDecoratorDrawer {
+    public sealed class UnityHeaderDecoratorDrawer : FriggDecoratorDrawer {
+        private int HeaderDefaultHeight { get; set; } = 20;
+        
         public override void DrawLayout() {
             EditorGUILayout.Space(5);
             var attr  = (HeaderAttribute) this.linkedAttribute;
@@ -20,7 +22,7 @@
         public override void Draw(Rect rect) {
             var       attr   = (HeaderAttribute) this.linkedAttribute;
             var       temp   = rect;
-            const float height = BaseDecoratorAttribute.DEFAULT_HEIGHT + GuiUtilities.SPACE;
+            var height = this.HeaderDefaultHeight + GuiUtilities.SPACE;
             temp.height = height;
             
             var style = new GUIStyle {
@@ -34,7 +36,7 @@
         }
 
         public override bool  IsVisible   => true;
-        public override float GetHeight() => GuiUtilities.SPACE + EditorGUIUtility.singleLineHeight;
+        public override float GetHeight() => GuiUtilities.SPACE + this.HeaderDefaultHeight;
 
     }
 }
