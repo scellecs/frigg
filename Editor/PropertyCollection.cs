@@ -191,16 +191,15 @@
             }
         }
         
-        private void SetMembers(FriggProperty prop, List<PropertyValue<object>> members) {
+        private void SetMembers(FriggProperty prop, IEnumerable<PropertyValue<object>> members) {
             var ordered = members.OrderBy(x => x.MetaInfo.Order);
-            members = ordered.ToList();
 
-            foreach (var member in members) {
+            foreach (var member in ordered) {
                 if (member.Get() == null) {
                     return;
                 }
                 
-                if (member.MetaInfo.MemberInfo.GetCustomAttribute<HideInInspector>() != null) {
+                if (member.MetaInfo.MemberInfo.IsDefined(typeof(HideInInspector))) {
                     continue;
                 }
                 

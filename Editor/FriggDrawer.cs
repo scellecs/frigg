@@ -22,14 +22,14 @@
 
         public static IEnumerable<FriggDrawer> Resolve(FriggProperty property) {
             //Get attribute drawers
-            var attrs = new List<Attribute>();
-            attrs.AddRange(property.FixedAttributes);
+            //var attrs = new List<Attribute>();
+            //attrs.AddRange(property.FixedAttributes);
 
             var result          = new List<FriggDrawer>();
             var hasCustomDrawer = false;
             
             //Add attribute custom decorators
-            foreach (var attr in attrs) {
+            foreach (var attr in property.FixedAttributes) {
                 if(attr.IsDefaultAttribute())
                     continue;
                 

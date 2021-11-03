@@ -20,8 +20,8 @@
                 if(this.property.IsExpanded)
                    total += EditorGUIUtility.singleLineHeight * 1.5f;
             }
-            
-            var layout = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == this.property.Path);
+
+            this.property.PropertyTree.LayoutsByPath.TryGetValue(this.property.Path, out var layout);
             
             if (layout != null) {
                 total += layout.TotalHeight;
@@ -156,7 +156,8 @@
                     return 0f;
                 
                 var element = this.property.GetArrayElementAtIndex(index);
-                var layout  = this.property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == element.Path);
+                this.property.PropertyTree.LayoutsByPath.TryGetValue
+                    (this.property.ParentProperty.Path, out var layout);
             
                 if (layout != null) {
                     return layout.TotalHeight;

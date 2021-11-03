@@ -83,16 +83,20 @@
         /// Children properties of target property.
         /// </summary>
         public PropertyCollection ChildrenProperties { get; set; }
-        
+
         /// <summary>
         /// Applied attributes on target property.
         /// </summary>
-        public IEnumerable<Attribute> FixedAttributes => this.fixedAttributes;
+        /// 
+        public IEnumerable<Attribute> FixedAttributes { get; private set; }
+        //All applied attributes on target property.
+        //private List<Attribute> fixedAttributes = new List<Attribute>();
 
         public FriggProperty(PropertyTree propertyTree, PropertyValue<object> value, bool isRoot = false) {
             this.NativeValue    = value;
             this.IsRootProperty = isRoot;
             this.PropertyTree   = propertyTree;
+            this.Path           = propertyTree.TargetType.ToString();
 
             this.TrySetInstanceID(value.Get());
         }
@@ -127,10 +131,9 @@
             
             property.Label          = new GUIContent(property.NiceName);
             
-            //If this property can't have any children properties (is not struct or built-in unity type)
-            property.fixedAttributes = !property.IsRootProperty
-                ? property.MetaInfo.MemberInfo.GetCustomAttributes().ToList()
-                : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
+            property.FixedAttributes = !property.IsRootProperty
+                ? property.MetaInfo.MemberInfo.GetCustomAttributes()
+                : property.MetaInfo.MemberType.GetCustomAttributes();
 
             property.Path = GetFriggPath(property);
 
@@ -140,10 +143,11 @@
             property.ChildrenProperties = new PropertyCollection(property);
 
             var drawers = FriggDrawer.Resolve(property).ToList();
-            property.MetaInfo.drawersCount = drawers.Count;
+            property.MetaInfo.drawersCount = drawers.Count();
 
             property.Drawers      = drawers;
             property.DrawersQueue = drawers.GetEnumerator();
+            
             property.HandleMetaAttributes();
 
             property.IsExpanded = EditorData.GetBoolValue(property.Path);
@@ -156,7 +160,8 @@
             
             property.IsLayoutMember = true;
 
-            var layout = property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == property.ParentProperty.Path);
+            property.PropertyTree.LayoutsByPath.TryGetValue
+                (property.ParentProperty.Path, out var layout);
 
             if (layout != null) {
                 layout.Add(property);
@@ -174,13 +179,10 @@
 
             layout.Add(property);
 
-            property.PropertyTree.Layouts.Add(layout);
+            property.PropertyTree.LayoutsByPath[layout.layoutPath] = layout;
 
             return property;
         }
-
-        //All applied attributes on target property.
-        private List<Attribute> fixedAttributes = new List<Attribute>();
 
         /// <summary>
         /// Draw property.
@@ -290,7 +292,7 @@
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public T TryGetFixedAttribute<T>() where T : Attribute {
-            var attr = this.fixedAttributes.FirstOrDefault(x => x is T);
+            var attr = this.FixedAttributes.FirstOrDefault(x => x is T);
             return (T) attr;
         }
 
@@ -300,8 +302,6 @@
             }
             
             this.ObjectInstanceID = obj.GetInstanceID();
-            
-            
         }
         
         private void SetNativeProperty() {
@@ -320,7 +320,7 @@
             }
 
             //Initial property type for this tree, because our property wasn't created
-            var root     = this;
+            var root = this;
             while (!root.IsRootProperty) {
                 root = root.ParentProperty;
             }
@@ -373,7 +373,7 @@
                 var currPath = string.Empty;
 
                 if (prop.IsRootProperty) {
-                    currPath += prop.PropertyTree.SerializedObject.targetObject.name + ".";
+                    currPath = prop.PropertyTree.SerializedObject.targetObject.name + ".";
                 }
                 
                 var index = prop.MetaInfo.arrayIndex;

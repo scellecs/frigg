@@ -19,10 +19,9 @@
 
         protected void UpdateAndCallNext(object value, Rect rect = default) {
             if (EditorGUI.EndChangeCheck()) {
+                this.property.UpdateValue(value);
                 CoreUtilities.OnValueChanged(this.property);
                 
-                this.property.UpdateValue(value);
-
                 if (!Application.isPlaying) {
                     if (this.property.NativeProperty != null) {
                         var prop             = this.property.NativeProperty;
