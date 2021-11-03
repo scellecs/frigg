@@ -66,16 +66,10 @@
             }
 
             if (target == null) {
-                //Debug.Log($"Target is null with {this.property.Name}");
                 return;
             }
             
             target.TryGetMembers(membersArray);
-
-            /*if (membersArray.Count == 0) {
-                return;
-            }*/
-            
             this.SetMembers(this.property, membersArray);
         }
 
@@ -133,7 +127,7 @@
                         list[i] = copy[i];
                     }
 
-                    this.property.SetValue(list);
+                    this.property.NativeValue.Set(list);
                 }
                 
                 var arrayElement = list[idx];
@@ -142,7 +136,7 @@
                     arrayElement = Activator.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()));
                     list[idx] = (arrayElement);
                     
-                    this.property.SetValue(list);
+                    this.property.NativeValue.Set(list);
                 }
                 
                 prop = FriggProperty.DoProperty(this.property, new PropertyMeta {
@@ -152,6 +146,7 @@
                     arrayIndex = idx
                 });
 
+                this.property.NativeValue.Set(list);
                 this.property.MetaInfo.arraySize++;
             }
 
@@ -159,9 +154,9 @@
                 prop = FriggProperty.DoProperty(parentProp, new PropertyMeta {
                     Name       = this.property.MetaInfo.Name, 
                     MemberType = target.GetType()
-                }); 
+                });
             }
-
+            
             this.propByIndex[idx] = prop;
             return prop;
         }

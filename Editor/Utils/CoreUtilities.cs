@@ -524,7 +524,7 @@ namespace Frigg.Utils {
                     }
                 }
             }
-
+            
             //assign new target object to this property
             property.NativeValue.Set(value);
         }

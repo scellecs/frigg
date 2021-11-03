@@ -42,6 +42,7 @@
 
         public ReorderableListDrawer(FriggProperty prop) : base(prop) {
             var elements = (IList) prop.GetValue();
+            //todo: refactor
             if (!string.IsNullOrEmpty(this.property.UnityPath)) {
                 var serializedProperty = this.property.PropertyTree
                     .SerializedObject.FindProperty(this.property.UnityPath);
