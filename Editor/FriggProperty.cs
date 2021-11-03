@@ -260,8 +260,12 @@
         /// </summary>
         public void Refresh() {
             var parent = this.ParentProperty;
-            if(parent != null && parent.MetaInfo.isArray) {
-                this.NativeValue.Set(((IList) parent.NativeValue.Get())[this.MetaInfo.arrayIndex]);
+            if (parent != null && parent.MetaInfo.isArray) {
+                var list = (IList) parent.NativeValue.Get();
+                if (list.Count != parent.MetaInfo.arraySize)
+                    return;
+                    
+                this.NativeValue.Set(list[this.MetaInfo.arrayIndex]);
             }
 
             else {
@@ -277,7 +281,6 @@
         /// </summary>
         /// <param name="newValue"></param>
         public void UpdateValue(object newValue) {
-            //We need to set a new Value.
             this.SetValue(newValue);
         }
         
@@ -297,6 +300,8 @@
             }
             
             this.ObjectInstanceID = obj.GetInstanceID();
+            
+            
         }
         
         private void SetNativeProperty() {
