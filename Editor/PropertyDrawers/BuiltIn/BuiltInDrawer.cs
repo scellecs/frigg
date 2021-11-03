@@ -21,7 +21,7 @@
             if (EditorGUI.EndChangeCheck()) {
                 CoreUtilities.OnValueChanged(this.property);
                 
-                this.property.Update(value);
+                this.property.UpdateValue(value);
 
                 if (!Application.isPlaying) {
                     if (this.property.NativeProperty != null) {

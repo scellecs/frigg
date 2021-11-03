@@ -11,7 +11,7 @@
     using Utils;
 
     public abstract class PropertyTree {
-        public abstract SerializedObject            SerializedObject { get; }
+        public abstract SerializedObject           SerializedObject { get; }
 
         public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
 
@@ -181,7 +181,6 @@
             this.RootProperty = new FriggProperty(this, new PropertyValue<object>(
                 this.memberTargets[0], metaInfo), true);
             this.RootProperty.ChildrenProperties = new PropertyCollection(this.RootProperty);
-
         }
 
         //Draw section. 
@@ -193,8 +192,8 @@
             this.UpdateTree();
         }
         
-        //We need to call this method only when we are updating our properties (trying to get new values).
-        //Cycle should look like:
+        //We need to call this method only when we are updating our properties (trying to fetch new values).
+        //Loop should look like:
         //Get all properties -> Draw them -> Get incoming changes
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
@@ -224,7 +223,7 @@
                     continue;
                 }
 
-                foreach (var child in prop.ChildrenProperties.RecurseChildren())
+                foreach (var child in prop.ChildrenProperties.RecurseChildren(true))
                 {
                     yield return child;
                 }

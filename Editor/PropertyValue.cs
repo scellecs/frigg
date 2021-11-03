@@ -33,7 +33,10 @@
             this.MetaInfo = metaInfo;
         }
 
-        public T Get()        => this.actual.Value;
-        public void   Set(T value) => this.actual.Value = value;
+        public T Get() => this.actual.Value;
+
+        public void Set(T value) {
+            this.actual.Value = value;
+        }
     }
 }

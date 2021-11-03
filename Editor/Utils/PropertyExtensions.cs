@@ -8,11 +8,6 @@
             => property.NativeValue.Get();
 
         public static void SetValue(this FriggProperty property, object value) {
-            /*if (property.IsRootProperty) {
-                property.NativeValue.Set(value);
-                return;
-            }*/
-            
             property.NativeValue.Set(value);
             
             while (!property.IsRootProperty) {
