@@ -83,18 +83,20 @@
         /// Children properties of target property.
         /// </summary>
         public PropertyCollection ChildrenProperties { get; set; }
-        
+
         /// <summary>
         /// Applied attributes on target property.
         /// </summary>
-        public IEnumerable<Attribute> FixedAttributes => this.fixedAttributes;
+        /// 
+        public IEnumerable<Attribute> FixedAttributes { get; private set; }
+        //All applied attributes on target property.
+        //private List<Attribute> fixedAttributes = new List<Attribute>();
 
         public FriggProperty(PropertyTree propertyTree, PropertyValue<object> value, bool isRoot = false) {
             this.NativeValue    = value;
             this.IsRootProperty = isRoot;
             this.PropertyTree   = propertyTree;
-
-            this.TrySetInstanceID(value.Get());
+            this.Path           = propertyTree.TargetType.ToString();
         }
 
         /// <summary>
@@ -123,27 +125,23 @@
                 ParentProperty = parent
             };
 
-            property.ChildrenProperties = new PropertyCollection(property);
+            property.Label = new GUIContent(property.NiceName);
             
-            property.Label          = new GUIContent(property.NiceName);
-            
-            //If this property can't have any children properties (is not struct or built-in unity type)
-            property.fixedAttributes = !property.IsRootProperty
-                ? property.MetaInfo.MemberInfo.GetCustomAttributes().ToList()
-                : property.MetaInfo.MemberType.GetCustomAttributes().ToList();
+            property.FixedAttributes = !property.IsRootProperty
+                ? property.MetaInfo.MemberInfo.GetCustomAttributes()
+                : property.MetaInfo.MemberType.GetCustomAttributes();
 
-            property.Path = GetFriggPath(property);
-
-            property.TrySetInstanceID(property.GetValue());
             property.SetNativeProperty();
+            property.Path = GetFriggPath(property);
             
             property.ChildrenProperties = new PropertyCollection(property);
 
-            var drawers = FriggDrawer.Resolve(property).ToList();
-            property.MetaInfo.drawersCount = drawers.Count;
+            var drawers = FriggDrawer.Resolve(property);
+            property.MetaInfo.drawersCount = drawers.Count();
 
             property.Drawers      = drawers;
             property.DrawersQueue = drawers.GetEnumerator();
+            
             property.HandleMetaAttributes();
 
             property.IsExpanded = EditorData.GetBoolValue(property.Path);
@@ -156,7 +154,8 @@
             
             property.IsLayoutMember = true;
 
-            var layout = property.PropertyTree.Layouts.FirstOrDefault(x => x.layoutPath == property.ParentProperty.Path);
+            property.PropertyTree.LayoutsByPath.TryGetValue 
+                (property.ParentProperty.Path, out var layout);
 
             if (layout != null) {
                 layout.Add(property);
@@ -174,13 +173,10 @@
 
             layout.Add(property);
 
-            property.PropertyTree.Layouts.Add(layout);
+            property.PropertyTree.LayoutsByPath[layout.layoutPath] = layout;
 
             return property;
         }
-
-        //All applied attributes on target property.
-        private List<Attribute> fixedAttributes = new List<Attribute>();
 
         /// <summary>
         /// Draw property.
@@ -290,59 +286,12 @@
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public T TryGetFixedAttribute<T>() where T : Attribute {
-            var attr = this.fixedAttributes.FirstOrDefault(x => x is T);
+            var attr = this.FixedAttributes.FirstOrDefault(x => x is T);
             return (T) attr;
         }
 
-        private void TrySetInstanceID(object value) {
-            if (!(value is Object obj)) {
-                return;
-            }
-            
-            this.ObjectInstanceID = obj.GetInstanceID();
-            
-            
-        }
-        
         private void SetNativeProperty() {
-            var prop = this.ParentProperty?.NativeProperty?.FindPropertyRelative(this.Name);
-            if (prop != null) {
-                this.UnityPath      = prop.propertyPath;
-                this.NativeProperty = prop;
-                return;
-            }
-
-            prop = this.PropertyTree.SerializedObject.FindProperty(this.Name);
-            if (prop != null) {
-                this.UnityPath      = prop.propertyPath;
-                this.NativeProperty = prop;
-                return; 
-            }
-
-            //Initial property type for this tree, because our property wasn't created
-            var root     = this;
-            while (!root.IsRootProperty) {
-                root = root.ParentProperty;
-            }
-            
-            var rootType = this.PropertyTree.TargetType;
-
-            //Catch all scripts on scene with specified type (root).
-            if (!typeof(Object).IsAssignableFrom(rootType)) {
-                return;
-            }
-            
-            //Find correct object using Unique Id comparison.
-            var obj = Object.FindObjectsOfType(rootType)
-                ?.FirstOrDefault(x => x.GetInstanceID() == root.ObjectInstanceID);
-
-            if (obj == null) {
-                Debug.Log(rootType);
-                return;
-            }
-
-            var so       = new SerializedObject(obj);
-            var iterator = so.GetIterator();
+            var iterator = this.PropertyTree.SerializedObject.GetIterator();
 
             while (iterator.Next(true)) {
                 var relative = iterator.FindPropertyRelative(this.Name);
@@ -366,40 +315,18 @@
             }
         }
 
-        private static string GetFriggPath(FriggProperty property) {
-            var parentObjects = new List<string>();
-            var prop          = property;
-            while (prop != null) {
-                var currPath = string.Empty;
-
-                if (prop.IsRootProperty) {
-                    currPath += prop.PropertyTree.SerializedObject.targetObject.name + ".";
-                }
-                
-                var index = prop.MetaInfo.arrayIndex;
-                if (index == -1) {
-                    currPath += prop.Name;
-                    currPath += ".";
-                }
-
-                if (index != -1) {
-                    currPath += $"[{index}].";
-                }
-
-                if (prop.MetaInfo.isArray)
-                    currPath += "Array.data";
-
-                parentObjects.Add(currPath);
-                prop = prop.ParentProperty;
+        private static string GetFriggPath(FriggProperty property) {    
+            var path = property.ParentProperty.IsRootProperty ?
+                property.PropertyTree.TargetType.Name :property.ParentProperty.Path;
+            
+            if (property.MetaInfo.isArray) {
+                path = $"{path}.{property.Name}.data";
             }
 
-            parentObjects.Reverse();
-
-            foreach (var obj in parentObjects) {
-                property.Path += obj;
-            }
-
-            return property.Path.Substring(0, property.Path.Length - 1);
+            path = property.MetaInfo.arrayIndex != -1 ?
+                $"{path}[{property.MetaInfo.arrayIndex.ToString()}]" : $"{path}.{property.Name}";
+            
+            return path;
         }
     }
 }

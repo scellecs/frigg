@@ -29,8 +29,6 @@
             }
 
             this.property = prop;
-
-            var    membersArray = new List<PropertyValue<object>>();
             object target;
 
             if(typeof(IList).IsAssignableFrom(meta.MemberType)) {
@@ -69,36 +67,9 @@
                 return;
             }
             
+            var membersArray = new List<PropertyValue<object>>();
             target.TryGetMembers(membersArray);
             this.SetMembers(this.property, membersArray);
-        }
-
-        public void Update() {
-            if (this.property.GetValue() is IList list) {
-                for (var i = 0; i < list.Count; i++) {
-                    if (!this.propByIndex.ContainsKey(i)) {
-                        this.propByIndex[i] = FriggProperty.DoProperty(
-                            this.property, new PropertyMeta {
-                                Name       = list[i].GetType().Name,
-                                MemberType = list[i].GetType(),
-                                MemberInfo = list[i].GetType(),
-                                arrayIndex = i
-                            });
-
-                        this.property.MetaInfo.arraySize++;
-                    }
-                    
-                    this.propByIndex[i].SetValue(list[i]);
-                    this.propByIndex[i].ChildrenProperties.Update();
-                }
-            }
-
-            else {
-                foreach (var child in this.RecurseChildren()) {
-                    //child.Value may be changed somewhere else and all the time we need to refresh it's value
-                    child.SetValue(child.GetValue());
-                }
-            }
         }
 
         public int AmountOfChildren => this.propByIndex.Count;
@@ -191,16 +162,15 @@
             }
         }
         
-        private void SetMembers(FriggProperty prop, List<PropertyValue<object>> members) {
+        private void SetMembers(FriggProperty prop, IEnumerable<PropertyValue<object>> members) {
             var ordered = members.OrderBy(x => x.MetaInfo.Order);
-            members = ordered.ToList();
 
-            foreach (var member in members) {
+            foreach (var member in ordered) {
                 if (member.Get() == null) {
                     return;
                 }
                 
-                if (member.MetaInfo.MemberInfo.GetCustomAttribute<HideInInspector>() != null) {
+                if (member.MetaInfo.MemberInfo.IsDefined(typeof(HideInInspector))) {
                     continue;
                 }
                 

@@ -15,7 +15,7 @@
 
         public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
 
-        public List<Layout> Layouts = new List<Layout>();
+        public Dictionary<string, Layout> LayoutsByPath = new Dictionary<string, Layout>();
 
         public abstract Type             TargetType       { get; }
 

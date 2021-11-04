@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Reflection;
     using BuiltIn;
+    using Layouts;
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEngine;
@@ -27,8 +28,8 @@
         }
 
         public override void Draw(Rect rect) {
-            var layout = this.property.PropertyTree.Layouts.
-                FirstOrDefault(x => x.layoutPath == this.property.Path);
+            this.property.PropertyTree.LayoutsByPath.TryGetValue
+                (this.property.Path, out var layout);
             
             if (layout != null) {
                 layout.Draw(rect);

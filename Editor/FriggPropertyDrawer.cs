@@ -16,25 +16,25 @@
         public static FriggPropertyDrawer GetCustomDrawer(FriggProperty property) {
             var meta = property.MetaInfo.MemberInfo;
 
-            if (meta.GetCustomAttribute<ReadonlyAttribute>() != null) {
+            if (meta.IsDefined(typeof(ReadonlyAttribute))) {
                 return new ReadonlyPropertyDrawer(property);
             }
             
-            if (meta.GetCustomAttribute<InlinePropertyAttribute>() != null 
+            if (meta.IsDefined(typeof(InlinePropertyAttribute)) 
                 || property.MetaInfo.isArray
                 || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))){
                 return new InlinePropertyDrawer(property);
             }
 
-            if (meta.GetCustomAttribute<DropdownAttribute>() != null) {
+            if (meta.IsDefined(typeof(DropdownAttribute))) {
                 return new DropdownDrawer(property);
             }
             
-            if (meta.GetCustomAttribute<EnumFlagsAttribute>() != null) {
+            if (meta.IsDefined(typeof(EnumFlagsAttribute))) {
                 return new EnumFlagsDrawer(property);
             }
             
-            if (!CoreUtilities.IsBuiltIn(property.MetaInfo.MemberType) || meta.GetCustomAttribute<SerializableAttribute>() != null) {
+            if (!CoreUtilities.IsBuiltIn(property.MetaInfo.MemberType) || meta.IsDefined(typeof(SerializableAttribute))) {
                 return new FoldoutPropertyDrawer(property);
             }
 
