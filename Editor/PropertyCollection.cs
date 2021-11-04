@@ -73,34 +73,6 @@
             this.SetMembers(this.property, membersArray);
         }
 
-        public void Update() {
-            if (this.property.GetValue() is IList list) {
-                for (var i = 0; i < list.Count; i++) {
-                    if (!this.propByIndex.ContainsKey(i)) {
-                        this.propByIndex[i] = FriggProperty.DoProperty(
-                            this.property, new PropertyMeta {
-                                Name       = list[i].GetType().Name,
-                                MemberType = list[i].GetType(),
-                                MemberInfo = list[i].GetType(),
-                                arrayIndex = i
-                            });
-
-                        this.property.MetaInfo.arraySize++;
-                    }
-                    
-                    this.propByIndex[i].SetValue(list[i]);
-                    this.propByIndex[i].ChildrenProperties.Update();
-                }
-            }
-
-            else {
-                foreach (var child in this.RecurseChildren()) {
-                    //child.Value may be changed somewhere else and all the time we need to refresh it's value
-                    child.SetValue(child.GetValue());
-                }
-            }
-        }
-
         public int AmountOfChildren => this.propByIndex.Count;
 
         public FriggProperty this[int idx] => this.GetByIndex(idx);
