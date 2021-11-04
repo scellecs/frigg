@@ -97,8 +97,6 @@
             this.IsRootProperty = isRoot;
             this.PropertyTree   = propertyTree;
             this.Path           = propertyTree.TargetType.ToString();
-
-            this.TrySetInstanceID(value.Get());
         }
 
         /// <summary>
@@ -127,18 +125,14 @@
                 ParentProperty = parent
             };
 
-            property.ChildrenProperties = new PropertyCollection(property);
-            
-            property.Label          = new GUIContent(property.NiceName);
+            property.Label = new GUIContent(property.NiceName);
             
             property.FixedAttributes = !property.IsRootProperty
                 ? property.MetaInfo.MemberInfo.GetCustomAttributes()
                 : property.MetaInfo.MemberType.GetCustomAttributes();
 
-            property.Path = GetFriggPath(property);
-
-            property.TrySetInstanceID(property.GetValue());
             property.SetNativeProperty();
+            property.Path = GetFriggPath(property);
             
             property.ChildrenProperties = new PropertyCollection(property);
 
@@ -296,53 +290,8 @@
             return (T) attr;
         }
 
-        private void TrySetInstanceID(object value) {
-            if (!(value is Object obj)) {
-                return;
-            }
-            
-            this.ObjectInstanceID = obj.GetInstanceID();
-        }
-        
         private void SetNativeProperty() {
-            var prop = this.ParentProperty?.NativeProperty?.FindPropertyRelative(this.Name);
-            if (prop != null) {
-                this.UnityPath      = prop.propertyPath;
-                this.NativeProperty = prop;
-                return;
-            }
-
-            prop = this.PropertyTree.SerializedObject.FindProperty(this.Name);
-            if (prop != null) {
-                this.UnityPath      = prop.propertyPath;
-                this.NativeProperty = prop;
-                return; 
-            }
-
-            //Initial property type for this tree, because our property wasn't created
-            var root = this;
-            while (!root.IsRootProperty) {
-                root = root.ParentProperty;
-            }
-            
-            var rootType = this.PropertyTree.TargetType;
-
-            //Catch all scripts on scene with specified type (root).
-            if (!typeof(Object).IsAssignableFrom(rootType)) {
-                return;
-            }
-            
-            //Find correct object using Unique Id comparison.
-            var obj = Object.FindObjectsOfType(rootType)
-                ?.FirstOrDefault(x => x.GetInstanceID() == root.ObjectInstanceID);
-
-            if (obj == null) {
-                Debug.Log(rootType);
-                return;
-            }
-
-            var so       = new SerializedObject(obj);
-            var iterator = so.GetIterator();
+            var iterator = this.PropertyTree.SerializedObject.GetIterator();
 
             while (iterator.Next(true)) {
                 var relative = iterator.FindPropertyRelative(this.Name);
@@ -367,39 +316,18 @@
         }
 
         private static string GetFriggPath(FriggProperty property) {
-            var parentObjects = new List<string>();
-            var prop          = property;
-            while (prop != null) {
-                var currPath = string.Empty;
-
-                if (prop.IsRootProperty) {
-                    currPath = prop.PropertyTree.SerializedObject.targetObject.name + ".";
-                }
-                
-                var index = prop.MetaInfo.arrayIndex;
-                if (index == -1) {
-                    currPath += prop.Name;
-                    currPath += ".";
-                }
-
-                if (index != -1) {
-                    currPath += $"[{index}].";
-                }
-
-                if (prop.MetaInfo.isArray)
-                    currPath += "Array.data";
-
-                parentObjects.Add(currPath);
-                prop = prop.ParentProperty;
+            var path = property.ParentProperty.IsRootProperty ?
+                property.PropertyTree.TargetType.Name :property.ParentProperty.Path;
+            
+            if (property.MetaInfo.isArray) {
+                path = $"{path}.{property.Name}.data";
             }
 
-            parentObjects.Reverse();
+            path = property.MetaInfo.arrayIndex != -1 ?
+                $"{path}[{property.MetaInfo.arrayIndex.ToString()}]" : $"{path}.{property.Name}";
 
-            foreach (var obj in parentObjects) {
-                property.Path += obj;
-            }
-
-            return property.Path.Substring(0, property.Path.Length - 1);
+            Debug.Log(path);
+            return path;
         }
     }
 }
