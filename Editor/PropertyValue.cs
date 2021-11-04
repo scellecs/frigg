@@ -6,8 +6,8 @@
 
     public sealed class GetterSetter<T> 
     {
-        private Func<T>   getter;
-        private Action<T> setter;
+        private readonly Func<T>   getter;
+        private readonly Action<T> setter;
         public GetterSetter(Func<T> getter, Action<T> setter)
         {
             this.getter = getter;
@@ -15,14 +15,12 @@
         }
         public T Value
         {
-            get => getter();
-            set {
-                this.setter(value);
-            }
+            get => this.getter();
+            set => this.setter(value);
         }
     }
     
-    public class PropertyValue<T> {
+    public struct PropertyValue<T> {
         public  PropertyMeta MetaInfo { get; set; }
 
         private readonly GetterSetter<T> actual;
