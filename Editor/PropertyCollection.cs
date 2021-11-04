@@ -166,10 +166,6 @@
             var ordered = members.OrderBy(x => x.MetaInfo.Order);
 
             foreach (var member in ordered) {
-                if (member.Get() == null) {
-                    return;
-                }
-                
                 if (member.MetaInfo.MemberInfo.IsDefined(typeof(HideInInspector))) {
                     continue;
                 }
