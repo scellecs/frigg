@@ -19,6 +19,10 @@
             if (meta.IsDefined(typeof(ReadonlyAttribute))) {
                 return new ReadonlyPropertyDrawer(property);
             }
+
+            if (meta.IsDefined(typeof(ButtonAttribute))) {
+                return new ButtonDrawer(property);
+            }
             
             if (meta.IsDefined(typeof(InlinePropertyAttribute)) 
                 || property.MetaInfo.isArray
