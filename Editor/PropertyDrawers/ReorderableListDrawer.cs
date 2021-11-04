@@ -89,7 +89,7 @@
             this.list.draggable      = this.list.displayAdd = this.list.displayRemove = true;
             this.list.headerHeight   = 1;
             
-            var attr                 = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
+            var attr = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
                 this.list.draggable     = attr.AllowDrag;
                 this.list.displayAdd    = !attr.HideAddButton;

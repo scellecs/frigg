@@ -16,8 +16,12 @@
         public static FriggPropertyDrawer GetCustomDrawer(FriggProperty property) {
             var meta = property.MetaInfo.MemberInfo;
 
-            if (meta.IsDefined(typeof(ReadonlyAttribute))) {
+            if (!CoreUtilities.IsWritable(property.MetaInfo.MemberInfo)) {
                 return new ReadonlyPropertyDrawer(property);
+            }
+
+            if (meta.IsDefined(typeof(ButtonAttribute))) {
+                return new ButtonDrawer(property);
             }
             
             if (meta.IsDefined(typeof(InlinePropertyAttribute)) 

@@ -8,17 +8,13 @@
         
         public override void DrawLayout() {
             using (new EditorGUI.DisabledScope(true)) {
-                //foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                    this.property.CallNextDrawer();
-                //}
+                this.property.CallNextDrawer();
             }
         }
 
         public override void Draw(Rect rect) {
             using (new EditorGUI.DisabledScope(true)) {
-                //foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
-                    this.property.CallNextDrawer(rect);
-                //}
+                this.property.CallNextDrawer(rect);
             }
         }
 

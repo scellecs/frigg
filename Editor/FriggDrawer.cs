@@ -18,12 +18,12 @@
 
         
         //Check before draw an element
-        public abstract bool      IsVisible { get;}
+        public abstract bool IsVisible { get;}
 
         public static List<FriggDrawer> Resolve(FriggProperty property) {
             var result          = new List<FriggDrawer>();
             var hasCustomDrawer = false;
-            
+
             //Add attribute custom decorators
             foreach (var attr in property.FixedAttributes) {
                 if(attr.IsDefaultAttribute())
@@ -47,9 +47,10 @@
 
                         drawer.property        = property;
                         drawer.linkedAttribute = attr;
-                        if (drawer.GetType() != typeof(ReadonlyPropertyDrawer) && !(drawer is BaseGroupDrawer)) {
+                        if (!(drawer is BaseGroupDrawer) &&  !(drawer is ReadonlyPropertyDrawer)) {
                             hasCustomDrawer = true;
                         }
+                        
                         result.Add(drawer);
                         break;
                     }

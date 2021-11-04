@@ -18,14 +18,12 @@
 
         public override void Draw(Rect rect) {
             this.DoDropdown(rect);
-            
-            rect.y += EditorGUIUtility.singleLineHeight;
-            this.property.CallNextDrawer(rect);
         }
 
         private void DoDropdown(Rect position = default) {
+            EditorGUI.BeginChangeCheck();
+            
             var attr          = (DropdownAttribute) this.linkedAttribute;
-            var target        = this.property.ParentProperty.GetValue();
             var values        = this.GetDropdownValues(this.property, attr.Name);
             var selectedValue = this.property.GetValue();
 
@@ -48,9 +46,22 @@
                     }
 
                     var currIndex = Array.IndexOf(valuesArr, currValue);
+
+                    if (currIndex == -1) {
+                        currIndex = 1;
+                    }
                     
-                    GuiUtilities.Dropdown(position, property.PropertyTree.SerializedObject, target, 
-                        (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, currIndex, options, valuesArr);
+                    int newIndex;
+
+                    if (position != default) {
+                        newIndex   =  EditorGUI.Popup(position, this.property.Label, currIndex, options);
+                        position.y += EditorGUIUtility.singleLineHeight;
+                    }
+                    else {
+                        newIndex = EditorGUILayout.Popup(this.property.Label, currIndex, options);
+                    }
+                    
+                    this.UpdateAndCallNext(valuesArr[newIndex], position);
                     break;
                 }
                 
@@ -75,10 +86,17 @@
                         
                             currIndex++;
                         }
-                        GuiUtilities.Dropdown(position, this.property.PropertyTree.SerializedObject, target, 
-                            (FieldInfo) this.property.MetaInfo.MemberInfo, this.property.Label, selected, options.ToArray(), val.ToArray());
+                        
+                        if (position != default) {
+                            selected   =  EditorGUI.Popup(position, this.property.Label, selected, options.ToArray());
+                            position.y += EditorGUIUtility.singleLineHeight;
+                        }
+                        else {
+                            selected = EditorGUILayout.Popup(this.property.Label, selected, options.ToArray());
+                        }
+                        
+                        this.UpdateAndCallNext(val[selected], position);
                     }
-
                     break;
                 }
             }
@@ -89,7 +107,7 @@
         public override bool IsVisible => true;
 
         private object GetDropdownValues(FriggProperty prop, string name) {
-            var target = prop.GetValue();
+            var target = prop.ParentProperty.GetValue();
 
             var fInfo = target.TryGetField(name);
             if (fInfo != null) {
@@ -105,7 +123,7 @@
             if (pInfo != null) {
                 return pInfo.GetValue(target);
             }
-
+            
             Debug.LogError($"There aren't any field with name {name}");
             return null;
         }
