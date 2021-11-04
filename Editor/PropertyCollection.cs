@@ -29,8 +29,6 @@
             }
 
             this.property = prop;
-
-            var    membersArray = new List<PropertyValue<object>>();
             object target;
 
             if(typeof(IList).IsAssignableFrom(meta.MemberType)) {
@@ -69,6 +67,7 @@
                 return;
             }
             
+            var membersArray = new List<PropertyValue<object>>();
             target.TryGetMembers(membersArray);
             this.SetMembers(this.property, membersArray);
         }

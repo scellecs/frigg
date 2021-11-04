@@ -136,7 +136,7 @@
             
             property.ChildrenProperties = new PropertyCollection(property);
 
-            var drawers = FriggDrawer.Resolve(property).ToList();
+            var drawers = FriggDrawer.Resolve(property);
             property.MetaInfo.drawersCount = drawers.Count();
 
             property.Drawers      = drawers;
@@ -154,7 +154,7 @@
             
             property.IsLayoutMember = true;
 
-            property.PropertyTree.LayoutsByPath.TryGetValue
+            property.PropertyTree.LayoutsByPath.TryGetValue 
                 (property.ParentProperty.Path, out var layout);
 
             if (layout != null) {
@@ -315,7 +315,7 @@
             }
         }
 
-        private static string GetFriggPath(FriggProperty property) {
+        private static string GetFriggPath(FriggProperty property) {    
             var path = property.ParentProperty.IsRootProperty ?
                 property.PropertyTree.TargetType.Name :property.ParentProperty.Path;
             
@@ -325,8 +325,7 @@
 
             path = property.MetaInfo.arrayIndex != -1 ?
                 $"{path}[{property.MetaInfo.arrayIndex.ToString()}]" : $"{path}.{property.Name}";
-
-            Debug.Log(path);
+            
             return path;
         }
     }

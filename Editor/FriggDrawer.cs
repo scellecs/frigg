@@ -20,11 +20,7 @@
         //Check before draw an element
         public abstract bool      IsVisible { get;}
 
-        public static IEnumerable<FriggDrawer> Resolve(FriggProperty property) {
-            //Get attribute drawers
-            //var attrs = new List<Attribute>();
-            //attrs.AddRange(property.FixedAttributes);
-
+        public static List<FriggDrawer> Resolve(FriggProperty property) {
             var result          = new List<FriggDrawer>();
             var hasCustomDrawer = false;
             
@@ -33,27 +29,32 @@
                 if(attr.IsDefaultAttribute())
                     continue;
                 
-                if (attr is BaseDecoratorAttribute || attr is PropertyAttribute){
-                    var decoratorDrawer = FriggDecoratorDrawer.Create(attr);
-                    decoratorDrawer.property        = property;
-                    decoratorDrawer.linkedAttribute = attr;
-                    result.Add(decoratorDrawer);
-                }
-
-                if (attr is CustomAttribute || attr is BaseAttribute) {
-                    var drawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
-                    if (drawer == null) {
-                        continue;
+                switch (attr) {
+                    case BaseDecoratorAttribute _:
+                    case PropertyAttribute _: {
+                        var decoratorDrawer = FriggDecoratorDrawer.Create(attr);
+                        decoratorDrawer.property        = property;
+                        decoratorDrawer.linkedAttribute = attr;
+                        result.Add(decoratorDrawer);
+                        break;
                     }
+                    case CustomAttribute _:
+                    case BaseAttribute _: {
+                        var drawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
+                        if (drawer == null) {
+                            continue;
+                        }
 
-                    drawer.property        = property;
-                    drawer.linkedAttribute = attr;
-                    if (drawer.GetType() != typeof(ReadonlyPropertyDrawer) && !(drawer is BaseGroupDrawer)) {
-                        hasCustomDrawer = true;
+                        drawer.property        = property;
+                        drawer.linkedAttribute = attr;
+                        if (drawer.GetType() != typeof(ReadonlyPropertyDrawer) && !(drawer is BaseGroupDrawer)) {
+                            hasCustomDrawer = true;
+                        }
+                        result.Add(drawer);
+                        break;
                     }
-                    result.Add(drawer);
                 }
-            }
+            }   
             
             if (hasCustomDrawer) {
                 return result;
@@ -73,7 +74,6 @@
             }
             
             var customDrawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
-
             if (customDrawer == null) {
                 return result;
             }
