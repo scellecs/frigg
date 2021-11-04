@@ -291,7 +291,19 @@
         }
 
         private void SetNativeProperty() {
-            var property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
+            SerializedProperty property;
+            if (this.ParentProperty != null) {
+                if (!string.IsNullOrEmpty(this.ParentProperty.UnityPath)) {
+                    property = this.PropertyTree.SerializedObject.FindProperty($"{this.ParentProperty?.UnityPath}.{this.Name}");
+                    if (property != null) {
+                        this.UnityPath      = property.propertyPath;
+                        this.NativeProperty = property;
+                        return;
+                    }
+                }
+            }
+            
+            property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
             if (property != null) {
                 this.UnityPath      = property.propertyPath;
                 this.NativeProperty = property;
@@ -300,22 +312,23 @@
             var iterator = this.PropertyTree.SerializedObject.GetIterator();
 
             while (iterator.Next(true)) {
+                if (iterator.isArray && iterator.arraySize > 0
+                                     && this.MetaInfo.arrayIndex != -1
+                                     && this.ParentProperty?.Name == iterator.name) {
+                    var arrayElement = iterator.GetArrayElementAtIndex
+                        (this.MetaInfo.arrayIndex);
+                        
+                    this.UnityPath      = arrayElement.propertyPath;
+                    this.NativeProperty = arrayElement;
+
+                    return;
+                }
+                
                 var relative = iterator.FindPropertyRelative(this.Name);
                 if (relative == null) {
-                    if (iterator.isArray && iterator.arraySize > 0
-                                         && this.MetaInfo.arrayIndex != -1
-                                         && this.ParentProperty?.Name == iterator.name) {
-                        var arrayElement = iterator.GetArrayElementAtIndex
-                            (this.MetaInfo.arrayIndex);
-                        
-                        this.UnityPath      = arrayElement.propertyPath;
-                        this.NativeProperty = arrayElement;
-
-                        return;
-                    }
                     continue;
                 }
-                        
+                
                 this.UnityPath      = relative.propertyPath;
                 this.NativeProperty = relative;
             }
@@ -323,7 +336,7 @@
 
         private static string GetFriggPath(FriggProperty property) {    
             var path = property.ParentProperty.IsRootProperty ?
-                property.PropertyTree.TargetType.Name :property.ParentProperty.Path;
+                property.PropertyTree.TargetType.Name : property.ParentProperty.Path;
             
             if (property.MetaInfo.isArray) {
                 path = $"{path}.{property.Name}.data";
