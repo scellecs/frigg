@@ -28,7 +28,7 @@ namespace Frigg.Utils {
 
             var property = (PropertyInfo) member;
             writable = property.CanWrite;
-
+            
             return writable;
         }
 

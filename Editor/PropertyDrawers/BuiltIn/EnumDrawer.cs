@@ -11,32 +11,31 @@
 
         public override void DrawLayout() {
             this.DoEnumField();
-            this.property.CallNextDrawer();
         }
 
         public override void Draw(Rect rect) {
             this.DoEnumField(rect);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.property.CallNextDrawer(rect);
         }
 
         private void DoEnumField(Rect rect = default) {
-            if (rect == Rect.zero) {
-                rect = EditorGUILayout.GetControlRect(true);
-            }
-            
-            var target = (Enum) CoreUtilities.GetTargetValue(this.property.ParentProperty.GetValue(), this.property.MetaInfo.MemberInfo);
+            EditorGUI.BeginChangeCheck();
+            var target = (Enum) CoreUtilities.GetTargetValue
+                (this.property.ParentProperty.GetValue(), this.property.MetaInfo.MemberInfo);
                 
             if (target == null) {
                 Debug.LogError("Invalid target.");
                 return;
             }
             
-            var enumValue = EditorGUI.EnumPopup(rect, this.property.Label, target);
-            this.property.PropertyTree.SerializedObject.ApplyModifiedProperties();
-            
-            
-            //this.property.Update(enumValue);
+            var enumValue = rect == default 
+                ? EditorGUILayout.EnumPopup(this.property.Label, target)
+                : EditorGUI.EnumPopup(rect, this.property.Label, target);
+
+            if (rect != default) {
+                rect.y += EditorGUIUtility.singleLineHeight;
+            }
+            this.UpdateAndCallNext(enumValue, rect);
         }
 
         public override float GetHeight() => EditorGUIUtility.singleLineHeight;

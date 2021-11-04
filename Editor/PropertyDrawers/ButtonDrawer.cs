@@ -31,7 +31,7 @@
             this.property.CallNextDrawer(rect);
         }
 
-        public override float GetHeight() => 25f;
+        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
 
         public override bool IsVisible => true;
     }

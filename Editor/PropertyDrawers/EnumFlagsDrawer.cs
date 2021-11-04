@@ -19,9 +19,7 @@
         }
 
         private void DoEnumFlags(Rect rect = default) {
-            if (rect == Rect.zero) {
-                rect = EditorGUILayout.GetControlRect(true);
-            }
+            EditorGUI.BeginChangeCheck();
             
             var attr   = (EnumFlagsAttribute) this.linkedAttribute;
             var target = (Enum) this.property.GetValue();
@@ -31,8 +29,14 @@
                 return;
             }
 
-            var enumValues = EditorGUI.EnumFlagsField(rect, this.property.Label, target);
-            this.property.SetValue(enumValues);
+            var enumValues = rect == default 
+                ? EditorGUILayout.EnumFlagsField(this.property.Label, target)
+                : EditorGUI.EnumFlagsField(rect, this.property.Label, target);
+
+            if (rect != default) {
+                rect.y += EditorGUIUtility.singleLineHeight;
+            }
+            this.UpdateAndCallNext(enumValues, rect);
         }
 
         public override float GetHeight() => EditorGUIUtility.singleLineHeight;
