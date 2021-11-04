@@ -291,6 +291,12 @@
         }
 
         private void SetNativeProperty() {
+            var property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
+            if (property != null) {
+                this.UnityPath      = property.propertyPath;
+                this.NativeProperty = property;
+            }
+            
             var iterator = this.PropertyTree.SerializedObject.GetIterator();
 
             while (iterator.Next(true)) {
