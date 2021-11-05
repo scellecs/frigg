@@ -111,44 +111,11 @@
             };
 
             this.list.onAddCallback = _ => {
-                if (this.list.serializedProperty != null) {
-                    this.list.serializedProperty.arraySize++;
-                    //this.property.MetaInfo.arraySize++;
-                    return;
-                }
-                
-                var copy = this.list.list;
-
-                this.list.list = Array.CreateInstance
-                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), copy.Count + 1);
-                
-                for (var i = 0; i < copy.Count; i++) {
-                    this.list.list[i] = copy[i];
-                }
-
-                //this.property.MetaInfo.arraySize++;
+                this.property.AddArrayElement(this.property.MetaInfo.arraySize);
             };
 
-            this.list.onRemoveCallback = _ => {
-                if (this.list.serializedProperty != null) {
-                    this.list.serializedProperty.DeleteArrayElementAtIndex(this.list.index);
-                    this.property.MetaInfo.arraySize--;
-                    return;
-                }
-                
-                var copy      = this.list.list;
-                var newLength = copy.Count - 1;
-
-                this.list.list = Array.CreateInstance
-                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), newLength);
-                
-                for (var i = 0; i < this.list.index; i++)
-                    this.list.list[i] = copy[i];
-
-                for (var i = this.list.index; i < newLength; i++)
-                    this.list.list[i] = copy[i + 1];
-
-                this.property.MetaInfo.arraySize--;
+            this.list.onRemoveCallback = l => {
+                this.property.RemoveArrayElement(l.index);
             };
 
             this.list.elementHeightCallback = index => {
@@ -157,8 +124,8 @@
                 
                 var element = this.property.GetArrayElementAtIndex(index);
                 this.property.PropertyTree.LayoutsByPath.TryGetValue
-                    (this.property.ParentProperty.Path, out var layout);
-            
+                    (element.Path, out var layout);
+                
                 if (layout != null) {
                     return layout.TotalHeight;
                 }

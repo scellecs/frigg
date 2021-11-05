@@ -124,7 +124,7 @@
                 NiceName = ObjectNames.NicifyVariableName(metaInfo.Name),
                 ParentProperty = parent
             };
-
+            
             property.Label = new GUIContent(property.NiceName);
             
             property.FixedAttributes = !property.IsRootProperty
@@ -223,7 +223,20 @@
             
             var fProperty = this.ChildrenProperties.GetByIndex(index);
             return fProperty;
+        }
 
+        public void AddArrayElement(int index) {
+            this.NativeProperty?.InsertArrayElementAtIndex(index);
+            this.NativeProperty?.serializedObject.ApplyModifiedProperties();
+            
+            this.ChildrenProperties.AddElement(index);
+        }
+
+        public void RemoveArrayElement(int index) {
+            this.NativeProperty?.DeleteArrayElementAtIndex(index);
+            this.NativeProperty?.serializedObject.ApplyModifiedProperties();
+            
+            this.ChildrenProperties.RemoveElement(index);
         }
 
         /// <summary>
@@ -237,10 +250,6 @@
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
             var total = 0f;
 
-            if (prop.IsLayoutMember) {
-                return EditorGUIUtility.singleLineHeight;
-            }
-            
             foreach (var drawer in prop.Drawers) {
                 var height = drawer.GetHeight();
                 if (height > 0) {
@@ -252,7 +261,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Fetch newest values of target property.
         /// </summary>
         public void Refresh() {
             var parent = this.ParentProperty;
@@ -260,7 +269,7 @@
                 var list = (IList) parent.NativeValue.Get();
                 if (list.Count != parent.MetaInfo.arraySize)
                     return;
-                    
+                
                 this.NativeValue.Set(list[this.MetaInfo.arrayIndex]);
             }
 
@@ -273,7 +282,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Apply modified changes on target property.
         /// </summary>
         /// <param name="newValue"></param>
         public void UpdateValue(object newValue) {
@@ -281,7 +290,7 @@
         }
         
         /// <summary>
-        /// 
+        /// Returns attribute of specified type, if exists.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
