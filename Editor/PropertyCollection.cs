@@ -39,6 +39,9 @@
 
                 this.property.MetaInfo.arraySize = list.Count;
                 for (var i = 0; i < list.Count; i++) {
+                    if (list[i] == null)
+                        return;
+                    
                     this.propByIndex[i] = FriggProperty.DoProperty(this.property, new PropertyMeta {
                         Name       = list[i].GetType().Name,
                         MemberType = list[i].GetType(),
@@ -76,6 +79,77 @@
 
         public FriggProperty this[int idx] => this.GetByIndex(idx);
 
+        public void AddElement(int idx) {
+            var list      = (IList)this.property.GetValue();
+            var newLength = list.Count + 1;
+
+            var elementType = CoreUtilities.TryGetListElementType(list.GetType());
+            
+            var newArray = Array.CreateInstance(elementType, 
+                newLength);
+
+            for (var i = 0; i < newLength - 1; i++) {
+                newArray.SetValue(list[i], i);
+            }
+            
+            var constructor = elementType.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, 
+                null, Type.EmptyTypes, null);
+
+            if (constructor == null) {
+                newArray.SetValue(null, newLength - 1);
+            }
+            
+            this.property.MetaInfo.arraySize++;
+            this.property.NativeValue.Set(newArray);
+            
+            this.propByIndex[idx] = FriggProperty.DoProperty(this.property, new PropertyMeta {
+                arrayIndex = idx,
+                MemberInfo = elementType,
+                MemberType = elementType,
+                Name  = elementType.Name
+            });
+        }
+
+        public void RemoveElement(int idx) {
+            var list      = (IList)this.property.GetValue();
+            var newLength = list.Count - 1;
+            
+            var elementType = CoreUtilities.TryGetListElementType(list.GetType());
+            
+            var newArray  = Array.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()), 
+                newLength);
+
+            for (var i = 0; i < idx; i++) {
+                newArray.SetValue(list[i], i);
+            }
+            
+            this.property.PropertyTree.LayoutsByPath.
+                TryGetValue(this.propByIndex[idx].Path, out var value);
+            value?.ResetLayout();
+
+            for (var i = idx; i < newLength; i++) {
+                newArray.SetValue(list[i + 1], i);
+                
+                this.property.PropertyTree.LayoutsByPath.
+                    TryGetValue(this.propByIndex[i].Path, out value);
+                value?.ResetLayout();
+
+                //GetValue is possible as null?
+                this.propByIndex[i] = FriggProperty.DoProperty(this.property, 
+                    new PropertyMeta {
+                        arrayIndex = i,
+                        MemberType = elementType,
+                        MemberInfo = elementType
+                    });
+            }
+            
+            this.property.NativeValue.Set(newArray);
+            this.propByIndex.Remove(list.Count - 1);
+            this.property.MetaInfo.arraySize--;
+
+        }
+
         public FriggProperty GetByIndex(int idx) {
             if (this.propByIndex.TryGetValue(idx, out var prop)) {
                 return prop;
@@ -89,36 +163,13 @@
             //Allows us to fill it in runtime
             if (this.property.MetaInfo.isArray) {
                 var list = (IList) this.property.GetValue();
-
-                if (list.Count < this.property.MetaInfo.arraySize) {
-                    var copy = list;
-                    
-                    list = Array.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()), copy.Count + 1);
-                    for (var i = 0; i < copy.Count; i++) {
-                        list[i] = copy[i];
-                    }
-
-                    this.property.NativeValue.Set(list);
+                
+                this.propByIndex.TryGetValue(idx, out prop);
+                if (prop == null) {
+                    this.AddElement(idx);
+                    this.propByIndex[idx].NativeValue.Set(list[idx]);
+                    return this.propByIndex[idx];
                 }
-                
-                var arrayElement = list[idx];
-                
-                if (arrayElement == null) {
-                    arrayElement = Activator.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()));
-                    list[idx] = (arrayElement);
-                    
-                    this.property.NativeValue.Set(list);
-                }
-                
-                prop = FriggProperty.DoProperty(this.property, new PropertyMeta {
-                    Name       = arrayElement.GetType().Name,
-                    MemberType = arrayElement.GetType(),
-                    MemberInfo = arrayElement.GetType(),
-                    arrayIndex = idx
-                });
-
-                this.property.NativeValue.Set(list);
-                this.property.MetaInfo.arraySize++;
             }
 
             else {
