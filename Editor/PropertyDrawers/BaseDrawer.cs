@@ -1,9 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
-    using Packages.Frigg.Editor.Utils;
     using UnityEngine;
-    using UnityEditor;
-    using Utils;
 
     public abstract class BaseDrawer : FriggPropertyDrawer {
         private Type drawerType;
@@ -15,34 +12,12 @@
 
         protected T GetTargetValue<T>() {
             this.drawerType = typeof(T);
-            EditorGUI.BeginChangeCheck();
-            return (T) this.property.GetValue();
+            return DrawerUtils.GetTargetValue<T>(this.property);
         }
-        
-        protected void UpdateAndCallNext(object value, Rect rect = default) {
-            if (EditorGUI.EndChangeCheck()) {
-                this.property.UpdateValue(value);
-                CoreUtilities.OnValueChanged(this.property);
-                
-                if (!Application.isPlaying) {
-                    if (this.property.NativeProperty != null) {
-                        var prop             = this.property.NativeProperty;
-                        var serializedObject = prop.serializedObject;
-                        CoreUtilities.SetSerializedPropertyValue(prop, this.drawerType, value);
-                        
-                        Undo.RegisterCompleteObjectUndo(serializedObject.targetObject,
-                            $"'update {prop.name} value to {value}'");
-                        Undo.FlushUndoRecordObjects();
-                        
-                        serializedObject.ApplyModifiedProperties();
-                    }
-                }
-            }
-            this.CallNext(rect);
-        }
-        
-        protected void CallNext(Rect rect = default) {
-            this.property.CallNextDrawer(rect);
-        }
+
+        protected void UpdateAndCallNext(object value, Rect rect = default) =>
+            DrawerUtils.UpdateAndCallNext(this.drawerType, this.property, value, rect);
+
+        protected void CallNext(Rect rect = default) => DrawerUtils.CallNext(this.property, rect);
     }
 }

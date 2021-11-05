@@ -2,24 +2,19 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class GradientDrawer : BuiltInDrawer {
-        public GradientDrawer(FriggProperty prop) : base(prop) {
+    public static class GradientDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<Gradient>(property);
+            var result = EditorGUILayout.GradientField(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<Gradient>();
-            var result = EditorGUILayout.GradientField(this.property.Label, value);
-            this.UpdateAndCallNext(result);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<Gradient>(property);
+            var result = EditorGUI.GradientField(rect, property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<Gradient>();
-            var result = EditorGUI.GradientField(rect, this.property.Label, value);
-            this.UpdateAndCallNext(result, rect);
-        }
-
-        public override float GetHeight() => 0;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => 0;
     }
 }

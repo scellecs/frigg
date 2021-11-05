@@ -2,16 +2,16 @@
     using UnityEditor;
     using UnityEngine;
 
-    public static class FloatDrawer {
+    public static class DoubleDrawer {
         public static void DrawLayout(FriggProperty property) {
-            var value  = DrawerUtils.GetTargetValue<float>(property);
-            var result = EditorGUILayout.FloatField(property.Label, value);
+            var value  = DrawerUtils.GetTargetValue<double>(property);
+            var result = EditorGUILayout.DoubleField(property.Label, value);
             DrawerUtils.UpdateAndCallNext(property, result);
         }
 
         public static void Draw(FriggProperty property, Rect rect) {
-            var value  = DrawerUtils.GetTargetValue<float>(property);
-            var result = EditorGUI.FloatField(rect, property.Label, value);
+            var value  = DrawerUtils.GetTargetValue<double>(property);
+            var result = EditorGUI.DoubleField(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
             DrawerUtils.UpdateAndCallNext(property, result, rect);
         }

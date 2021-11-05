@@ -45,67 +45,68 @@
             return null;
         }
 
-        public static BuiltInDrawer GetBuiltInDrawer(FriggProperty prop) {
+        public static FriggDrawerWrapper? GetBuiltInDrawer(FriggProperty prop)
+        {
             var valueType = prop.MetaInfo.MemberType;
-            
+
             if (valueType == typeof(int)) {
-                return new IntegerDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Integer, Drawer = null };
             }
 
             if (valueType == typeof(string)) {
-                return new StringDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = prop.TryGetFixedAttribute<DisplayAsString>() != null ? FriggDrawerType.LabelString : FriggDrawerType.String, Drawer = null };
             }
-            
+
             if (valueType == typeof(bool)) {
-                return new BoolDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Bool, Drawer = null };
             }
-            
+
             if (valueType == typeof(Color)) {
-                return new ColorDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Color, Drawer = null };
             }
-            
+
             if (valueType == typeof(AnimationCurve)) {
-                return new CurveDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Curve, Drawer = null };
             }
-            
+
             if (valueType == typeof(Gradient)) {
-                return new GradientDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Gradient, Drawer = null };
             }
-            
+
             if (valueType == typeof(long)) {
-                return new LongDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Long, Drawer = null };
             }
-            
+
             if (valueType == typeof(Rect)) {
-                return new RectDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Rect, Drawer = null };
             }
-            
-            if (valueType== typeof(Vector2)) {
-                return new Vector2Drawer(prop);
+
+            if (valueType == typeof(Vector2)) {
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Vector2, Drawer = null };
             }
-            
+
             if (valueType == typeof(Vector3)) {
-                return new Vector3Drawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Vector3, Drawer = null };
             }
-            
+
             if (valueType == typeof(Vector4)) {
-                return new Vector4Drawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Vector4, Drawer = null };
             }
 
             if (valueType == typeof(float)) {
-                return new FloatDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Float, Drawer = null };
             }
 
             if (valueType == typeof(double)) {
-                return new SingleDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Single, Drawer = null };
             }
 
             if (typeof(Enum).IsAssignableFrom(valueType)) {
-                return new EnumDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Enum, Drawer = null };
             }
 
             if (typeof(UnityEngine.Object).IsAssignableFrom(valueType)) {
-                return new ObjectDrawer(prop);
+                return new FriggDrawerWrapper { DrawerType = FriggDrawerType.Object, Drawer = null };
             }
 
             return null;

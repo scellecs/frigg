@@ -2,24 +2,19 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class ColorDrawer : BuiltInDrawer {
-        public ColorDrawer(FriggProperty prop) : base(prop) {
+    public static class ColorDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<Color>(property);
+            var result = EditorGUILayout.ColorField(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<Color>();
-            var result = EditorGUILayout.ColorField(this.property.Label, value);
-            this.UpdateAndCallNext(result);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<Color>(property);
+            var result = EditorGUI.ColorField(rect, property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<Color>();
-            var result = EditorGUI.ColorField(rect, this.property.Label, value);
-            this.UpdateAndCallNext(result, rect);
-        }
-
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }

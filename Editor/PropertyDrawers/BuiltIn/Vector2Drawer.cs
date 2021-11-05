@@ -2,26 +2,20 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class Vector2Drawer : BuiltInDrawer {
-        public Vector2Drawer(FriggProperty prop) : base(prop) {
+    public static class Vector2Drawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<Vector2>(property);
+            var result = EditorGUILayout.Vector2Field(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<Vector2>();
-            var result = EditorGUILayout.Vector2Field(this.property.Label, value);
-            this.UpdateAndCallNext(result);
-        }
-
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<Vector2>();
-            var result = EditorGUI.Vector2Field(rect, this.property.Label, value);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<Vector2>(property);
+            var result = EditorGUI.Vector2Field(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
-        
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }
