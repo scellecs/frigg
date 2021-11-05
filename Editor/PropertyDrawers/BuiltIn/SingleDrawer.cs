@@ -1,27 +1,21 @@
 ﻿namespace Frigg.Editor.BuiltIn {
-    using System;
     using UnityEditor;
     using UnityEngine;
 
-    public class SingleDrawer : BuiltInDrawer{
-        public SingleDrawer(FriggProperty prop) : base(prop) {
+    public static class SingleDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<double>(property);
+            var result = EditorGUILayout.DoubleField(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<double>();
-            var result = EditorGUILayout.DoubleField(this.property.Label, value);
-            this.UpdateAndCallNext(result);
-        }
-
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<double>();
-            var result = EditorGUI.DoubleField(rect, this.property.Label, value);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<double>(property);
+            var result = EditorGUI.DoubleField(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }
