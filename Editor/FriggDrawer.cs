@@ -137,7 +137,7 @@
                     FloatDrawer.DrawLayout(property);
                     break;
                 case FriggDrawerType.Single:
-                    SingleDrawer.DrawLayout(property);
+                    DoubleDrawer.DrawLayout(property);
                     break;
                 case FriggDrawerType.Enum:
                     EnumDrawer.DrawLayout(property);
@@ -193,7 +193,7 @@
                     FloatDrawer.Draw(property, rect);
                     break;
                 case FriggDrawerType.Single:
-                    SingleDrawer.Draw(property, rect);
+                    DoubleDrawer.Draw(property, rect);
                     break;
                 case FriggDrawerType.Enum:
                     EnumDrawer.Draw(property, rect);
@@ -236,7 +236,7 @@
                 case FriggDrawerType.Float:
                     return FloatDrawer.GetHeight();
                 case FriggDrawerType.Single:
-                    return SingleDrawer.GetHeight();
+                    return DoubleDrawer.GetHeight();
                 case FriggDrawerType.Enum:
                     return EnumDrawer.GetHeight();
                 case FriggDrawerType.Object:

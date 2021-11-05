@@ -2,7 +2,7 @@
     using UnityEditor;
     using UnityEngine;
 
-    public static class SingleDrawer {
+    public static class DoubleDrawer {
         public static void DrawLayout(FriggProperty property) {
             var value  = DrawerUtils.GetTargetValue<double>(property);
             var result = EditorGUILayout.DoubleField(property.Label, value);
