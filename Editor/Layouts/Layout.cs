@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor.Layouts {
     using System.Collections.Generic;
+    using System.Linq;
     using Groups;
     using UnityEditor;
     using UnityEngine;
@@ -45,14 +46,13 @@
         protected abstract void Recalculate();
 
         private float GetTotalHeight() {
-            var height = 0f;
-            foreach (var element in this.layoutElements) {
-                var last = FriggProperty.GetPropertyHeight(element.property);
-                if (last > height) {
-                    height = last;
-                }
-            }
-            return height + GuiUtilities.SPACE;
+            return this.layoutElements.Select
+                (element => FriggProperty.GetPropertyHeight(element.property))
+                .Prepend(0f).Max();
+        }
+
+        public void ResetLayout() {
+            this.layoutElements.Clear();
         }
 
         /// <summary>
