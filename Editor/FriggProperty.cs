@@ -226,16 +226,31 @@
         }
 
         public void AddArrayElement(int index) {
-            this.NativeProperty?.InsertArrayElementAtIndex(index);
-            this.NativeProperty?.serializedObject.ApplyModifiedProperties();
+            if (this.NativeProperty != null) {
+                this.NativeProperty.InsertArrayElementAtIndex(index);
+                this.NativeProperty?.serializedObject.ApplyModifiedProperties(); 
+            }
             
             this.ChildrenProperties.AddElement(index);
+
+            foreach (var prop in this.ChildrenProperties[index].ChildrenProperties
+                .RecurseChildren()) {
+                if (prop.NativeProperty == null) {
+                    continue;
+                }
+
+                CoreUtilities.SetDefaultValue(prop.NativeProperty, 
+                    prop.NativeValue.MetaInfo.MemberType);
+                prop.NativeProperty.serializedObject.ApplyModifiedProperties();
+            }
         }
 
         public void RemoveArrayElement(int index) {
-            this.NativeProperty?.DeleteArrayElementAtIndex(index);
-            this.NativeProperty?.serializedObject.ApplyModifiedProperties();
-            
+            if (this.NativeProperty != null) {
+                this.NativeProperty?.DeleteArrayElementAtIndex(index);
+                this.NativeProperty?.serializedObject.ApplyModifiedProperties();
+            }
+
             this.ChildrenProperties.RemoveElement(index);
         }
 
