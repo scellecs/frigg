@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Reflection;
     using Packages.Frigg.Editor.Utils;
+    using UnityEditor;
     using UnityEngine;
     using Utils;
     
@@ -33,14 +34,22 @@
 
             if(typeof(IList).IsAssignableFrom(meta.MemberType)) {
                 this.property.MetaInfo.isArray = true;
-                var list = (IList) prop.GetValue();
-
+                var list        = (IList) prop.GetValue();
+                var elementType = CoreUtilities.TryGetListElementType(list.GetType());
+                
                 this.property.NativeValue.Set(list);
-
                 this.property.MetaInfo.arraySize = list.Count;
+                
                 for (var i = 0; i < list.Count; i++) {
-                    if (list[i] == null)
-                        return;
+                    if (list[i] == null) {
+                        this.propByIndex[i] = FriggProperty.DoProperty(this.property, new PropertyMeta {
+                            Name       = elementType.Name,
+                            MemberType = elementType,
+                            MemberInfo = elementType,
+                            arrayIndex = i,
+                        });
+                        continue;
+                    }
                     
                     this.propByIndex[i] = FriggProperty.DoProperty(this.property, new PropertyMeta {
                         Name       = list[i].GetType().Name,
@@ -91,23 +100,28 @@
             for (var i = 0; i < newLength - 1; i++) {
                 newArray.SetValue(list[i], i);
             }
-            
-            var constructor = elementType.GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, 
-                null, Type.EmptyTypes, null);
 
-            if (constructor == null) {
-                newArray.SetValue(null, newLength - 1);
+            //fix for immutable types
+            if (!elementType.IsValueType && elementType != typeof(string)) {
+                var isAbstract = elementType.IsAbstract;
+
+                newArray.SetValue(isAbstract 
+                    ? null 
+                    : Activator.CreateInstance(elementType), newLength - 1);
             }
-            
+
+            else {
+                newArray.SetValue(default, newLength - 1);
+            }
+
             this.property.MetaInfo.arraySize++;
             this.property.NativeValue.Set(newArray);
             
             this.propByIndex[idx] = FriggProperty.DoProperty(this.property, new PropertyMeta {
                 arrayIndex = idx,
+                Name = elementType.Name,
                 MemberInfo = elementType,
-                MemberType = elementType,
-                Name  = elementType.Name
+                MemberType = elementType
             });
         }
 
@@ -127,7 +141,7 @@
             this.property.PropertyTree.LayoutsByPath.
                 TryGetValue(this.propByIndex[idx].Path, out var value);
             value?.ResetLayout();
-
+            
             for (var i = idx; i < newLength; i++) {
                 newArray.SetValue(list[i + 1], i);
                 
@@ -135,19 +149,19 @@
                     TryGetValue(this.propByIndex[i].Path, out value);
                 value?.ResetLayout();
 
+                var meta = CreateMeta(list, elementType, i);
+                
                 //GetValue is possible as null?
-                this.propByIndex[i] = FriggProperty.DoProperty(this.property, 
-                    new PropertyMeta {
-                        arrayIndex = i,
-                        MemberType = elementType,
-                        MemberInfo = elementType
-                    });
+                this.propByIndex[i] = FriggProperty.DoProperty(this.property, meta);
             }
             
+            this.property.PropertyTree.LayoutsByPath.
+                TryGetValue(this.propByIndex[newLength].Path, out value);
+            value?.ResetLayout();
+            
             this.property.NativeValue.Set(newArray);
-            this.propByIndex.Remove(list.Count - 1);
+            this.propByIndex.Remove(newLength);
             this.property.MetaInfo.arraySize--;
-
         }
 
         public FriggProperty GetByIndex(int idx) {
@@ -162,23 +176,15 @@
             
             //Allows us to fill it in runtime
             if (this.property.MetaInfo.isArray) {
-                var list = (IList) this.property.GetValue();
-                
-                this.propByIndex.TryGetValue(idx, out prop);
-                if (prop == null) {
-                    this.AddElement(idx);
-                    this.propByIndex[idx].NativeValue.Set(list[idx]);
-                    return this.propByIndex[idx];
-                }
+                this.AddElement(idx);
+                return this.propByIndex[idx];
             }
 
-            else {
-                prop = FriggProperty.DoProperty(parentProp, new PropertyMeta {
-                    Name       = this.property.MetaInfo.Name, 
-                    MemberType = target.GetType()
-                });
-            }
-            
+            prop = FriggProperty.DoProperty(parentProp, new PropertyMeta {
+                Name       = this.property.MetaInfo.Name, 
+                MemberType = target.GetType()
+            });
+
             this.propByIndex[idx] = prop;
             return prop;
         }
@@ -230,6 +236,25 @@
                     MemberInfo = member.MetaInfo.MemberInfo
                 });
             }
+        }
+
+        private static PropertyMeta CreateMeta(IList list, Type elementType, int idx) {
+            if (list[idx] == null) {
+                return new PropertyMeta {
+                    arrayIndex = idx,
+                    MemberType = elementType,
+                    MemberInfo = elementType,
+                    Name       = elementType.Name
+                };
+            }
+            
+            //Get member and name
+            return new PropertyMeta {
+                arrayIndex = idx,
+                MemberType = list[idx].GetType(),
+                MemberInfo = list[idx].GetType(),
+                Name       = list[idx].GetType().Name
+            };
         }
     }
 }
