@@ -22,10 +22,10 @@
         public int ObjectInstanceID { get; set; } = -1;
         
         //Represents a queue of Frigg drawers.
-        public IEnumerator<FriggDrawer> DrawersQueue { get; set; }
+        public IEnumerator<FriggDrawerWrapper> DrawersQueue { get; set; }
 
         //Represents all drawers of target property.
-        public IEnumerable<FriggDrawer> Drawers { get; set; }
+        public IEnumerable<FriggDrawerWrapper> Drawers { get; set; }
 
         /// <summary>
         /// Path, declared on target property by Frigg inspector.
@@ -184,11 +184,11 @@
         /// <param name="rect">Rect that represents draw info</param>
         public void Draw(Rect rect = default) {
             var current = this.DrawersQueue.Current;
-            if (current != null && current.IsVisible) {
+            if ((current.DrawerType != FriggDrawerType.Custom || current.Drawer != null) && current.IsVisible) {
                 if (rect == default)
-                    this.DrawersQueue.Current?.DrawLayout();
+                    this.DrawersQueue.Current.DrawLayout(this);
                 else {
-                    this.DrawersQueue.Current?.Draw(rect);
+                    this.DrawersQueue.Current.Draw(this, rect);
                 }
             }
 
@@ -266,7 +266,7 @@
             var total = 0f;
 
             foreach (var drawer in prop.Drawers) {
-                var height = drawer.GetHeight();
+                var height = drawer.GetHeight(prop);
                 if (height > 0) {
                     total += height + GuiUtilities.SPACE;   
                 }

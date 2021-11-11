@@ -1,27 +1,21 @@
 ﻿namespace Frigg.Editor.BuiltIn {
     using UnityEditor;
     using UnityEngine;
-    using Utils;
 
-    public class ObjectDrawer : BuiltInDrawer {
-        public ObjectDrawer(FriggProperty prop) : base(prop) {
+    public static class ObjectDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<Object>(property);
+            var result = EditorGUILayout.ObjectField(property.Label, value, property.MetaInfo.MemberType, true);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<Object>();
-            var result = EditorGUILayout.ObjectField(this.property.Label, value, this.property.MetaInfo.MemberType, true);
-            this.UpdateAndCallNext(result);
-        }
-
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<Object>();
-            var result = EditorGUI.ObjectField(rect, this.property.Label, value, this.property.MetaInfo.MemberType, true);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<Object>(property);
+            var result = EditorGUI.ObjectField(rect, property.Label, value, property.MetaInfo.MemberType, true);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }

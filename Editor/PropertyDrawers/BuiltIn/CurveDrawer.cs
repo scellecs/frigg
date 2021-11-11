@@ -2,24 +2,19 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class CurveDrawer : BuiltInDrawer {
-        public CurveDrawer(FriggProperty prop) : base(prop) {
+    public static class CurveDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<AnimationCurve>(property);
+            var result = EditorGUILayout.CurveField(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<AnimationCurve>();
-            var result = EditorGUILayout.CurveField(this.property.Label, value);
-            this.UpdateAndCallNext(result);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<AnimationCurve>(property);
+            var result = EditorGUI.CurveField(rect, property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<AnimationCurve>();
-            var result = EditorGUI.CurveField(rect, this.property.Label, value);
-            this.UpdateAndCallNext(result, rect);
-        }
-
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }

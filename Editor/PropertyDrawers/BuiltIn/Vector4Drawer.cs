@@ -1,29 +1,22 @@
 ﻿namespace Frigg.Editor.BuiltIn {
-    using System.Numerics;
     using UnityEditor;
     using UnityEngine;
     using Vector4 = UnityEngine.Vector4;
 
-    public class Vector4Drawer : BuiltInDrawer {
-        public Vector4Drawer(FriggProperty prop) : base(prop) {
+    public static class Vector4Drawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<Vector4>(property);
+            var result = EditorGUILayout.Vector4Field(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<Vector4>();
-            var result = EditorGUILayout.Vector4Field(this.property.Label, value);
-            this.UpdateAndCallNext(result);
-        }
-
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<Vector4>();
-            var result = EditorGUI.Vector4Field(rect, this.property.Label, value);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<Vector4>(property);
+            var result = EditorGUI.Vector4Field(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
-        
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }

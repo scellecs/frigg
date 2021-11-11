@@ -2,25 +2,20 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class IntegerDrawer : BuiltInDrawer {
-        public IntegerDrawer(FriggProperty prop) : base(prop) {
-        }
-        
-        public override void DrawLayout() {
-            var value  = this.GetTargetValue<int>();
-            var result = EditorGUILayout.IntField(this.property.Label, value);
-            this.UpdateAndCallNext(result);
+    public static class IntegerDrawer{
+        public static void DrawLayout(FriggProperty property) {
+            var value  = DrawerUtils.GetTargetValue<int>(property);
+            var result = EditorGUILayout.IntField(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<int>();
-            var result = EditorGUI.IntField(rect, this.property.Label, value);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<int>(property);
+            var result = EditorGUI.IntField(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }

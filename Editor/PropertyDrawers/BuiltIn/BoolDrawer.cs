@@ -2,25 +2,20 @@
     using UnityEditor;
     using UnityEngine;
 
-    public class BoolDrawer : BuiltInDrawer{
-        public BoolDrawer(FriggProperty prop) : base(prop) {
+    public static class BoolDrawer {
+        public static void DrawLayout(FriggProperty property) {
+            var value = DrawerUtils.GetTargetValue<bool>(property);
+            var result = EditorGUILayout.Toggle(property.Label, value);
+            DrawerUtils.UpdateAndCallNext(property, result);
         }
 
-        public override void DrawLayout() {
-            var value = this.GetTargetValue<bool>();
-            var result = EditorGUILayout.Toggle(this.property.Label, value);
-            this.UpdateAndCallNext(result);
-        }
-
-        public override void Draw(Rect rect) {
-            var value  = this.GetTargetValue<bool>();
-            var result = EditorGUI.Toggle(rect, this.property.Label, value);
+        public static void Draw(FriggProperty property, Rect rect) {
+            var value  = DrawerUtils.GetTargetValue<bool>(property);
+            var result = EditorGUI.Toggle(rect, property.Label, value);
             rect.y += EditorGUIUtility.singleLineHeight;
-            this.UpdateAndCallNext(result, rect);
+            DrawerUtils.UpdateAndCallNext(property, result, rect);
         }
 
-        public override float GetHeight() => EditorGUIUtility.singleLineHeight;
-
-        public override bool IsVisible => true;
+        public static float GetHeight() => EditorGUIUtility.singleLineHeight;
     }
 }
