@@ -428,7 +428,6 @@ namespace Frigg.Utils {
         }
 
         public static void SetDefaultValue(SerializedProperty prop, Type objType) {
-            Debug.Log(objType);
             if (objType == typeof(bool))
             {
                 prop.boolValue = default;

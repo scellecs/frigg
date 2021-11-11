@@ -102,21 +102,21 @@
             }
 
             //fix for immutable types
-            if (!elementType.IsValueType && elementType != typeof(string)) {
-                var isAbstract = elementType.IsAbstract;
-
-                newArray.SetValue(isAbstract 
+            if (!elementType.IsValueType) {
+                newArray.SetValue(elementType == typeof(string)
+                    ? string.Empty
+                    : default, newLength - 1);
+            }
+            else {
+                newArray.SetValue(elementType.IsAbstract 
                     ? null 
                     : Activator.CreateInstance(elementType), newLength - 1);
-            }
-
-            else {
-                newArray.SetValue(default, newLength - 1);
             }
 
             this.property.MetaInfo.arraySize++;
             this.property.NativeValue.Set(newArray);
             
+            Debug.Log($"{elementType} -> Create a new property at index {idx}");
             this.propByIndex[idx] = FriggProperty.DoProperty(this.property, new PropertyMeta {
                 arrayIndex = idx,
                 Name = elementType.Name,
