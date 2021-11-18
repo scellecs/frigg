@@ -15,16 +15,19 @@
         }
         
         public override void DrawLayout() {
-            var style = EditorStyles.foldoutHeader;
-            this.property.IsExpanded = GUILayout.Toggle(this.property.IsExpanded, this.property.Label, style);
+            this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property);
             
             if (!this.property.IsExpanded) {
                 return;
             }
 
+            EditorGUI.indentLevel++;
+            
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
                 p.Draw();
             }
+
+            EditorGUI.indentLevel--;
         }
 
         public override void Draw(Rect rect) {

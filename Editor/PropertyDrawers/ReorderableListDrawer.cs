@@ -61,8 +61,12 @@
         public override void DrawLayout() {
             this.SetCallbacks(this.list);
 
-            if(this.property.IsExpanded)
-               this.list.DoLayoutList();
+            if (this.property.IsExpanded) {
+                var controlRect = EditorGUILayout.GetControlRect(false, this.GetHeight() + GuiUtilities.SPACE);
+                controlRect.width -= EditorGUI.indentLevel * 15;
+                controlRect.x     += EditorGUI.indentLevel * 15;
+                this.list.DoList(controlRect);
+            }
         }
 
         private void SetCallbacks(ReorderableList reorderableList, Rect rect = default) {
