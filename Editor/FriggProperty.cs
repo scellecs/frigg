@@ -124,7 +124,7 @@
                 NiceName = ObjectNames.NicifyVariableName(metaInfo.Name),
                 ParentProperty = parent
             };
-
+            
             property.Label = new GUIContent(property.NiceName);
             
             property.FixedAttributes = !property.IsRootProperty
@@ -223,7 +223,25 @@
             
             var fProperty = this.ChildrenProperties.GetByIndex(index);
             return fProperty;
+        }
 
+        public void AddArrayElement(int index) {
+            this.ChildrenProperties.AddElement(index);
+
+            foreach (var prop in this.ChildrenProperties[index].ChildrenProperties
+                .RecurseChildren()) {
+                if (prop.NativeProperty == null) {
+                    continue;
+                }
+
+                CoreUtilities.SetDefaultValue(prop.NativeProperty, 
+                    prop.NativeValue.MetaInfo.MemberType);
+                prop.NativeProperty.serializedObject.ApplyModifiedProperties();
+            }
+        }
+
+        public void RemoveArrayElement(int index) {
+            this.ChildrenProperties.RemoveElement(index);
         }
 
         /// <summary>
@@ -237,10 +255,6 @@
         private static float CalculateDrawersHeight(FriggProperty prop, bool includeChildren) {
             var total = 0f;
 
-            if (prop.IsLayoutMember) {
-                return EditorGUIUtility.singleLineHeight;
-            }
-            
             foreach (var drawer in prop.Drawers) {
                 var height = drawer.GetHeight(prop);
                 if (height > 0) {
@@ -252,7 +266,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Fetch newest values of target property.
         /// </summary>
         public void Refresh() {
             var parent = this.ParentProperty;
@@ -260,7 +274,7 @@
                 var list = (IList) parent.NativeValue.Get();
                 if (list.Count != parent.MetaInfo.arraySize)
                     return;
-                    
+                
                 this.NativeValue.Set(list[this.MetaInfo.arrayIndex]);
             }
 
@@ -273,7 +287,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Apply modified changes on target property.
         /// </summary>
         /// <param name="newValue"></param>
         public void UpdateValue(object newValue) {
@@ -281,7 +295,7 @@
         }
         
         /// <summary>
-        /// 
+        /// Returns attribute of specified type, if exists.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -291,7 +305,21 @@
         }
 
         private void SetNativeProperty() {
-            var property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
+            this.PropertyTree.SerializedObject.Update();
+
+            SerializedProperty property;
+            if (this.ParentProperty != null) {
+                if (!string.IsNullOrEmpty(this.ParentProperty.UnityPath)) {
+                    property = this.PropertyTree.SerializedObject.FindProperty($"{this.ParentProperty?.UnityPath}.{this.Name}");
+                    if (property != null) {
+                        this.UnityPath      = property.propertyPath;
+                        this.NativeProperty = property;
+                        return;
+                    }
+                }
+            }
+            
+            property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
             if (property != null) {
                 this.UnityPath      = property.propertyPath;
                 this.NativeProperty = property;
@@ -300,22 +328,23 @@
             var iterator = this.PropertyTree.SerializedObject.GetIterator();
 
             while (iterator.Next(true)) {
+                if (iterator.isArray && iterator.arraySize > 0
+                                     && this.MetaInfo.arrayIndex != -1
+                                     && this.ParentProperty?.Name == iterator.name) {
+                    var arrayElement = iterator.GetArrayElementAtIndex
+                        (this.MetaInfo.arrayIndex);
+                        
+                    this.UnityPath      = arrayElement.propertyPath;
+                    this.NativeProperty = arrayElement;
+
+                    return;
+                }
+                
                 var relative = iterator.FindPropertyRelative(this.Name);
                 if (relative == null) {
-                    if (iterator.isArray && iterator.arraySize > 0
-                                         && this.MetaInfo.arrayIndex != -1
-                                         && this.ParentProperty?.Name == iterator.name) {
-                        var arrayElement = iterator.GetArrayElementAtIndex
-                            (this.MetaInfo.arrayIndex);
-                        
-                        this.UnityPath      = arrayElement.propertyPath;
-                        this.NativeProperty = arrayElement;
-
-                        return;
-                    }
                     continue;
                 }
-                        
+                
                 this.UnityPath      = relative.propertyPath;
                 this.NativeProperty = relative;
             }
@@ -323,7 +352,7 @@
 
         private static string GetFriggPath(FriggProperty property) {    
             var path = property.ParentProperty.IsRootProperty ?
-                property.PropertyTree.TargetType.Name :property.ParentProperty.Path;
+                property.PropertyTree.TargetType.Name : property.ParentProperty.Path;
             
             if (property.MetaInfo.isArray) {
                 path = $"{path}.{property.Name}.data";

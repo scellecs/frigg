@@ -42,25 +42,15 @@
 
         public ReorderableListDrawer(FriggProperty prop) : base(prop) {
             var elements = (IList) prop.GetValue();
-            //todo: refactor
-            if (!string.IsNullOrEmpty(this.property.UnityPath)) {
-                var serializedProperty = this.property.PropertyTree
-                    .SerializedObject.FindProperty(this.property.UnityPath);
-
-                this.list = new ReorderableList(serializedProperty.serializedObject, serializedProperty);
-            }
-
             if (this.list == null)
-                this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
-            
+                this.list = new ReorderableList(elements, 
+                    CoreUtilities.TryGetListElementType(elements.GetType()));
         }
 
         public override void Draw(Rect rect) {
-            //todo: check this behaviour later
-            //rect.y += GuiUtilities.SPACE;
             this.SetCallbacks(this.list, rect);
-            rect.y += EditorGUIUtility.singleLineHeight;
-
+            
+            rect.y     += EditorGUIUtility.singleLineHeight;
             rect.width -= EditorGUI.indentLevel * 15;
             rect.x     += EditorGUI.indentLevel * 15;
 
@@ -69,34 +59,46 @@
         }
         
         public override void DrawLayout() {
-            var elements = (IList) this.property.GetValue(); 
-            
-            if(this.list == null)
-               this.list = new ReorderableList(elements, CoreUtilities.TryGetListElementType(elements.GetType()));
-            
             this.SetCallbacks(this.list);
 
-            if(this.property.IsExpanded)
-               this.list.DoLayoutList();
+            if (this.property.IsExpanded) {
+                var controlRect = EditorGUILayout.GetControlRect(false, this.GetHeight() + GuiUtilities.SPACE);
+                controlRect.width -= EditorGUI.indentLevel * 15;
+                controlRect.x     += EditorGUI.indentLevel * 15;
+                this.list.DoList(controlRect);
+            }
         }
 
         private void SetCallbacks(ReorderableList reorderableList, Rect rect = default) {
-            this.list = reorderableList;
+            var elements = (IList) this.property.GetValue();
 
-            this.property.Label.text = $"{this.property.NiceName} - {this.property.MetaInfo.arraySize} elements.";
+            reorderableList.list = elements;
+            
+            if (this.list.count < this.property.MetaInfo.arraySize) {
+                for (var i = this.list.count; i <= this.property.MetaInfo.arraySize; i++) {
+                    this.property.ChildrenProperties.RemoveProperty(i);
+                    EditorUtility.SetDirty(this.property.PropertyTree
+                        .SerializedObject.targetObject);
+                }
+
+                this.property.MetaInfo.arraySize = this.list.count;
+            }
+
+            //check for array size
+            this.property.Label.text = $"{this.property.NiceName} - {this.list.count} elements.";
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
-            this.list.draggable      = this.list.displayAdd = this.list.displayRemove = true;
-            this.list.headerHeight   = 1;
+            reorderableList.draggable    = reorderableList.displayAdd = reorderableList.displayRemove = true;
+            reorderableList.headerHeight = 1;
             
             var attr = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
-                this.list.draggable     = attr.AllowDrag;
-                this.list.displayAdd    = !attr.HideAddButton;
-                this.list.displayRemove = !attr.HideRemoveButton;
+                reorderableList.draggable     = attr.AllowDrag;
+                reorderableList.displayAdd    = !attr.HideAddButton;
+                reorderableList.displayRemove = !attr.HideRemoveButton;
             }
 
-            this.list.drawElementCallback = (tempRect, index, active, focused) => {
+            reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
                 if (!this.property.IsExpanded)
                     return;
                 
@@ -106,59 +108,26 @@
                 tempRect.height =  EditorGUIUtility.singleLineHeight;
                 tempRect.width  += EditorGUI.indentLevel * 15;
                 tempRect.x      -= EditorGUI.indentLevel * 15;
-
+                
                 pr.Draw(tempRect);
             };
 
-            this.list.onAddCallback = _ => {
-                if (this.list.serializedProperty != null) {
-                    this.list.serializedProperty.arraySize++;
-                    //this.property.MetaInfo.arraySize++;
-                    return;
-                }
-                
-                var copy = this.list.list;
-
-                this.list.list = Array.CreateInstance
-                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), copy.Count + 1);
-                
-                for (var i = 0; i < copy.Count; i++) {
-                    this.list.list[i] = copy[i];
-                }
-
-                //this.property.MetaInfo.arraySize++;
+            reorderableList.onAddCallback = _ => {
+                this.property.AddArrayElement(this.property.MetaInfo.arraySize);
             };
 
-            this.list.onRemoveCallback = _ => {
-                if (this.list.serializedProperty != null) {
-                    this.list.serializedProperty.DeleteArrayElementAtIndex(this.list.index);
-                    this.property.MetaInfo.arraySize--;
-                    return;
-                }
-                
-                var copy      = this.list.list;
-                var newLength = copy.Count - 1;
-
-                this.list.list = Array.CreateInstance
-                    (CoreUtilities.TryGetListElementType(this.list.list.GetType()), newLength);
-                
-                for (var i = 0; i < this.list.index; i++)
-                    this.list.list[i] = copy[i];
-
-                for (var i = this.list.index; i < newLength; i++)
-                    this.list.list[i] = copy[i + 1];
-
-                this.property.MetaInfo.arraySize--;
+            reorderableList.onRemoveCallback = l => {
+                this.property.RemoveArrayElement(l.index);
             };
 
-            this.list.elementHeightCallback = index => {
+            reorderableList.elementHeightCallback = index => {
                 if (index >= this.property.MetaInfo.arraySize)
                     return 0f;
                 
                 var element = this.property.GetArrayElementAtIndex(index);
                 this.property.PropertyTree.LayoutsByPath.TryGetValue
-                    (this.property.ParentProperty.Path, out var layout);
-            
+                    (element.Path, out var layout);
+                
                 if (layout != null) {
                     return layout.TotalHeight;
                 }

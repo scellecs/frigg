@@ -427,6 +427,60 @@ namespace Frigg.Utils {
             return false;
         }
 
+        public static void SetDefaultValue(SerializedProperty prop, Type objType) {
+            if (objType == typeof(bool))
+            {
+                prop.boolValue = default;
+            }
+            if (objType == typeof(int))
+            {
+                prop.intValue = default;
+            }
+            if (objType == typeof(long))
+            {
+                prop.longValue = default;
+            }
+            if (objType == typeof(float)) 
+            {
+                prop.floatValue = default;
+            }
+            if (objType == typeof(double))
+            {
+                prop.doubleValue = default;
+            }
+            if (objType == typeof(string))
+            {
+                prop.stringValue = default;
+            }
+            if (objType == typeof(Vector2))
+            {
+                prop.vector2Value = default;
+            }
+            if (objType == typeof(Vector3))
+            {
+                prop.vector3Value = default;
+            }
+            if (objType == typeof(Vector4))
+            {
+                prop.vector4Value = default;
+            }
+            if (objType == typeof(Color))
+            {
+                prop.colorValue = default;
+            }
+            if (objType == typeof(Bounds))
+            {
+                prop.boundsValue = default;
+            }
+            if (objType == typeof(Rect)) {
+                prop.rectValue = default;
+            }
+            if (typeof(Object).IsAssignableFrom(objType))
+            {
+                prop.objectReferenceValue = default;
+            }
+        }
+        
         public static void SetSerializedPropertyValue(SerializedProperty prop, Type objType, object value) {
             if (objType == typeof(bool))
             {
