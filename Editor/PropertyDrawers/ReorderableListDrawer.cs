@@ -69,9 +69,19 @@
             var elements = (IList) this.property.GetValue();
 
             reorderableList.list = elements;
+            
+            if (this.list.count < this.property.MetaInfo.arraySize) {
+                for (var i = this.list.count; i <= this.property.MetaInfo.arraySize; i++) {
+                    this.property.ChildrenProperties.RemoveProperty(i);
+                    EditorUtility.SetDirty(this.property.PropertyTree
+                        .SerializedObject.targetObject);
+                }
+
+                this.property.MetaInfo.arraySize = this.list.count;
+            }
 
             //check for array size
-            this.property.Label.text = $"{this.property.NiceName} - {this.property.MetaInfo.arraySize} elements.";
+            this.property.Label.text = $"{this.property.NiceName} - {this.list.count} elements.";
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
             reorderableList.draggable    = reorderableList.displayAdd = reorderableList.displayRemove = true;
