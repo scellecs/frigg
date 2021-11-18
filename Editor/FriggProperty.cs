@@ -226,11 +226,6 @@
         }
 
         public void AddArrayElement(int index) {
-            if (this.NativeProperty != null) {
-                this.NativeProperty.InsertArrayElementAtIndex(index);
-                this.NativeProperty?.serializedObject.ApplyModifiedProperties(); 
-            }
-            
             this.ChildrenProperties.AddElement(index);
 
             foreach (var prop in this.ChildrenProperties[index].ChildrenProperties
@@ -246,11 +241,6 @@
         }
 
         public void RemoveArrayElement(int index) {
-            if (this.NativeProperty != null) {
-                this.NativeProperty?.DeleteArrayElementAtIndex(index);
-                this.NativeProperty?.serializedObject.ApplyModifiedProperties();
-            }
-
             this.ChildrenProperties.RemoveElement(index);
         }
 
@@ -315,6 +305,8 @@
         }
 
         private void SetNativeProperty() {
+            this.PropertyTree.SerializedObject.Update();
+
             SerializedProperty property;
             if (this.ParentProperty != null) {
                 if (!string.IsNullOrEmpty(this.ParentProperty.UnityPath)) {
