@@ -90,27 +90,43 @@
 
         public void AddElement(int idx) {
             var oldList     = (IList) this.property.GetValue();
+
             var elementType = CoreUtilities.TryGetListElementType(oldList.GetType());
+            
+            if (this.property.MetaInfo.arraySize != oldList.Count) {
+                this.propByIndex[idx] = FriggProperty.DoProperty(this.property, new PropertyMeta {
+                    arrayIndex = idx,
+                    Name       = elementType.Name,
+                    MemberInfo = elementType,
+                    MemberType = elementType
+                });
+                this.property.MetaInfo.arraySize++;
+                if (this.property.NativeProperty != null) {
+                    EditorUtility.SetDirty(this.property.PropertyTree
+                        .SerializedObject.targetObject);
+                }
+                return;
+            }
+            
             var newLength   = oldList.Count + 1;
-            
-            var newList     = (IList) Activator.CreateInstance(oldList.GetType());
-            
+
+            var listType = typeof(List<>).MakeGenericType(elementType);
+            var newList  = (IList) Activator.CreateInstance(listType);
+
             for (var i = 0; i < newLength - 1; i++) {
                 newList.Insert(i, oldList[i]);
             }
+            
+            newList.Insert(newLength - 1, elementType.IsAbstract
+                ? default
+                : Activator.CreateInstance(elementType));
 
-            //fix for immutable types
-            if (!elementType.IsValueType) {
-                newList.Insert(newLength - 1, elementType == typeof(string)
-                    ? string.Empty
-                    : Activator.CreateInstance(elementType));
+            if(newList.GetType() != this.property.MetaInfo.MemberType) {
+                var array = Array.CreateInstance(elementType, newLength);
+                newList.CopyTo(array, 0);
+                newList = array;
             }
-            else {
-                newList.Insert(newLength - 1, elementType.IsAbstract
-                    ? null
-                    : Activator.CreateInstance(elementType));
-            }
-
+            
             this.property.SetValue(newList);
             if (this.property.NativeProperty != null) {
                 EditorUtility.SetDirty(this.property.PropertyTree
@@ -128,28 +144,27 @@
         }
 
         public void RemoveElement(int idx) {
-            var list      = (IList) this.property.GetValue();
-            var newLength = list.Count - 1;
+            var oldList     = (IList) this.property.GetValue();
+            var elementType = CoreUtilities.TryGetListElementType(oldList.GetType());
+            var newLength   = oldList.Count - 1;
 
-            var elementType = CoreUtilities.TryGetListElementType(list.GetType());
-            
-            var newArray = Array.CreateInstance(CoreUtilities.TryGetListElementType(list.GetType()),
-                newLength);
+            var listType = typeof(List<>).MakeGenericType(elementType);
+            var newList  = (IList) Activator.CreateInstance(listType);
 
-            for (var i = 0; i <= idx; i++) {
-                newArray.SetValue(list[i], i);
+            for (var i = 0; i < idx; i++) {
+                newList.Insert(i, oldList[i]);
             }
 
             this.property.PropertyTree.LayoutsByPath.TryGetValue(this.propByIndex[idx].Path, out var value);
             value?.ResetLayout();
 
-            for (var i = idx + 1; i < newLength; i++) {
-                newArray.SetValue(list[i + 1], i);
+            for (var i = idx; i < newLength; i++) {
+                newList.Insert(i, oldList[i + 1]);
 
                 this.property.PropertyTree.LayoutsByPath.TryGetValue(this.propByIndex[i].Path, out value);
                 value?.ResetLayout();
 
-                var meta = CreateMeta(list, elementType, i);
+                var meta = CreateMeta(oldList, elementType, i);
 
                 //GetValue is possible as null?
                 this.propByIndex[i] = FriggProperty.DoProperty(this.property, meta);
@@ -158,10 +173,20 @@
             this.property.PropertyTree.LayoutsByPath.TryGetValue(this.propByIndex[newLength].Path, out value);
             value?.ResetLayout();
 
-            this.property.SetValue(newArray);
-
-            Debug.Log($"Element removed at index {idx}");
+            if(newList.GetType() != this.property.MetaInfo.MemberType) {
+                var array = Array.CreateInstance(elementType, newLength);
+                newList.CopyTo(array, 0);
+                newList = array;
+            }
+            
+            this.property.SetValue(newList);
+            
             this.propByIndex.Remove(newLength);
+            this.property.MetaInfo.arraySize--;
+        }
+
+        public void RemoveProperty(int idx) {
+            this.propByIndex.Remove(idx);
             this.property.MetaInfo.arraySize--;
         }
 
