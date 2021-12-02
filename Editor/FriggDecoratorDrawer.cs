@@ -1,12 +1,17 @@
 ﻿namespace Frigg.Editor {
     using System;
     using UnityEngine;
+    using Utils;
 
     //Add a constructor and set it's property & attribute.
     public abstract class FriggDecoratorDrawer : FriggDrawer {
         public static FriggDecoratorDrawer Create(Attribute attr) {
             var type = attr.GetType();
 
+            if (typeof(ReadonlyAttribute).IsAssignableFrom(type)) {
+                return new ReadonlyDecoratorDrawer();
+            }
+            
             if (typeof(InfoBoxAttribute).IsAssignableFrom(type)) {
                 return new InfoBoxDecoratorDrawer();
             }
