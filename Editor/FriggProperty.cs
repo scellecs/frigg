@@ -56,6 +56,8 @@
         /// Indicates whether property is Expanded in Unity Editor.
         /// </summary>
         public bool IsExpanded     { get; set; }
+
+        public bool IsReadonly => !CoreUtilities.IsWritable(this.MetaInfo.MemberInfo);
         
         //Don't need to use this? Check for an attribute and then remove from list?
         public bool IsLayoutMember  { get; set; }
@@ -185,8 +187,9 @@
         public void Draw(Rect rect = default) {
             var current = this.DrawersQueue.Current;
             if ((current.DrawerType != FriggDrawerType.Custom || current.Drawer != null) && current.IsVisible) {
-                if (rect == default)
+                if (rect == default) {
                     this.DrawersQueue.Current.DrawLayout(this);
+                }
                 else {
                     this.DrawersQueue.Current.Draw(this, rect);
                 }
