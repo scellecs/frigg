@@ -14,6 +14,8 @@
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
                 p.Draw();
             }
+            
+            this.property.CallNextDrawer();
         }
 
         public override void Draw(Rect rect) {
@@ -23,6 +25,8 @@
                     p.Draw(rect); 
                     rect.y += h + GuiUtilities.SPACE;
             }
+            
+            this.property.CallNextDrawer(rect);
         }
 
         public override float GetHeight() {
