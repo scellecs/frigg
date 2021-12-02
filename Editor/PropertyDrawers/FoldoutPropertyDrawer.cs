@@ -18,6 +18,7 @@
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property);
             
             if (!this.property.IsExpanded) {
+                this.property.CallNextDrawer();
                 return;
             }
 
@@ -28,6 +29,7 @@
             }
 
             EditorGUI.indentLevel--;
+            this.property.CallNextDrawer();
         }
 
         public override void Draw(Rect rect) {
@@ -42,6 +44,7 @@
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
             if (!this.property.IsExpanded) {
+                this.property.CallNextDrawer(rect);
                 return;
             }
 
@@ -69,6 +72,7 @@
             }
             
             EditorGUI.indentLevel--;
+            this.property.CallNextDrawer(rect);
         }
 
         //if property has FoldoutDrawer - then add 18F if !expanded or calculate all other drawers if expanded
