@@ -1,5 +1,6 @@
 ﻿namespace Frigg.Editor {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
     using BuiltIn;
@@ -16,18 +17,17 @@
         public static FriggPropertyDrawer GetCustomDrawer(FriggProperty property) {
             var meta = property.MetaInfo.MemberInfo;
 
-            if (!CoreUtilities.IsWritable(property.MetaInfo.MemberInfo)) {
-                return new ReadonlyPropertyDrawer(property);
-            }
-
             if (meta.IsDefined(typeof(ButtonAttribute))) {
                 return new ButtonDrawer(property);
             }
             
-            if (meta.IsDefined(typeof(InlinePropertyAttribute)) 
-                || property.MetaInfo.isArray
+            if (meta.IsDefined(typeof(InlinePropertyAttribute))
                 || property.MetaInfo.MemberType.IsDefined(typeof(InlinePropertyAttribute))){
                 return new InlinePropertyDrawer(property);
+            }
+
+            if (property.MetaInfo.isArray) {
+                return new ReorderableListDrawer(property);
             }
 
             if (meta.IsDefined(typeof(DropdownAttribute))) {
