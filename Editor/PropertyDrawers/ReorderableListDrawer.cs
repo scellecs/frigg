@@ -34,8 +34,8 @@
                 elementsHeight += height;
             }
             
-            total += elementsHeight;
-            return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight;
+            total += elementsHeight + GuiUtilities.SPACE;
+            return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
         }
 
         public override bool  IsVisible => true;
@@ -86,16 +86,28 @@
 
             //check for array size
             this.property.Label.text = $"{this.property.NiceName} - {this.list.count} elements.";
-            this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
+            var attr = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
+
             reorderableList.draggable    = reorderableList.displayAdd = reorderableList.displayRemove = true;
             reorderableList.headerHeight = 1;
             
-            var attr = this.property.TryGetFixedAttribute<ListDrawerSettingsAttribute>();
             if (attr != null) {
                 reorderableList.draggable     = attr.AllowDrag;
                 reorderableList.displayAdd    = !attr.HideAddButton;
                 reorderableList.displayRemove = !attr.HideRemoveButton;
+            }
+            
+            EditorGUI.EndDisabledGroup();
+            this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
+            var isReadOnly = this.property.IsReadonly;
+            
+            EditorGUI.BeginDisabledGroup(isReadOnly);
+            
+            if (isReadOnly) {
+                reorderableList.draggable = 
+                    reorderableList.displayAdd =
+                        reorderableList.displayRemove = false;
             }
 
             reorderableList.drawElementCallback = (tempRect, index, active, focused) => {
@@ -138,6 +150,8 @@
                 var height = FriggProperty.GetPropertyHeight(element);
                 return height;
             };
+            
+            this.property.CallNextDrawer(rect);
         }
     }
 }
