@@ -2,7 +2,7 @@
     using UnityEditor;
     using UnityEngine;
     
-    public class ReadonlyPropertyDrawer : FriggDecoratorDrawer {
+    public class ReadonlyDecoratorDrawer : FriggDecoratorDrawer {
         public override void DrawLayout() {
             using (new EditorGUI.DisabledScope(true)) {
                 this.property.CallNextDrawer();
