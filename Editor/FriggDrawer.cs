@@ -16,75 +16,65 @@
         public abstract void      Draw(Rect rect);
         
         public abstract float GetHeight();
-
         
         //Check before draw an element
         public abstract bool IsVisible { get;}
 
         public static List<FriggDrawerWrapper> Resolve(FriggProperty property) {
             var result          = new List<FriggDrawerWrapper>();
-            var hasCustomDrawer = false;
 
-            //Add attribute custom decorators
-            foreach (var attr in property.FixedAttributes) {
-                if(attr.IsDefaultAttribute())
-                    continue;
-                
-                switch (attr) {
-                    case BaseDecoratorAttribute _:
-                    case PropertyAttribute _: {
-                        var decoratorDrawer = FriggDecoratorDrawer.Create(attr);
-                        decoratorDrawer.property        = property;
-                        decoratorDrawer.linkedAttribute = attr;
-                        result.Add(new FriggDrawerWrapper { DrawerType = FriggDrawerType.Custom, Drawer = decoratorDrawer });
-                        break;
-                    }
-                    case CustomAttribute _:
-                    case BaseAttribute _: {
-                        var drawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
-                        if (drawer == null) {
-                            continue;
-                        }
-
-                        drawer.property        = property;
-                        drawer.linkedAttribute = attr;
-                        if (!(drawer is BaseGroupDrawer) &&  !(drawer is ReadonlyPropertyDrawer)) {
-                            hasCustomDrawer = true;
-                        }
-                        result.Add(new FriggDrawerWrapper { DrawerType = FriggDrawerType.Custom, Drawer = drawer });
-                        break;
-                    }
-                }
-            }   
-            
-            if (hasCustomDrawer) {
-                return result;
-            }
-            
-            if (property.MetaInfo.isArray) {
-                var drawer = new ReorderableListDrawer(property);
-                result.Add(new FriggDrawerWrapper { DrawerType = FriggDrawerType.Custom, Drawer = drawer });
-                return result;
-            }
-            
-            var builtInDrawer = FriggPropertyDrawerUtils.GetBuiltInDrawer(property);
-            if (builtInDrawer != null) {
-                if (property.TryGetFixedAttribute<HideLabelAttribute>() != null) {
-                    property.Label = GUIContent.none;
-                }
-
-                result.Add(builtInDrawer.Value);
-                return result;
-            }
-            
-            var customDrawer = FriggPropertyDrawerUtils.GetCustomDrawer(property);
-            if (customDrawer == null) {
-                return result;
-            }
-
-            customDrawer.property = property;
-            result.Add(new FriggDrawerWrapper { DrawerType = FriggDrawerType.Custom, Drawer = customDrawer });
+            SetDecorators(property, result);
+            SetMainDrawer(property, result);
             return result;
+        }
+
+        private static void SetDecorators(FriggProperty property, List<FriggDrawerWrapper> list) {
+            foreach (var attr in property.FixedAttributes) {
+                if (!(attr is BaseDecoratorAttribute)) {
+                    continue;
+                }
+
+                var drawer = FriggDecoratorDrawer.Create(attr);
+                
+                //todo: move into constructor
+                drawer.linkedAttribute = attr;
+                drawer.property        = property;
+                list.Add(new FriggDrawerWrapper {
+                    Drawer     = drawer,
+                    DrawerType = FriggDrawerType.Custom
+                });
+            }
+
+
+            if (!CoreUtilities.IsWritable(property.MetaInfo.MemberInfo)
+                && !list.Exists(x 
+                    => x.Drawer.GetType() == typeof(ReadonlyDecoratorDrawer))) {
+                
+                var drawer = new ReadonlyDecoratorDrawer {
+                    property = property
+                };
+                
+                //move into constructor
+                list.Add(new FriggDrawerWrapper {
+                    Drawer     = drawer,
+                    DrawerType = FriggDrawerType.Custom
+                });
+            }
+        }
+
+        private static void SetMainDrawer(FriggProperty property, List<FriggDrawerWrapper> list) {
+            var builtIn = FriggPropertyDrawerUtils.GetBuiltInDrawer(property);
+            if (builtIn == null) {
+                var custom = FriggPropertyDrawerUtils.GetCustomDrawer(property);
+                list.Add(new FriggDrawerWrapper {
+                    Drawer = custom,
+                    DrawerType = FriggDrawerType.Custom
+                });
+
+                return;
+            }
+            
+            list.Add(builtIn.Value);
         }
     }
 
@@ -146,7 +136,8 @@
                     ObjectDrawer.DrawLayout(property);
                     break;
                 case FriggDrawerType.Custom:
-                    Drawer.DrawLayout();
+                    //Debug.Log($"{this.Drawer.GetType()} -> {this.Drawer.property.Name}");
+                    this.Drawer.DrawLayout();
                     break;
             }
         }
@@ -202,7 +193,7 @@
                     ObjectDrawer.Draw(property, rect);
                     break;
                 case FriggDrawerType.Custom:
-                    Drawer.Draw(rect);
+                    this.Drawer.Draw(rect);
                     break;
             }
         }
