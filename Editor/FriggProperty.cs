@@ -264,7 +264,6 @@
                     total += height + GuiUtilities.SPACE;   
                 }
             }
-
             return total;
         }
 
