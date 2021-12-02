@@ -9,16 +9,16 @@
     using Utils;
 
     public class ReorderableListDrawer : FriggPropertyDrawer {
-        public const byte LIST_INTERFACE_WIDTH = 50;
-        private ReorderableList list;
+        public const     byte            LIST_INTERFACE_WIDTH = 50;
+        private readonly ReorderableList list;
 
         public override float GetHeight() {
             //header
             var total = EditorGUIUtility.singleLineHeight;
             if (this.list.displayAdd || this.list.displayRemove) {
                 //button
-                if(this.property.IsExpanded)
-                   total += EditorGUIUtility.singleLineHeight * 1.5f;
+                if (this.property.IsExpanded) ;
+                total += this.list.footerHeight;
             }
 
             this.property.PropertyTree.LayoutsByPath.TryGetValue(this.property.Path, out var layout);
@@ -28,14 +28,21 @@
                 return total;
             }
 
-            var elementsHeight = 0f;
-            foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
-                var height = FriggProperty.GetPropertyHeight(child);
-                elementsHeight += height;
+            if (this.property.IsExpanded) {
+                var elementsHeight = 0f;
+                foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
+                    var height = FriggProperty.GetPropertyHeight(child);
+                    elementsHeight += height;
+                }
+                
+                total += elementsHeight + GuiUtilities.SPACE;
+
+                if (this.list.count >= 1) {
+                    total -= EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE / 2f;
+                }
             }
             
-            total += elementsHeight + GuiUtilities.SPACE;
-            return this.property.IsExpanded ? total : EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
+            return total;
         }
 
         public override bool  IsVisible => true;
@@ -98,12 +105,9 @@
                 reorderableList.displayRemove = !attr.HideRemoveButton;
             }
             
-            EditorGUI.EndDisabledGroup();
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             var isReadOnly = this.property.IsReadonly;
-            
-            EditorGUI.BeginDisabledGroup(isReadOnly);
-            
+
             if (isReadOnly) {
                 reorderableList.draggable = 
                     reorderableList.displayAdd =
