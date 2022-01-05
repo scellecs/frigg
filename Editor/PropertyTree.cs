@@ -13,7 +13,7 @@
     public abstract class PropertyTree {
         public abstract SerializedObject           SerializedObject { get; }
 
-        public abstract IEnumerable<FriggProperty> EnumerateTree(bool includeChildren);
+        public abstract void EnumerateTree(Action<FriggProperty> action, bool includeChildren);
 
         public Dictionary<string, Layout> LayoutsByPath = new Dictionary<string, Layout>();
 
@@ -197,36 +197,37 @@
         //Get all properties -> Draw them -> Get incoming changes
         //-> Call Update method which should refresh root property and register objects manually.
         public override void UpdateTree() {
-            foreach (var prop in this.EnumerateTree(true)) {
-                if (prop.ParentProperty != null) {
-                    prop.Refresh();
+            var action = new Action<FriggProperty>(property => {
+                if (property.ParentProperty != null) {
+                    property.Refresh();
                 }
-            }
+            });
+
+            this.EnumerateTree(action, true);
         }
 
         private void DrawTree() {
-            foreach (var prop in this.EnumerateTree(false)) {
-                if(!prop.IsLayoutMember)
-                   prop.Draw();
-            }
+            var action = new Action<FriggProperty>(property => {
+                if(!property.IsLayoutMember)
+                    property.Draw();
+            });
+
+            this.EnumerateTree(action, false);
         }
 
-        public override IEnumerable<FriggProperty> EnumerateTree(bool includeChildren)
+        public override void EnumerateTree(Action<FriggProperty> action,  bool includeChildren)
         {
             for (var i = 0; i < this.RootProperty.ChildrenProperties.AmountOfChildren; i++)
             {
                 var prop = this.RootProperty.ChildrenProperties[i];
 
-                yield return prop;
+                action.Invoke(prop);
 
                 if (!includeChildren) {
                     continue;
                 }
 
-                foreach (var child in prop.ChildrenProperties.RecurseChildren(true))
-                {
-                    yield return child;
-                }
+                prop.ChildrenProperties.RecurseChildren(action, true);
             }
         }
     }

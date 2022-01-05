@@ -16,14 +16,12 @@
         public SerializedProperty NativeProperty { get; set; }
         
         public GUIContent         Label              { get; set; }
-
-        public int ObjectInstanceID { get; set; } = -1;
         
         //Represents a queue of Frigg drawers.
         public IEnumerator<FriggDrawerWrapper> DrawersQueue { get; set; }
 
         //Represents all drawers of target property.
-        public IEnumerable<FriggDrawerWrapper> Drawers { get; set; }
+        public List<FriggDrawerWrapper> Drawers { get; set; }
 
         /// <summary>
         /// Path, declared on target property by Frigg inspector.
@@ -229,16 +227,18 @@
         public void AddArrayElement(int index) {
             this.ChildrenProperties.AddElement(index);
 
-            foreach (var prop in this.ChildrenProperties[index].ChildrenProperties
-                .RecurseChildren()) {
-                if (prop.NativeProperty == null) {
-                    continue;
+            var action = new Action<FriggProperty>(property => {
+                if (property.NativeProperty == null) {
+                    return;
                 }
 
-                CoreUtilities.SetDefaultValue(prop.NativeProperty, 
-                    prop.NativeValue.MetaInfo.MemberType);
-                prop.NativeProperty.serializedObject.ApplyModifiedProperties();
-            }
+                CoreUtilities.SetDefaultValue(property.NativeProperty,
+                    property.NativeValue.MetaInfo.MemberType);
+                property.NativeProperty.serializedObject.ApplyModifiedProperties();
+            });
+
+            this.ChildrenProperties[index].ChildrenProperties
+                .RecurseChildren(action);
         }
 
         public void RemoveArrayElement(int index) {
