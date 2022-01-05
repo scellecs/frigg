@@ -11,36 +11,44 @@
         private const    byte            EMPTY_SIZE           = 22;
         private readonly ReorderableList list;
 
+        private float total;
+        private float elementsHeight;
+
         public override float GetHeight() {
             //header + space in the end
-            var total = EditorGUIUtility.singleLineHeight;
+            this.total = EditorGUIUtility.singleLineHeight;
 
             if (!this.property.IsExpanded) 
-                return total;
+                return this.total;
             
             //footer
             if (this.list.displayAdd || this.list.displayRemove) {
-                total += this.list.footerHeight;
+                this.total += this.list.footerHeight;
             }
 
             if (this.list.count == 0) {
-                total += EMPTY_SIZE;
-                return total;
+                this.total += EMPTY_SIZE;
+                return this.total;
             }
 
-            var elementsHeight = 0f;
-            foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
-                if (this.property.PropertyTree.LayoutsByPath.TryGetValue(child.Path, out var val)) {
-                    total += val.TotalHeight;
-                    continue;
-                }
-                
-                var height = FriggProperty.GetPropertyHeight(child);
-                elementsHeight += height;
+            this.elementsHeight = 0f;
+
+            if (this.getHeightAction == null) {
+                this.getHeightAction = friggProperty => {
+                    if (this.property.PropertyTree.LayoutsByPath.TryGetValue(friggProperty.Path, out var val)) {
+                        this.total += val.TotalHeight;
+                        return;
+                    }
+
+                    var height = FriggProperty.GetPropertyHeight(friggProperty);
+                    this.elementsHeight += height;
+                };
             }
-                
-            total += elementsHeight;
-            return total;
+
+            this.property.ChildrenProperties.RecurseChildren(this.getHeightAction);
+
+            this.total += this.elementsHeight;
+            return this.total;
         }
 
         public override bool  IsVisible => true;
