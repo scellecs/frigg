@@ -235,7 +235,6 @@
                 case FriggDrawerType.Custom:
                     return Drawer.GetHeight();
             }
-
             return 0f;
         }
     }

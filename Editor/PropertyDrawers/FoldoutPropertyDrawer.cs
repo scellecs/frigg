@@ -33,6 +33,10 @@
         }
 
         public override void Draw(Rect rect) {
+            /*Algorithm: List -> Foldout -> list of foldouts.
+             *Start drawing foldout with Toggle (18f), then if expanded - for each element draw spacing (5f) + element (element height)
+             * 
+             */
             this.property.PropertyTree.LayoutsByPath.TryGetValue
                 (this.property.Path, out var layout);
             
@@ -41,21 +45,24 @@
                 return;
             }
 
+            //Foldout toggle
             this.property.IsExpanded = GuiUtilities.FoldoutToggle(this.property, rect);
             
+            //If !expanded - skip all the next logic and move to the next drawer.
             if (!this.property.IsExpanded) {
                 this.property.CallNextDrawer(rect);
                 return;
             }
-
-            rect.y += EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE;
+            
+            //Add 18f as height because of foldout toggle.
+            rect.y += EditorGUIUtility.singleLineHeight;
 
             EditorGUI.indentLevel++;
 
             var prevProp = this.property;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                //Padding in the beginning of an each element.
                 if (p.TryGetFixedAttribute<DisplayAsString>() != null) {
-                    rect.y   += GuiUtilities.SPACE;
                     prevProp =  p;
                     continue;
                 }
@@ -64,10 +71,11 @@
                     p.Label.text = (string) prevProp.GetValue();
                 }
 
+                rect.y += GuiUtilities.SPACE;
                 p.Draw(rect);
 
                 var h = FriggProperty.GetPropertyHeight(p);
-                rect.y      += h;
+                rect.y      += h - GuiUtilities.SPACE;
                 rect.height =  EditorGUIUtility.singleLineHeight;
             }
             
@@ -77,7 +85,8 @@
 
         //if property has FoldoutDrawer - then add 18F if !expanded or calculate all other drawers if expanded
         public override float GetHeight() {
-            var height     = EditorGUIUtility.singleLineHeight;
+            //foldout header
+            var height = EditorGUIUtility.singleLineHeight;
 
             if (!this.property.IsExpanded) {
                 return height;
@@ -87,9 +96,11 @@
             var properties = this.property.ChildrenProperties.RecurseChildren();
 
             foreach (var prop in properties) {
+                //var propHeight = FriggProperty.GetPropertyHeight(prop);
                 height += FriggProperty.GetPropertyHeight(prop);
             }
-
+            
+            //Debug.Log(height);
             return height;
         }
 
