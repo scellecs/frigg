@@ -15,14 +15,6 @@
             //header + space in the end
             var total = EditorGUIUtility.singleLineHeight;
 
-            this.property.PropertyTree.LayoutsByPath
-                .TryGetValue(this.property.Path, out var layout);
-            
-            if (layout != null) {
-                total += layout.TotalHeight;
-                return total;
-            }
-
             if (!this.property.IsExpanded) 
                 return total;
             
@@ -38,6 +30,11 @@
 
             var elementsHeight = 0f;
             foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
+                if (this.property.PropertyTree.LayoutsByPath.TryGetValue(child.Path, out var val)) {
+                    total += val.TotalHeight;
+                    continue;
+                }
+                
                 var height = FriggProperty.GetPropertyHeight(child);
                 elementsHeight += height;
             }
@@ -74,6 +71,7 @@
 
             var controlRect = EditorGUILayout.GetControlRect(true, this.GetHeight() 
                 - EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE);
+            
             controlRect.width -= EditorGUI.indentLevel * 15;
             controlRect.x     += EditorGUI.indentLevel * 15;
             this.list.DoList(controlRect);
