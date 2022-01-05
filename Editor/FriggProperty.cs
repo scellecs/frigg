@@ -9,10 +9,8 @@
     using Layouts;
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
-    using UnityEditor.Graphs;
     using UnityEngine;
     using Utils;
-    using Object = UnityEngine.Object;
 
     public class FriggProperty {
         public SerializedProperty NativeProperty { get; set; }
