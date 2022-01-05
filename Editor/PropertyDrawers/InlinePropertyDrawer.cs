@@ -32,9 +32,12 @@
         public override float GetHeight() {
             var height = 0f;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                if (!p.IsExpanded) {
+                    height += EditorGUIUtility.singleLineHeight;
+                    continue;
+                } 
                 height += FriggProperty.GetPropertyHeight(p);
             }
-
             return height;
         }
 
