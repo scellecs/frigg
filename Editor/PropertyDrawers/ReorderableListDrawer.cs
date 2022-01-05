@@ -1,7 +1,5 @@
 ﻿namespace Frigg.Editor {
-    using System;
     using System.Collections;
-    using System.Linq;
     using Packages.Frigg.Editor.Utils;
     using UnityEditor;
     using UnityEditorInternal;
@@ -10,38 +8,41 @@
 
     public class ReorderableListDrawer : FriggPropertyDrawer {
         public const     byte            LIST_INTERFACE_WIDTH = 50;
+        private const    byte            EMPTY_SIZE           = 22;
         private readonly ReorderableList list;
 
         public override float GetHeight() {
-            //header
+            //header + space in the end
             var total = EditorGUIUtility.singleLineHeight;
-            if (this.list.displayAdd || this.list.displayRemove) {
-                //button
-                if (this.property.IsExpanded) ;
-                total += this.list.footerHeight;
-            }
 
-            this.property.PropertyTree.LayoutsByPath.TryGetValue(this.property.Path, out var layout);
+            this.property.PropertyTree.LayoutsByPath
+                .TryGetValue(this.property.Path, out var layout);
             
             if (layout != null) {
                 total += layout.TotalHeight;
                 return total;
             }
 
-            if (this.property.IsExpanded) {
-                var elementsHeight = 0f;
-                foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
-                    var height = FriggProperty.GetPropertyHeight(child);
-                    elementsHeight += height;
-                }
-                
-                total += elementsHeight + GuiUtilities.SPACE;
-
-                if (this.list.count >= 1) {
-                    total -= EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE / 2f;
-                }
-            }
+            if (!this.property.IsExpanded) 
+                return total;
             
+            //footer
+            if (this.list.displayAdd || this.list.displayRemove) {
+                total += this.list.footerHeight;
+            }
+
+            if (this.list.count == 0) {
+                total += EMPTY_SIZE;
+                return total;
+            }
+
+            var elementsHeight = 0f;
+            foreach (var child in this.property.ChildrenProperties.RecurseChildren()) {
+                var height = FriggProperty.GetPropertyHeight(child);
+                elementsHeight += height;
+            }
+                
+            total += elementsHeight;
             return total;
         }
 
@@ -49,9 +50,8 @@
 
         public ReorderableListDrawer(FriggProperty prop) : base(prop) {
             var elements = (IList) prop.GetValue();
-            if (this.list == null)
-                this.list = new ReorderableList(elements, 
-                    CoreUtilities.TryGetListElementType(elements.GetType()));
+            this.list = new ReorderableList(elements, 
+                CoreUtilities.TryGetListElementType(elements.GetType()));
         }
 
         public override void Draw(Rect rect) {
@@ -68,12 +68,15 @@
         public override void DrawLayout() {
             this.SetCallbacks(this.list);
 
-            if (this.property.IsExpanded) {
-                var controlRect = EditorGUILayout.GetControlRect(false, this.GetHeight() + GuiUtilities.SPACE);
-                controlRect.width -= EditorGUI.indentLevel * 15;
-                controlRect.x     += EditorGUI.indentLevel * 15;
-                this.list.DoList(controlRect);
+            if (!this.property.IsExpanded) {
+                return;
             }
+
+            var controlRect = EditorGUILayout.GetControlRect(true, this.GetHeight() 
+                - EditorGUIUtility.singleLineHeight + GuiUtilities.SPACE);
+            controlRect.width -= EditorGUI.indentLevel * 15;
+            controlRect.x     += EditorGUI.indentLevel * 15;
+            this.list.DoList(controlRect);
         }
 
         private void SetCallbacks(ReorderableList reorderableList, Rect rect = default) {
