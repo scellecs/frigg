@@ -33,7 +33,9 @@
             var color = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0.8f,0.8f,0.8f);
             
+            EditorGUI.EndDisabledGroup();
             var value = GUI.Toggle(toggleRect, property.IsExpanded, property.Label, style);
+            EditorGUI.BeginDisabledGroup(property.IsReadonly);
             EditorData.SetBoolValue(property.Path, value);
             property.IsExpanded = value;
             

@@ -14,6 +14,8 @@
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
                 p.Draw();
             }
+            
+            this.property.CallNextDrawer();
         }
 
         public override void Draw(Rect rect) {
@@ -23,14 +25,19 @@
                     p.Draw(rect); 
                     rect.y += h + GuiUtilities.SPACE;
             }
+            
+            this.property.CallNextDrawer(rect);
         }
 
         public override float GetHeight() {
             var height = 0f;
             foreach (var p in this.property.ChildrenProperties.RecurseChildren()) {
+                if (!p.IsExpanded) {
+                    height += EditorGUIUtility.singleLineHeight;
+                    continue;
+                } 
                 height += FriggProperty.GetPropertyHeight(p);
             }
-
             return height;
         }
 

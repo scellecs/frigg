@@ -34,6 +34,6 @@
             DrawerUtils.CallNext(property, rect);            
         }
 
-        public static float GetHeight() => GuiUtilities.SPACE;
+        public static float GetHeight() => 0;
     }
 }

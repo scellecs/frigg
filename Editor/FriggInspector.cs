@@ -1,12 +1,5 @@
 ﻿namespace Frigg.Editor {
-    using System;
-    using System.Collections;
-    using System.Linq;
-    using System.Reflection;
-    using Packages.Frigg.Editor.Utils;
     using UnityEditor;
-    using UnityEngine;
-    using Utils;
     using Object = UnityEngine.Object;
 
     [CanEditMultipleObjects]
@@ -23,7 +16,6 @@
             this.serializedObject.Update();
             //Here we are drawing our inspector.
             GuiUtilities.DrawTree(this.PropertyTree);
-            
             this.Repaint();
         }
     }
