@@ -10,7 +10,6 @@
     using Utils;
 
     public class PropertyCollection : IEnumerable<FriggProperty> {
-        private Dictionary<int, PropertyMeta>  metaByIndex = new Dictionary<int, PropertyMeta>();
         private Dictionary<int, FriggProperty> propByIndex = new Dictionary<int, FriggProperty>();
 
         public FriggProperty property;
@@ -21,7 +20,7 @@
         //Represent children components of this property
         public PropertyCollection(FriggProperty prop) {
             if (prop?.GetValue() == null)
-                return;
+                return; 
 
             var meta = prop.MetaInfo;
 
@@ -228,19 +227,17 @@
             }
         }
 
-        public IEnumerable<FriggProperty> RecurseChildren(bool includeArray = false) {
+        public void RecurseChildren(Action<FriggProperty> action, bool includeArray = false) {
             var amountOfChildren = this.AmountOfChildren;
 
             for (var i = 0; i < amountOfChildren; i++) {
                 var child = this[i];
-                yield return child;
+                action.Invoke(child);
 
                 if (!includeArray)
                     continue;
 
-                foreach (var nextChild in child.ChildrenProperties.RecurseChildren(true)) {
-                    yield return nextChild;
-                }
+                child.ChildrenProperties.RecurseChildren(action, true);
             }
         }
 

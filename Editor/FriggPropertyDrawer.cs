@@ -11,6 +11,10 @@
 
     public abstract class FriggPropertyDrawer : FriggDrawer {
         protected FriggPropertyDrawer(FriggProperty prop) => this.property = prop;
+        
+        protected Action<FriggProperty> drawLayoutAction;
+        protected Action<FriggProperty> drawAction;
+        protected Action<FriggProperty> getHeightAction;
     }
 
     public static class FriggPropertyDrawerUtils {
