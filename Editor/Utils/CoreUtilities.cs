@@ -9,7 +9,6 @@ using UnityEngine;
 namespace Frigg.Utils {
     using Editor;
     using Packages.Frigg.Editor.Utils;
-    using UnityEditorInternal;
     using Object = UnityEngine.Object;
 
     public static class CoreUtilities {
@@ -53,7 +52,7 @@ namespace Frigg.Utils {
             var toolTip = property.TryGetFixedAttribute<PropertyTooltipAttribute>();
             if (toolTip != null) {
                 if (toolTip.IsDynamic) {
-                    property.Label.tooltip = (string) GetValueByName(property.ParentProperty.GetType(), toolTip.Text);
+                    property.Label.tooltip = (string)GetValueByName(property.ParentProperty.GetType(), toolTip.Text);
                 }
 
                 else {

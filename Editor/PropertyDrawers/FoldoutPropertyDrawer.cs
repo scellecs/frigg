@@ -23,7 +23,7 @@
             EditorGUI.indentLevel++;
 
             if (this.drawLayoutAction == null) {
-                this.drawLayoutAction = (friggProperty => { friggProperty.Draw(); });
+                this.drawLayoutAction = friggProperty => { friggProperty.Draw(); };
             }
 
             this.property.ChildrenProperties.RecurseChildren(this.drawLayoutAction);
