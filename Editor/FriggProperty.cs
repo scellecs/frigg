@@ -53,8 +53,8 @@
         /// </summary>
         public bool IsExpanded     { get; set; }
 
-        public bool IsReadonly => !CoreUtilities.IsWritable(this.MetaInfo.MemberInfo);
-        
+        public bool IsReadonly { get; private set; }
+
         //Don't need to use this? Check for an attribute and then remove from list?
         public bool IsLayoutMember  { get; set; }
 
@@ -139,6 +139,8 @@
 
             property.Drawers      = drawers;
             property.DrawersQueue = drawers.GetEnumerator();
+
+            property.IsReadonly = !CoreUtilities.IsWritable(property.MetaInfo.MemberInfo);
             
             property.HandleMetaAttributes();
 
@@ -306,7 +308,7 @@
 
         private void SetNativeProperty() {
             this.PropertyTree.SerializedObject.Update();
-
+            
             SerializedProperty property;
             if (this.ParentProperty != null) {
                 if (!string.IsNullOrEmpty(this.ParentProperty.UnityPath)) {
