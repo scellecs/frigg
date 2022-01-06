@@ -1,12 +1,9 @@
 ﻿namespace Frigg.Editor {
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
-    using Groups;
-    using Unity.Collections;
     using UnityEngine;
     using Utils;
-    using Frigg.Editor.BuiltIn;
+    using BuiltIn;
 
     public abstract class FriggDrawer {
         public          FriggProperty property;
@@ -46,7 +43,7 @@
             }
 
 
-            if (!CoreUtilities.IsWritable(property.MetaInfo.MemberInfo)
+            if (property.IsReadonly
                 && !list.Exists(x 
                     => x.Drawer.GetType() == typeof(ReadonlyDecoratorDrawer))) {
                 
