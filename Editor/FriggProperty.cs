@@ -91,10 +91,12 @@
         //private List<Attribute> fixedAttributes = new List<Attribute>();
 
         public FriggProperty(PropertyTree propertyTree, PropertyValue<object> value, bool isRoot = false) {
-            this.NativeValue    = value;
-            this.IsRootProperty = isRoot;
-            this.PropertyTree   = propertyTree;
-            this.Path           = propertyTree.TargetType.ToString();
+            this.NativeValue     = value;
+            this.IsRootProperty  = isRoot;
+            this.PropertyTree    = propertyTree;
+            this.Name            = value.MetaInfo.Name;
+            this.Path            = propertyTree.TargetType.ToString();
+            this.FixedAttributes = value.MetaInfo.MemberType.GetCustomAttributes();
         }
 
         /// <summary>
@@ -103,7 +105,7 @@
         /// <param name="parent"></param>
         /// <param name="metaInfo"></param>
         /// <returns></returns>
-        internal static FriggProperty DoProperty(FriggProperty parent, [NotNull] PropertyMeta metaInfo) {
+        internal static FriggProperty DoProperty(FriggProperty parent, [NotNull] PropertyMeta metaInfo, bool readOnly = false) {
             var nativeValue = new PropertyValue<object>(null, metaInfo);
             
             if(parent != null && parent.MetaInfo.isArray) {
@@ -123,6 +125,7 @@
                 ParentProperty = parent
             };
             
+            property.SetReadOnly(readOnly);
             property.Label = new GUIContent(property.NiceName);
             
             property.FixedAttributes = !property.IsRootProperty
@@ -131,11 +134,11 @@
 
             property.SetNativeProperty();
             property.Path = GetFriggPath(property);
-            
+
             property.ChildrenProperties = new PropertyCollection(property);
 
             var drawers = FriggDrawer.Resolve(property);
-            property.MetaInfo.drawersCount = drawers.Count();
+            property.MetaInfo.drawersCount = drawers.Count;
 
             property.Drawers      = drawers;
             property.DrawersQueue = drawers.GetEnumerator();
@@ -176,6 +179,10 @@
             property.PropertyTree.LayoutsByPath[layout.layoutPath] = layout;
 
             return property;
+        }
+
+        public void SetReadOnly(bool status) {
+            this.IsReadonly = status;
         }
 
         /// <summary>
@@ -320,7 +327,7 @@
                     }
                 }
             }
-            
+
             property = this.PropertyTree.SerializedObject.FindProperty(this.Name);
             if (property != null) {
                 this.UnityPath      = property.propertyPath;

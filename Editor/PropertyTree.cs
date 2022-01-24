@@ -162,6 +162,8 @@
         public override        SerializedObject SerializedObject => this.serializedObject;
         public sealed override Type             TargetType       => typeof(T);
 
+        private FriggProperty mScriptProperty;
+
         public PropertyTree(SerializedObject serializedObject) : this(serializedObject.targetObjects.Cast<T>().ToArray(), serializedObject) {
         }
 
@@ -180,7 +182,21 @@
 
             this.RootProperty = new FriggProperty(this, new PropertyValue<object>(
                 this.memberTargets[0], metaInfo), true);
+
             this.RootProperty.ChildrenProperties = new PropertyCollection(this.RootProperty);
+            
+            if (this.RootProperty.TryGetFixedAttribute<HideMonoScriptAttribute>() == null) {
+                var p = this.RootProperty.PropertyTree.SerializedObject.FindProperty("m_Script");
+
+                if (p != null) {
+                    this.mScriptProperty = FriggProperty.DoProperty(this.RootProperty, new PropertyMeta {
+                        Name       = "Script",
+                        MemberInfo = p.objectReferenceValue.GetType(),
+                        MemberType = p.objectReferenceValue.GetType()
+                    }, true);
+                    this.mScriptProperty.NativeValue.Set(p.objectReferenceValue);
+                }
+            }
         }
 
         //Draw section. 
@@ -212,6 +228,7 @@
                     property.Draw();
             });
 
+            this.mScriptProperty?.Draw();
             this.EnumerateTree(action, false);
         }
 

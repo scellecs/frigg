@@ -155,7 +155,7 @@ namespace Frigg.Utils {
 
                     //Get all methods in provided type
                     var fields = type.GetFields(FLAGS);
-                    
+
                     //Get all properties in provided type
                     var properties = type.GetProperties(FLAGS);
 
@@ -195,7 +195,7 @@ namespace Frigg.Utils {
                                 MemberInfo = fields[i],
                                 Order      = order
                             });
-                        
+
                             if (!info.Contains(member)) {
                                 info.Add(member);
                             }

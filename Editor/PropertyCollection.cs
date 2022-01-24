@@ -250,7 +250,7 @@
                 }
 
                 this.index++;
-
+                
                 //Do own property for each MemberInfo inside a target object
                 this.propByIndex[this.index] = FriggProperty.DoProperty(prop, new PropertyMeta {
                     Name       = member.MetaInfo.Name,
