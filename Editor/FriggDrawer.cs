@@ -42,21 +42,21 @@
                 });
             }
 
-
-            if (property.IsReadonly
-                && !list.Exists(x 
-                    => x.Drawer.GetType() == typeof(ReadonlyDecoratorDrawer))) {
-                
-                var drawer = new ReadonlyDecoratorDrawer {
-                    property = property
-                };
-                
-                //move into constructor
-                list.Add(new FriggDrawerWrapper {
-                    Drawer     = drawer,
-                    DrawerType = FriggDrawerType.Custom
-                });
+            if (!property.IsReadonly || list.Exists(x
+                => x.Drawer.GetType() == typeof(ReadonlyDecoratorDrawer))) {
+                return;
             }
+            
+            var readonlyDecoratorDrawer = new ReadonlyDecoratorDrawer {
+                    property = property
+            };
+
+            //move into constructor
+            list.Add(new FriggDrawerWrapper { 
+                Drawer = readonlyDecoratorDrawer,
+                DrawerType  = FriggDrawerType.Custom
+            });
+            
         }
 
         private static void SetMainDrawer(FriggProperty property, List<FriggDrawerWrapper> list) {
