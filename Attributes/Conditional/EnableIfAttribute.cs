@@ -1,9 +1,9 @@
 ﻿namespace Frigg {
     public class EnableIfAttribute : ConditionAttribute {
-        public EnableIfAttribute(string name) : base(name) {
+        public EnableIfAttribute(string expression) : base(expression) {
         }
 
-        public EnableIfAttribute(string name, object expected) : base(name, expected) {
+        public EnableIfAttribute(string name, bool expected) : base(name, expected) {
         }
     }
 }

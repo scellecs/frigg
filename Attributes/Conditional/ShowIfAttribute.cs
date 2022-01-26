@@ -1,9 +1,9 @@
 ﻿namespace Frigg {
     public class ShowIfAttribute : ConditionAttribute {
-        public ShowIfAttribute(string name) : base(name) {
+        public ShowIfAttribute(string expression) : base(expression) {
         }
 
-        public ShowIfAttribute(string name, object expected) : base(name, expected) {
+        public ShowIfAttribute(string name, bool expected) : base(name, expected) {
         }
     }
 }

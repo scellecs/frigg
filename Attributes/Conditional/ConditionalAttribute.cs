@@ -3,20 +3,27 @@
 
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method,
         Inherited = false, AllowMultiple = true)]
-    public class ConditionAttribute : Attribute, IAttribute {
-        public string FieldName { get; set; }
+    public abstract class ConditionAttribute : Attribute, IAttribute {
+        public EConditionType ConditionType { get; }
+        public string         MemberName    { get; }
+        public string         Expression    { get; }
 
-        public bool Condition { get; set; } = true;
+        public bool ExpectedValue { get; private set; }
 
-        public object Value { get; set; }
-
-        public ConditionAttribute(string name) {
-            this.FieldName = name;
+        protected ConditionAttribute(string expression) {
+            this.Expression    = expression;
+            this.ConditionType = EConditionType.ByExpression;
         }
-        
-        public ConditionAttribute(string name, object expected) {
-            this.FieldName = name;
-            this.Value     = expected;
+
+        protected ConditionAttribute(string memberName, bool expectedValue) {
+            this.ConditionType = EConditionType.ByCondition;
+            this.MemberName    = memberName;
+            this.ExpectedValue = expectedValue;
         }
+    }
+
+    public enum EConditionType {
+        ByExpression = 0,
+        ByCondition = 1 
     }
 }
