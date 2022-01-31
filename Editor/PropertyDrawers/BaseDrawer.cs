@@ -10,11 +10,6 @@
             }
         }
 
-        protected T GetTargetValue<T>() {
-            this.drawerType = typeof(T);
-            return DrawerUtils.GetTargetValue<T>(this.property);
-        }
-
         protected void UpdateAndCallNext(object value, Rect rect = default) =>
             DrawerUtils.UpdateAndCallNext(this.drawerType, this.property, value, rect);
 

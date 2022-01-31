@@ -7,23 +7,23 @@
 
         public bool someToggle;
 
-        [HideIf("someToggle")]
-        public int hideIfToggleTrue;
+        [HideIf("someToggle", true)]
+        public int visibleWhenFalse;
         
-        [HideIf("someEnum", TestEnum.TestHide)]
-        public int hideIfEnumHide;
+        /*[HideIf("someEnum", TestEnum.TestHide)]
+        public int hideIfEnumHide;*/
         
-        [ShowIf("someToggle")]
-        public int showIfToggleTrue;
+        [ShowIf("someToggle", true)]
+        public int visibleWhenTrue;
         
-        [ShowIf("someEnum", TestEnum.TestShow)]
-        public int showIfEnumShow;
+        /*[ShowIf("someEnum", TestEnum.TestShow)]
+        public int showIfEnumShow;*/
 
-        [DisableIf("someToggle")]
-        public int disableIfToggleTrue;
+        [DisableIf("someToggle", true)]
+        public int disabledWhenTrue;
 
-        [EnableIf("someToggle")]
-        public int enableIfToggleTrue;
+        [EnableIf("someToggle", true)]
+        public int enabledWhenTrue;
     }
 
     public enum TestEnum {

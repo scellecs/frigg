@@ -28,13 +28,12 @@
                     break;
             }
 
-            if (CoreUtilities.IsPropertyVisible(this.property)) {
-                if (!string.IsNullOrEmpty(attr.Member)) {
+            //todo: move this code into another class. This should be checked only before calling "Property.Draw"
+            if (!string.IsNullOrEmpty(attr.Member)) {
                     //todo: get "member" name & call directly.
-                }
-                else {
-                    EditorGUILayout.HelpBox(attr.Text, messageType);
-                }
+            }
+            else {
+                EditorGUILayout.HelpBox(attr.Text, messageType);
             }
 
             this.property.CallNextDrawer();

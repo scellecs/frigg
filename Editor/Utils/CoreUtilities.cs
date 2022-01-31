@@ -7,8 +7,10 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Frigg.Utils {
+    using System.Diagnostics;
     using Editor;
     using Packages.Frigg.Editor.Utils;
+    using Debug = UnityEngine.Debug;
     using Object = UnityEngine.Object;
 
     public static class CoreUtilities {
@@ -269,58 +271,92 @@ namespace Frigg.Utils {
 
         #region properties //TODO: Check for any kind of errors.
         
+        /// <summary>
+        /// Returns 'true' if property is visible.
+        /// </summary>
         public static bool IsPropertyVisible(FriggProperty property) {
-            ConditionAttribute attr = property.TryGetFixedAttribute<HideIfAttribute>();
-
-            if (attr != null) {
-                return GetConditionValue(property, attr, false);
+            var result = true;
+            
+            foreach (var attr in property.ConditionAttributes) {
+                var condAttr = (ConditionAttribute) attr;
+                var type     = attr.GetType();
+                
+                if (type == typeof(HideIfAttribute) || type == typeof(ShowIfAttribute)) {
+                    result = condAttr.ConditionType == EConditionType.ByCondition
+                        ? CheckByCondition(property, condAttr)
+                        : CheckByExpression(property, condAttr);
+                }
             }
 
-            attr = property.TryGetFixedAttribute<ShowIfAttribute>();
-            return attr == null || GetConditionValue(property, attr, true);
+            return result;
         }
 
+        /// <summary>
+        /// Returns 'true' if property is enabled.
+        /// </summary>
         public static bool IsPropertyEnabled(FriggProperty property) {
-            ConditionAttribute attr = property.TryGetFixedAttribute<DisableIfAttribute>();
+            var result = true;
 
-            if (attr != null) {
-                return GetConditionValue(property, attr, false);
+            foreach (var attr in property.ConditionAttributes) {
+                var condAttr = (ConditionAttribute) attr;
+                var type     = attr.GetType();
+                
+                if (type == typeof(DisableIfAttribute) || type == typeof(EnableIfAttribute)) {
+                    result = condAttr.ConditionType == EConditionType.ByCondition
+                        ? CheckByCondition(property, condAttr)
+                        : CheckByExpression(property, condAttr);
+                }
             }
 
-            attr = property.TryGetFixedAttribute<EnableIfAttribute>();
-            return attr == null || GetConditionValue(property, attr, true);
+            return result;
         }
 
-        private static bool GetConditionValue(FriggProperty property, ConditionAttribute attr, bool invertedScope) {
-            var target = property.GetValue();
-            var field  = target.TryGetField(attr.FieldName);
-            if (field == null) {
-                return true;
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns>True if condition has passed.</returns>
+        private static bool CheckByCondition(FriggProperty property, ConditionAttribute attr) {
+            var type   = attr.GetType();
+
+            var inspectedObject = property.ParentProperty.GetValue();
+            var member          = inspectedObject.GetType().GetMember(attr.MemberName, FLAGS)[0];
+            var actualValue     = true;
+
+            switch (member.MemberType) {
+                case MemberTypes.Field: {
+                    actualValue = (bool)((FieldInfo)member).GetValue(inspectedObject);
+                } break;
+                
+                case MemberTypes.Property: {
+                    actualValue = (bool)((PropertyInfo)member).GetValue(inspectedObject);
+                } break;
+                
+                case MemberTypes.Method: {
+                    actualValue = (bool)((MethodInfo)member).Invoke(inspectedObject, null);
+                } break;
+            }
+
+            if (type == typeof(HideIfAttribute)
+                || type == typeof(DisableIfAttribute)) {
+                return actualValue != attr.ExpectedValue;
             }
             
-            var fieldValue = field.GetValue(target);
-
-            if (fieldValue is bool boolValue) {
-                if (!invertedScope) {
-                    return boolValue != attr.Condition;
-                }
-
-                return boolValue == attr.Condition;
+            if (type == typeof(ShowIfAttribute)
+                || type == typeof(EnableIfAttribute)) {
+                return actualValue == attr.ExpectedValue;
             }
 
-            var fieldValueType = fieldValue.GetType();
-            var attrValueType  = attr.Value.GetType();
-
-            var currentEnumValue  = Enum.Parse(fieldValueType, fieldValue.ToString());
-            var expectedEnumValue = Enum.Parse(fieldValueType, attr.Value.ToString());
-
-            if (!invertedScope) {
-                return !currentEnumValue.Equals(expectedEnumValue);
-            }
-
-            return currentEnumValue.Equals(expectedEnumValue);
+            return true;
         }
-        
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <returns>True if expression has passed.</returns>
+        private static bool CheckByExpression(FriggProperty property, ConditionAttribute attr) {
+            return false;
+        }
+
         #endregion
 
         public static void OnValueChanged(FriggProperty property) {

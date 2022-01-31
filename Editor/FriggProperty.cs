@@ -2,6 +2,7 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using Groups;
@@ -41,12 +42,12 @@
         /// <summary>
         /// Property's actual value.
         /// </summary>
-        public PropertyValue<object> NativeValue { get; private set; }
+        public PropertyValue<object> NativeValue { get; }
 
         /// <summary>
         /// Indicates whether property is root(e.g base property).
         /// </summary>
-        public bool IsRootProperty { get; private set; }
+        public bool IsRootProperty { get; }
         
         /// <summary>
         /// Indicates whether property is Expanded in Unity Editor.
@@ -56,26 +57,26 @@
         public bool IsReadonly { get; private set; }
 
         //Don't need to use this? Check for an attribute and then remove from list?
-        public bool IsLayoutMember  { get; set; }
+        public bool IsLayoutMember  { get; private set; }
 
         /// <summary>
         /// Property's reflected name.
         /// </summary>
-        public string Name     { get; set; }
+        public string Name     { get; private set; }
         
         /// <summary>
         /// Property's displayable name.
         /// </summary>
-        public string NiceName { get; set; }
+        public string NiceName { get; private set; }
 
         /// <summary>
         /// Parent property of target property.
         /// </summary>
-        public FriggProperty ParentProperty { get; set; }
+        public FriggProperty ParentProperty { get; private set; }
         /// <summary>
         /// Main property tree for target property.
         /// </summary>
-        public PropertyTree  PropertyTree   { get; set; }
+        public PropertyTree  PropertyTree   { get; }
 
         /// <summary>
         /// Children properties of target property.
@@ -87,16 +88,18 @@
         /// </summary>
         /// 
         public IEnumerable<Attribute> FixedAttributes { get; private set; }
+        public List<Attribute> ConditionAttributes { get;             private set; }
         //All applied attributes on target property.
         //private List<Attribute> fixedAttributes = new List<Attribute>();
 
         public FriggProperty(PropertyTree propertyTree, PropertyValue<object> value, bool isRoot = false) {
-            this.NativeValue     = value;
-            this.IsRootProperty  = isRoot;
-            this.PropertyTree    = propertyTree;
-            this.Name            = value.MetaInfo.Name;
-            this.Path            = propertyTree.TargetType.ToString();
-            this.FixedAttributes = value.MetaInfo.MemberType.GetCustomAttributes();
+            this.NativeValue         = value;
+            this.IsRootProperty      = isRoot;
+            this.PropertyTree        = propertyTree;
+            this.Name                = value.MetaInfo.Name;
+            this.Path                = propertyTree.TargetType.ToString();
+            this.FixedAttributes     = value.MetaInfo.MemberType.GetCustomAttributes();
+            this.ConditionAttributes = this.FixedAttributes.Where(x => x is ConditionalAttribute).ToList();
         }
 
         /// <summary>
@@ -131,6 +134,8 @@
             property.FixedAttributes = !property.IsRootProperty
                 ? property.MetaInfo.MemberInfo.GetCustomAttributes()
                 : property.MetaInfo.MemberType.GetCustomAttributes();
+            
+            property.ConditionAttributes = property.FixedAttributes.Where(x => x is ConditionAttribute).ToList();
 
             property.SetNativeProperty();
             property.Path = GetFriggPath(property);
@@ -190,6 +195,10 @@
         /// </summary>
         /// <param name="rect">Rect that represents draw info</param>
         public void Draw(Rect rect = default) {
+            if (!CoreUtilities.IsPropertyVisible(this))
+                return;
+            
+            EditorGUI.BeginDisabledGroup(!CoreUtilities.IsPropertyEnabled(this));
             var current = this.DrawersQueue.Current;
             if ((current.DrawerType != FriggDrawerType.Custom || current.Drawer != null) && current.IsVisible) {
                 if (rect == default) {
@@ -203,6 +212,7 @@
             else {
                 this.CallNextDrawer(rect);
             }
+            EditorGUI.EndDisabledGroup();
         }
 
         /// <summary>
